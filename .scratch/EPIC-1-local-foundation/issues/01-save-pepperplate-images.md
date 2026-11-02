@@ -21,11 +21,13 @@ A dependency-free TypeScript script, run directly by Node 26, that downloads the
 
 ## Acceptance criteria
 
-- [ ] A real run ends with 181 images `saved` or `skipped-existing`, 17 `no-image` and 0 `failed` (or the failures are explained).
-- [ ] Every saved file opens as a JPEG.
-- [ ] A second run downloads nothing and reports everything as `skipped-existing` / `no-image`.
-- [ ] `git status` shows no files from `docs/pepperplate-data/` or `.scratch/pepperplate-images/`.
-- [ ] Unit tests cover `Image:` line parsing and filename derivation. (Until US-1.1 adds Vitest, they can use `node:test`; they move to Vitest once it exists.)
+- [x] A real run ends with 181 images `saved` or `skipped-existing`, 17 `no-image` and 0 `failed` (or the failures are explained).
+- [x] Every saved file opens as a JPEG.
+- [x] A second run downloads nothing and reports everything as `skipped-existing` / `no-image`.
+- [x] `git status` shows no files from `docs/pepperplate-data/` or `.scratch/pepperplate-images/`.
+- [x] Unit tests cover `Image:` line parsing and filename derivation. (Until US-1.1 adds Vitest, they can use `node:test`; they move to Vitest once it exists.)
 - [ ] **Manual (owner):** copy `docs/pepperplate-data/` and `.scratch/pepperplate-images/` to a personal cloud drive.
 
 ## Comments
+
+**2026-11-02 (agent):** Script at `scripts/download-pepperplate-images.ts` (helpers + `node:test` tests in `scripts/pepperplate-images/`). Real run on Node 26.13: 181 saved, 17 no-image, 0 failed; 52 MB total; all 181 verified as JPEG. Re-run: 181 skipped-existing. Tests: `node --test scripts/pepperplate-images/lib.test.ts` (7 pass). Remaining: the owner's manual cloud backup.
