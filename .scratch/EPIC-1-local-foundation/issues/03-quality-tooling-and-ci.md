@@ -1,0 +1,30 @@
+# 03: Quality tooling and CI
+
+Status: ready-for-agent
+Story: US-1.4
+Branch: `EPIC-1/US-1.4-quality-tooling-ci`
+Spec: [../spec.md](../spec.md)
+Blocked by: 02
+
+## What to build
+
+- **ESLint** (flat config, TypeScript + React rules) with `no-restricted-imports` banning `firebase` and `firebase/*` everywhere except `src/data/**` and `src/config/**`.
+- **Prettier** with `endOfLine: "lf"`. ESLint and Prettier must not fight each other.
+- **Husky + lint-staged:** the pre-commit hook runs only ESLint `--fix` and Prettier on staged files.
+- **`npm run check`** runs typecheck, lint and tests.
+- **CI** in `.github/workflows/ci.yml` on `pull_request` and `push` to `main`: checkout, setup Node from `.nvmrc` with npm cache, setup Java (Temurin 21, or whatever current firebase-tools requires), `npm ci`, typecheck, lint, tests inside `npx firebase emulators:exec --project demo-recipe-app --only auth,firestore`, build. No secrets. Look up the current major version of every action; don't copy them from `project-setup.md`. This step needs firebase-tools as a devDependency; add it here if US-1.2 hasn't yet.
+- **Dependabot** (`.github/dependabot.yml`): weekly, `npm` and `github-actions`, each grouped into one PR.
+
+## After merge (owner + agent)
+
+Create a ruleset on `main`: require a pull request, require the CI check to pass, block force pushes and deletion, no required reviews, no bypass actors.
+
+## Acceptance criteria
+
+- [ ] A file outside `src/data`/`src/config` importing `firebase/firestore` fails `npm run lint`.
+- [ ] Committing a badly formatted file gets it fixed by the hook.
+- [ ] The CI run on this PR is green.
+- [ ] The ruleset is active: a direct push to `main` is rejected.
+- [ ] Dependabot config is valid (shows under Insights → Dependency graph → Dependabot).
+
+## Comments

@@ -1,0 +1,15 @@
+node_modules
+.env
+.env.local
+dist
+build
+docs/pepperplate-data/
+.scratch/pepperplate-images/
+.emulator-data/
+firebase-debug.log
+firestore-debug.log
+ui-debug.log
+
+# Claude Code local overrides
+.claude/settings.local.json
+.agents

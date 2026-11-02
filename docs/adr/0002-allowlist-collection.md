@@ -1,0 +1,3 @@
+# Membership is an `allowed_users` collection, not emails hardcoded in rules
+
+The Gemini rules hardcoded member emails. That would put real emails into a public repo once the rules are version-controlled, and adding a member would mean deploying the rules again. Instead, the rules check `exists(/databases/$(database)/documents/allowed_users/$(request.auth.token.email))` together with `email_verified == true`. Members are added by hand in the Firebase console. No real emails appear anywhere in the repo. The rules list each collection explicitly instead of using a `{document=**}` catch-all, so members can't write to `allowed_users` themselves.
