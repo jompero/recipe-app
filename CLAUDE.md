@@ -15,7 +15,7 @@ Epic 1 (Local Foundation) is built: Vite + React + Mantine scaffold, ESLint/Pret
 ## Planned layout
 - `src/config/firebase.ts`: Firebase init from `import.meta.env.VITE_FIREBASE_*`; connects to the emulator when `VITE_USE_EMULATOR=true`
 - `src/data/*.ts`: the **only** code that imports Firebase (`recipes`, `images`, `menu`, `backup`). Components call `src/data`, never Firebase directly.
-- `src/utils/imageCompressor.ts`: `browser-image-compression`, **JPEG** (not WebP): full ~1024px / ~100–150KB, thumbnail ~320px / ~10–15KB
+- `src/utils/imageCompressor.ts`: `browser-image-compression`, **JPEG** (not WebP): full ~1024px / ~100–300KB, thumbnail ~320px / ~15–40KB
 - `src/parsing/`: recipe and ingredient parsers, shared by the Pepperplate importer and Quick Paste
 - `src/components/*.tsx`: Mantine UI, designed for phones first, `HashRouter`
 
