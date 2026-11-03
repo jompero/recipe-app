@@ -8,11 +8,11 @@ import {
   serverTimestamp,
   Timestamp,
   where,
-  writeBatch,
   type DocumentData,
 } from "firebase/firestore";
 import { db } from "../config/firebase";
 import type { RecipeDraft } from "../parsing/types.ts";
+import { commitInBatches, type BatchItem } from "./batches";
 import { addFullImageToBatch } from "./images";
 
 const COLLECTION = "recipes";
@@ -35,48 +35,6 @@ export interface StoredRecipe extends RecipeDraft {
   updatedAt: Date;
 }
 
-// A batched write is one request, limited to 10 MiB (Firestore quotas page, checked 2026-11-03;
-// there's no longer a fixed count of writes). Stay well under it, measured in characters, which
-// for these ASCII data URLs and mostly-ASCII text is close to bytes.
-const BATCH_CHAR_BUDGET = 8_000_000;
-// Also cap the writes per batch, so one request never carries an unusual number of them.
-const BATCH_MAX_WRITES = 100;
-
-/** Rough size of a recipe's writes, in characters. */
-function sizeOf(item: RecipeToSave): number {
-  return (
-    JSON.stringify(item.recipe).length +
-    (item.thumbnail?.length ?? 0) +
-    (item.fullImage?.length ?? 0)
-  );
-}
-
-/** Groups recipes into batches that stay under the size and write-count limits. */
-function planBatches(recipes: RecipeToSave[]): RecipeToSave[][] {
-  const batches: RecipeToSave[][] = [];
-  let current: RecipeToSave[] = [];
-  let chars = 0;
-  let writes = 0;
-  for (const item of recipes) {
-    const itemChars = sizeOf(item);
-    const itemWrites = item.fullImage === null ? 1 : 2;
-    if (
-      current.length > 0 &&
-      (chars + itemChars > BATCH_CHAR_BUDGET || writes + itemWrites > BATCH_MAX_WRITES)
-    ) {
-      batches.push(current);
-      current = [];
-      chars = 0;
-      writes = 0;
-    }
-    current.push(item);
-    chars += itemChars;
-    writes += itemWrites;
-  }
-  if (current.length > 0) batches.push(current);
-  return batches;
-}
-
 /**
  * Saves recipes under their given IDs (replacing any existing ones), each with its full image, in
  * as few batched writes as the limits allow. Calls onProgress after each batch.
@@ -85,10 +43,10 @@ export async function saveRecipes(
   recipes: RecipeToSave[],
   onProgress?: (saved: number, total: number) => void,
 ): Promise<void> {
-  let saved = 0;
-  for (const items of planBatches(recipes)) {
-    const batch = writeBatch(db);
-    for (const { id, recipe, thumbnail, fullImage } of items) {
+  const items = recipes.map(({ id, recipe, thumbnail, fullImage }): BatchItem => ({
+    writes: fullImage === null ? 1 : 2,
+    chars: JSON.stringify(recipe).length + (thumbnail?.length ?? 0) + (fullImage?.length ?? 0),
+    addTo: (batch) => {
       batch.set(doc(db, COLLECTION, id), {
         ...recipe,
         thumbnail,
@@ -98,11 +56,9 @@ export async function saveRecipes(
         updatedAt: serverTimestamp(),
       });
       if (fullImage !== null) addFullImageToBatch(batch, id, fullImage);
-    }
-    await batch.commit();
-    saved += items.length;
-    onProgress?.(saved, recipes.length);
-  }
+    },
+  }));
+  await commitInBatches(items, onProgress);
 }
 
 /** Returns which of the given recipe IDs already exist. */

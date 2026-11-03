@@ -13,6 +13,7 @@ import {
 } from "@mantine/core";
 import { useState, type ChangeEvent } from "react";
 import { existingRecipeIds } from "../data/recipes.ts";
+import { ExportSection, RestoreSection } from "./BackupSections.tsx";
 import {
   buildImportPreview,
   type ImportPreview,
@@ -279,6 +280,8 @@ export function DataPage() {
     <Stack gap="lg">
       <Title order={2}>Data</Title>
       <PepperplateImport />
+      <ExportSection />
+      <RestoreSection />
     </Stack>
   );
 }
