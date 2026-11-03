@@ -23,6 +23,8 @@ vi.mock("../data/recipes.ts", () => ({
   saveRecipes: fakes.saveRecipes,
 }));
 vi.mock("../utils/imageCompressor.ts", () => ({ compressImage: fakes.compressImage }));
+// Export and restore are tested in DataPageBackup.test.tsx.
+vi.mock("../data/backup.ts", () => ({ exportEverything: vi.fn(), restoreEverything: vi.fn() }));
 
 function pepperplate(title: string, ingredients: string[], steps: string[]): string {
   return [
