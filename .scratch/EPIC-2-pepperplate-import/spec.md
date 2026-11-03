@@ -79,7 +79,7 @@ This is a one-off bulk import. Adding recipes day to day (Quick Paste, the bookm
 
 ### Parsers (`src/parsing/`, pure functions, shared with Epic 4)
 
-- **Recipe text parser:** reads the `Key: value` header lines, then `Ingredients:` and `Instructions:` blocks. Each tab-indented line is one ingredient or one step. `[Text]` lines become `{ header }`. Blank lines are ignored. `Categories:` is split on commas into tags. `Image:` is ignored, because photos are matched by file name. Unknown header keys produce a warning, not a failure.
+- **Recipe text parser:** reads the `Key: value` header lines, then `Ingredients:` and `Instructions:` blocks. Each tab-indented line is one ingredient or one step. `[Text]` lines become `{ header }`. Blank lines are ignored. `Categories:` is split on commas into tags. `Image:` is ignored, because photos are matched by file name. A header line that doesn't start with a known key continues the field above it (real descriptions run over several lines, one containing "Durability in freezer: …"). Notes start a final block that runs to the end of the file.
 - **Ingredient line parser:** pulls out the leading amount (whole numbers, decimals, `3/4`, `1 1/2`, unicode fractions such as `½`, ranges `1-2` → `qty` + `qtyMax`). It standardises known units to one spelling (`tablespoons` / `Tbsp.` / `tbsp` → `tbsp`; `teaspoon` / `tsp.` → `tsp`; `cups` → `cup`; `g.` → `g`; plus `kg`, `dl`, `ml`, `l`, and counts like `clove`, `slice`, `can`, `handful`). Everything else goes into `item`, prep notes included (`garlic, finely chopped`). A line with no amount gets only `item`. `raw` is always exactly the source line.
 
 ### Images
@@ -92,7 +92,7 @@ This is a one-off bulk import. Adding recipes day to day (Quick Paste, the bookm
 
 - Every member can see the Data page. The rules can't tell an owner from other members, and the group is small and trusted.
 - You pick the recipe folder and the images folder. Files are parsed and images compressed in the browser.
-- **Preview** (read-only): totals (recipes, with photos, ingredient lines with no amount) and a list of recipes with warnings (no photo, no ingredients, no instructions, unknown header keys, unparsed lines). Tapping one shows what was parsed. There's no editing here; fixes happen in Epic 3's edit page.
+- **Preview** (read-only): totals (recipes, with photos, ingredient lines with no amount) and a list of recipes with warnings (no photo, no ingredients, no instructions, unparsed lines). Tapping one shows what was parsed. There's no editing here; fixes happen in Epic 3's edit page.
 - **IDs** come from the file name (e.g. `15MinPulledOatsMushroomPasta` → `15-min-pulled-oats-mushroom-pasta`), so running the import again overwrites instead of duplicating. If any of those IDs already exist, the confirm step says "X recipes already exist and will be replaced; your edits to them will be lost". Recipes created later in the app use auto IDs and are never touched.
 - Writes run in batches with progress shown. Check Firestore's current batch and request-size limits against the docs when building: the full images total ~25 MB.
 
@@ -114,7 +114,7 @@ This is a one-off bulk import. Adding recipes day to day (Quick Paste, the bookm
 
 ## Testing Decisions
 
-- The parsers are pure and get thorough unit tests. Cases come from real Pepperplate lines: fractions, unicode fractions, ranges, unit spellings, no-amount lines, headers, Notes at the end of the file, unknown keys.
+- The parsers are pure and get thorough unit tests. Cases come from real Pepperplate lines: fractions, unicode fractions, ranges, unit spellings, no-amount lines, headers, Notes at the end of the file, multi-line descriptions.
 - A test parses all 198 files from `docs/pepperplate-data/` when they're present and checks that none throws and every recipe has a title. It's skipped in CI, where the files are gitignored.
 - Rules tests extend the Epic 1 matrix: valid documents pass; each forbidden field, wrong type, empty title and oversized image fails.
 - Data modules are tested against the emulator: import writes, export → restore round-trip gives the same documents, and restore never deletes.
