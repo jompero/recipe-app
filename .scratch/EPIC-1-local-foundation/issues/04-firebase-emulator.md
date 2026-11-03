@@ -18,11 +18,13 @@ Blocked by: 03
 
 ## Acceptance criteria
 
-- [ ] `npm run emulators` starts Auth, Firestore and the UI; data written before a clean stop is there after a restart.
-- [ ] `npm run seed` twice in a row leaves the same documents, visible in the Emulator UI.
-- [ ] The app loads with the emulator connected (no Firebase warnings about a real project).
-- [ ] No real emails anywhere in the repo.
+- [x] `npm run emulators` starts Auth, Firestore and the UI; data written before a clean stop is there after a restart.
+- [x] `npm run seed` twice in a row leaves the same documents, visible in the Emulator UI.
+- [ ] The app loads with the emulator connected (no Firebase warnings about a real project). **Moved to US-1.6**: nothing imports the config module until the auth module exists.
+- [x] No real emails anywhere in the repo.
 
 ## Comments
 
 **2026-11-03 (agent, from US-1.4):** CI currently runs `npm test` directly, because `emulators:exec` needs the `firebase.json` this story adds. This story must also: add `actions/setup-java` (Temurin, **21**: firebase-tools 15.34 requires JDK 21+) to `.github/workflows/ci.yml`, and wrap the test step in `npx firebase emulators:exec --project demo-recipe-app --only auth,firestore "npm test"`. firebase-tools 15.34.2 is already a devDependency (added in US-1.4).
+
+**2026-11-03 (agent):** firebase 13.2 SDK, firebase-tools 15.34. API names checked against the installed type definitions (`initializeFirestore`, `persistentLocalCache`, `persistentMultipleTabManager`, `connectFirestoreEmulator(db, host, port)`, `connectAuthEmulator(auth, url, { disableWarnings })`). `firebase.json` uses `singleProjectMode` (checked in the firebase-tools schema); `.firebaserc` defaults to `demo-recipe-app`. `firestore.rules` is a deny-all placeholder until US-1.3. The seed script is dependency-free: it calls the emulator REST API with `Authorization: Bearer owner`, which bypasses rules. Verified: seeding twice leaves exactly 2 docs; a client without the owner token gets 403; export, stop, restart re-imports both docs; `npm run test:ci` (emulators:exec) passes. A hard kill skips `--export-on-exit`, so there's `npm run emulators:save` plus a README note. `@firebase/util`'s postinstall (App Hosting auto-config only) is denied in `allowScripts`. CI now sets up Temurin 21 via `actions/setup-java@v6` and runs `npm run test:ci`.

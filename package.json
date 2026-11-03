@@ -10,17 +10,22 @@
     "dev": "vite",
     "build": "vite build",
     "preview": "vite preview",
+    "emulators": "firebase emulators:start --import=.emulator-data --export-on-exit",
+    "emulators:save": "firebase emulators:export .emulator-data --force",
+    "seed": "node scripts/seed-emulator.ts",
     "typecheck": "tsc -b",
     "test": "vitest run",
     "test:watch": "vitest",
     "lint": "eslint . && prettier --check .",
     "format": "prettier --write .",
     "check": "npm run typecheck && npm run lint && npm test",
-    "prepare": "husky"
+    "prepare": "husky",
+    "test:ci": "firebase emulators:exec --only auth,firestore \"npm test\""
   },
   "dependencies": {
     "@mantine/core": "^9.7.4",
     "@mantine/hooks": "^9.7.4",
+    "firebase": "^13.2.0",
     "react": "^19.3.1",
     "react-dom": "^19.3.1",
     "react-router": "^8.5.1"
@@ -55,7 +60,8 @@
   },
   "allowScripts": {
     "re2": false,
-    "protobufjs": false
+    "protobufjs": false,
+    "@firebase/util": false
   },
   "lint-staged": {
     "*.{ts,tsx,js,cjs,mjs}": [
