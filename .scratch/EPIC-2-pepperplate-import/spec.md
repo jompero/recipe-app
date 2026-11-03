@@ -84,7 +84,7 @@ This is a one-off bulk import. Adding recipes day to day (Quick Paste, the bookm
 
 ### Images
 
-- `src/utils/imageCompressor.ts` (moved here from backlog 4.3): `browser-image-compression` to JPEG. Full image ~1024px / ~100–150 KB; thumbnail ~320px / ~10–15 KB. A size check keeps each image under the rules caps.
+- `src/utils/imageCompressor.ts` (moved here from backlog 4.3): `browser-image-compression` to JPEG. Full image ~1024px / ~100–300 KB; thumbnail ~320px / ~15–40 KB. A size check keeps each image under the rules caps.
 - `src/data/images.ts` saves and loads thumbnails and full images. It's the only image seam (ADR-0001).
 - Photos match recipes by file name: `<recipe .txt stem>.jpg` (all 181 match; the other 17 recipes get `thumbnail: null`, `hasImage: false`).
 
@@ -108,7 +108,7 @@ This is a one-off bulk import. Adding recipes day to day (Quick Paste, the bookm
 
 ### Rules
 
-- `recipes`: only the schema's field names are allowed. `title` is a non-empty string. `ingredients`, `instructions` and `tags` are lists. `archived` and `hasImage` are booleans. `thumbnail` is a string under ~40 KB, or null. `createdAt` and `updatedAt` are timestamps.
+- `recipes`: only the schema's field names are allowed. `title` is a non-empty string. `ingredients`, `instructions` and `tags` are lists. `archived` and `hasImage` are booleans. `thumbnail` is a string under ~60 KB, or null. `createdAt` and `updatedAt` are timestamps.
 - `recipe_images`: only `data`, a string under ~900 KB.
 - The rules don't validate the shape of each list item (too awkward in the rules language). The parsers and types guard that.
 

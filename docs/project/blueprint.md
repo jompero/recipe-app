@@ -103,7 +103,7 @@ Illustrative shapes. Each epic spec will make its part final.
     { "raw": "2 Onions", "qty": 2, "item": "Onions" }
   ],
   "instructions": [ { "text": "Boil pasta until al dente and drain" }, { "header": "While pasta is boiling" }, { "text": "…" } ],
-  "thumbnail": "data:image/jpeg;base64,…",   // ~10–15 KB, or null
+  "thumbnail": "data:image/jpeg;base64,…",   // ~15–40 KB, or null
   "hasImage": true,                          // full image is in recipe_images/{same id}
   "archived": false,                         // archive instead of delete (ADR-0006)
   "createdAt": "<serverTimestamp>", "createdBy": "<uid>",
@@ -111,7 +111,7 @@ Illustrative shapes. Each epic spec will make its part final.
 }
 
 // recipe_images/{recipeId}
-{ "data": "data:image/jpeg;base64,…" }        // ~100–150 KB; the document limit is 1 MiB
+{ "data": "data:image/jpeg;base64,…" }        // ~100–300 KB; the document limit is 1 MiB
 
 // menu_days/{YYYY-MM-DD}
 { "entries": [ { "recipeId": "abc123", "slot": "dinner" } ] }
@@ -131,7 +131,7 @@ Rules of thumb:
 
 | Quota | Limit | Expected use |
 |---|---|---|
-| Firestore storage | 1 GiB | ~200 recipes × ~150 KB ≈ 30 MB |
+| Firestore storage | 1 GiB | ~200 recipes × up to ~450 KB (base64 full image + thumbnail) ≈ 90 MB at most |
 | Reads | 50,000/day | ~200 per app open (recipe list) plus full images on demand |
 | Writes | 20,000/day | Tiny. The one-off import is ~400. |
 | GitHub Pages | 1 GB site, ~100 GB/month soft limit | Tiny |

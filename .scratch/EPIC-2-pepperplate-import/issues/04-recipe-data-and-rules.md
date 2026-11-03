@@ -11,7 +11,7 @@ Blocked by: 01, 03
 - `src/data/recipes.ts` with what Epic 2 needs: write a batch of recipes with given IDs (thumbnail on the recipe, full image through `images.ts`), list which of a set of IDs already exist, and read all recipes (for export). Epic 3 adds the live list, editing and archiving.
 - Batched writes with progress. Check Firestore's current batch and request-size limits in the docs, and split batches by count and size (~25 MB of full images in total).
 - `firestore.rules` shape validation, as in the spec:
-  - `recipes`: only the schema's field names; `title` a non-empty string; `ingredients` / `instructions` / `tags` lists; `archived` / `hasImage` booleans; `thumbnail` a string under ~40 KB, or null; `createdAt` / `updatedAt` timestamps.
+  - `recipes`: only the schema's field names; `title` a non-empty string; `ingredients` / `instructions` / `tags` lists; `archived` / `hasImage` booleans; `thumbnail` a string under ~60 KB, or null; `createdAt` / `updatedAt` timestamps.
   - `recipe_images`: only `data`, a string under ~900 KB.
 - Update the blueprint's schema section to the spec's final schema.
 
