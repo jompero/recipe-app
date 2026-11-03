@@ -26,7 +26,7 @@ A dependency-free TypeScript script, run directly by Node 26, that downloads the
 - [x] A second run downloads nothing and reports everything as `skipped-existing` / `no-image`.
 - [x] `git status` shows no files from `docs/pepperplate-data/` or `.scratch/pepperplate-images/`.
 - [x] Unit tests cover `Image:` line parsing and filename derivation. (Until US-1.1 adds Vitest, they can use `node:test`; they move to Vitest once it exists.)
-- [ ] **Manual (owner):** copy `docs/pepperplate-data/` and `.scratch/pepperplate-images/` to a personal cloud drive.
+- [x] **Manual (owner):** copy `docs/pepperplate-data/` and `.scratch/pepperplate-images/` to a personal cloud drive.
 
 ## Comments
 

@@ -80,7 +80,7 @@ One issue file per story is in `issues/`.
   - Prettier with `endOfLine: "lf"`.
   - Husky + lint-staged pre-commit runs only ESLint `--fix` and Prettier on staged files.
   - `npm run check` runs typecheck, lint and tests locally.
-  - TypeScript `strict` + `noUncheckedIndexedAccess`; `typecheck` (`tsc --noEmit`) is its own script and CI step, separate from `build`.
+  - TypeScript **6.0.x** (not 7: typescript-eslint supports only TypeScript below 6.1 as of Nov 2026; Dependabot ignores TypeScript major updates until it supports 7; decided 2026-11-03), `strict` + `noUncheckedIndexedAccess`; `typecheck` (`tsc -b`, which checks every project in the solution-style tsconfig without emitting) is its own script and CI step, separate from `build`.
 - **CI** (`.github/workflows/ci.yml`) on pull requests and pushes to `main`: install, typecheck, lint, tests inside `firebase emulators:exec` (auth + firestore), build. No secrets. Action versions and the firebase-tools Java requirement are checked against current docs when written, not copied from `project-setup.md`.
 - **Ruleset on `main`**, created right after the CI PR merges: require a pull request, require the CI check to pass, block force pushes and deletion, no required reviews (solo developer), no bypass actors.
 - **Dependabot:** weekly, ecosystems `npm` and `github-actions`, each grouped into one PR.
