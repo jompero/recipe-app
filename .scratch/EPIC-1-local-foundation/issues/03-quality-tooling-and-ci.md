@@ -23,7 +23,7 @@ Create a ruleset on `main`: require a pull request, require the CI check to pass
 
 - [x] A file outside `src/data`/`src/config` importing `firebase/firestore` fails `npm run lint`.
 - [x] Committing a badly formatted file gets it fixed by the hook.
-- [ ] The CI run on this PR is green.
+- [x] The CI run on this PR is green.
 - [ ] The ruleset is active: a direct push to `main` is rejected.
 - [ ] Dependabot config is valid (shows under Insights → Dependency graph → Dependabot).
 
