@@ -1,0 +1,8 @@
+dist
+coverage
+package-lock.json
+docs/pepperplate-data
+.scratch/pepperplate-images
+.claude/skills
+.emulator-data
+*.md

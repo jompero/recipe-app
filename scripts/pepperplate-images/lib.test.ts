@@ -25,7 +25,10 @@ test("parseImageUrl ignores 'Image:' text that isn't at the start of a line", ()
 });
 
 test("imageFileName swaps .txt for .jpg", () => {
-  assert.equal(imageFileName("15MinPulledOatsMushroomPasta.txt"), "15MinPulledOatsMushroomPasta.jpg");
+  assert.equal(
+    imageFileName("15MinPulledOatsMushroomPasta.txt"),
+    "15MinPulledOatsMushroomPasta.jpg",
+  );
 });
 
 test("isJpeg checks the magic bytes", () => {

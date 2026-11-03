@@ -11,6 +11,8 @@ Until go-live (Epic 7), everything runs locally against the Firebase Emulator. N
 
 After installing, restart your terminal (in VS Code, restart VS Code itself) so the new `PATH` is picked up.
 
+**Windows PowerShell:** if `npm` fails with "running scripts is disabled on this system", allow local scripts for your account once with `Set-ExecutionPolicy -Scope CurrentUser RemoteSigned` (or use Git Bash). Windows PowerShell 5.1 also doesn't support `&&`; use `;` instead.
+
 ## Getting started
 
 ```sh
@@ -32,6 +34,15 @@ Open http://localhost:5173/recipe-app/. The `/recipe-app/` path matches the GitH
 | `npm run preview` | Serve `dist/` locally |
 | `npm run typecheck` | Type-check everything (`tsc -b`) |
 | `npm test` | Run the tests once (`npm run test:watch` to keep them running) |
+| `npm run lint` | ESLint plus a Prettier formatting check |
+| `npm run format` | Format everything with Prettier |
+| `npm run check` | Typecheck, lint and test: what CI runs, minus the build |
+
+A pre-commit hook (Husky + lint-staged) runs ESLint `--fix` and Prettier on the files you commit. ESLint also enforces the data boundary: only `src/data` and `src/config` may import Firebase.
+
+## Pull requests
+
+`main` only changes through pull requests, and CI (typecheck, lint, tests, build) must pass before merging. Dependabot opens grouped dependency updates weekly; they go through CI like any other PR.
 
 ## Pepperplate images
 
