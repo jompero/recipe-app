@@ -32,8 +32,12 @@ Open http://localhost:5173/recipe-app/. The `/recipe-app/` path matches the GitH
 | `npm run dev` | Start the dev server |
 | `npm run build` | Build the static site into `dist/` |
 | `npm run preview` | Serve `dist/` locally |
+| `npm run emulators` | Start the Firebase emulators with saved data |
+| `npm run emulators:save` | Save the running emulators' data to `.emulator-data/` |
+| `npm run seed` | Add fake allowlist members to the running emulator |
 | `npm run typecheck` | Type-check everything (`tsc -b`) |
 | `npm test` | Run the tests once (`npm run test:watch` to keep them running) |
+| `npm run test:ci` | Run the tests inside the emulators, as CI does |
 | `npm run lint` | ESLint plus a Prettier formatting check |
 | `npm run format` | Format everything with Prettier |
 | `npm run check` | Typecheck, lint and test: what CI runs, minus the build |
@@ -43,6 +47,31 @@ A pre-commit hook (Husky + lint-staged) runs ESLint `--fix` and Prettier on the 
 ## Pull requests
 
 `main` only changes through pull requests, and CI (typecheck, lint, tests, build) must pass before merging. Dependabot opens grouped dependency updates weekly; they go through CI like any other PR.
+
+## Local Firebase (emulator)
+
+The app talks to the Firebase Emulator Suite (Auth + Firestore) under the offline-only project `demo-recipe-app`. No real Firebase project is involved.
+
+```sh
+npm run emulators   # terminal 1: Auth on :9099, Firestore on :8080, Emulator UI on http://localhost:4000
+npm run seed        # terminal 2, once: adds fake members to allowed_users
+npm run dev         # terminal 2
+```
+
+- **Seeded members:** `member@example.com` and `alex@example.com`. In the emulator's Google sign-in popup, choose "Add new account" and enter one of these to sign in as a member; any other email is a non-member. `npm run seed` is safe to re-run.
+- **Data survives restarts:** it's loaded from `.emulator-data/` (gitignored) on start and saved back when you stop the emulators with **Ctrl+C** (wait for "Export complete"). Closing the terminal window instead skips the save, so run `npm run emulators:save` first if you've added data you want to keep.
+- **Starting over:** stop the emulators, delete `.emulator-data/`, start again and re-seed.
+- **Offline cache gotcha:** the app keeps an offline copy of Firestore data in the browser (IndexedDB). After wiping the emulator, the browser keeps showing the old documents until you clear the site data (DevTools → Application → Storage → Clear site data).
+- **Tests with the emulator:** `npm run test:ci` starts the emulators, runs the tests and stops them. This is what CI runs.
+
+## Testing on your phone
+
+1. Allow inbound connections on private networks for ports **5173** (Vite), **9099** (Auth emulator) and **8080** (Firestore emulator). In an admin PowerShell:
+   ```powershell
+   New-NetFirewallRule -DisplayName "recipe-app dev" -Direction Inbound -Protocol TCP -LocalPort 5173,9099,8080 -Profile Private -Action Allow
+   ```
+2. Make sure your Wi-Fi network is set to **Private** in Windows settings.
+3. Run `npm run emulators` and `npm run dev -- --host`, then open the "Network" address Vite prints (`http://<pc-ip>:5173/recipe-app/`) on your phone. The app connects to the emulator on the same host it was loaded from.
 
 ## Pepperplate images
 
