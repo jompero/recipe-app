@@ -16,20 +16,14 @@
 ## Epic 2: Pepperplate Import
 **Goal:** Get the 198 seed recipes into the final format, so the later epics are built against real data.
 
-* **2.1 Recipe text parser:** parse the Pepperplate `.txt` format (Title, Description, Source, Yield, times, Ingredients, Instructions, `[section headers]`). Shared with Quick Paste (4.1).
-* **2.2 Ingredient line parser:** each line becomes `{ raw, qty?, unit?, item? }` with `raw` kept as the source of truth ([ADR-0005](adr/0005-ingredients-raw-text-first.md)).
-* **2.3 Import page:** in the app, pick the `.txt` files and saved images, preview what was parsed, write them using your own login (so the rules apply). Images are compressed into a thumbnail and a full photo.
-* **2.4 Export and restore:** an "Export everything" JSON download and a restore option in the importer. This is the backup method and the way data moves at go-live.
+**Specified:** see [`.scratch/EPIC-2-pepperplate-import/spec.md`](../.scratch/EPIC-2-pepperplate-import/spec.md) (stories US-2.1 to US-2.7). The image compressor moved here from 4.3.
 
 ---
 
 ## Epic 3: Recipe Browser
 **Goal:** A fast, phone-friendly way to explore the shared cookbook.
 
-* **3.1 Cookbook grid:** all active recipes loaded into the browser, shown with thumbnail and title. Search and filtering happen in the browser.
-* **3.2 Recipe details:** full image (loaded when opened), ingredients with section headers, step-by-step instructions.
-* **3.3 Edit and archive:** edit a recipe (if two people edit at once, the last save wins). Archive instead of delete.
-* **3.x Browser tests (decided 2026-11-03):** add Playwright end-to-end tests against the emulator, run in CI. First test: the sign-in flow from US-1.6 (member sees the shell, a new account sees "not on the list", sign-out), automating the emulator's fake Google popup. Include a phone-sized WebKit project. Real-phone checks stay manual (Epic 7 smoke test).
+**Specified:** see [`.scratch/EPIC-3-recipe-browser/spec.md`](../.scratch/EPIC-3-recipe-browser/spec.md) (stories US-3.1 to US-3.6). Built after Epic 2. The earlier plan to add Playwright tests here was dropped in the Epic 3 grilling; revisit end-to-end tests in Epic 5.
 
 ---
 
@@ -38,7 +32,7 @@
 
 * **4.1 Quick Paste:** paste rough recipe text and get a parsed draft to correct (reuses the 2.1 and 2.2 parsers).
 * **4.2 Recipe bookmarklet:** a bookmarklet run on a recipe website reads its `ld+json` Recipe data and hands it to the app as a draft. No server and no CORS proxy.
-* **4.3 Photo pipeline:** compress camera photos in the browser to JPEG (full ~1024px / ~100–150 KB, thumbnail ~320px / ~10–15 KB), with a size check. No WebP (Safari can't produce it from a canvas).
+* **4.3 Photo upload:** take or pick a photo for a recipe. Reuses the JPEG compressor built in Epic 2 (US-2.3).
 
 ---
 
@@ -49,6 +43,7 @@
 * **5.2 Manual assignment:** add a recipe to a date (merge-safe with `arrayUnion`). Supports several meals per day.
 * **5.3 Recipe roller:** pick a range of dates, roll random recipes, lock the days you like, re-roll the rest, then save.
 * **5.4 Live sync:** the visible range uses `onSnapshot`, so changes on one device appear on the others.
+* **Open question:** decide whether to add end-to-end browser tests (e.g. Playwright with a phone-sized WebKit project), since live sync across devices is the riskiest flow so far. Deferred from Epic 3.
 
 ---
 
