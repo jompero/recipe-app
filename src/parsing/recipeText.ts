@@ -1,3 +1,4 @@
+import { parseIngredientLine } from "./ingredientLine.ts";
 import type { RecipeDraft } from "./types.ts";
 
 export interface ParsedRecipe {
@@ -88,7 +89,9 @@ export function parseRecipeText(text: string): ParsedRecipe {
     if (content === "") continue;
     const header = /^\[(.*)\]$/.exec(content)?.[1];
     if (section === "ingredients") {
-      recipe.ingredients.push(header !== undefined ? { header: header.trim() } : { raw: content });
+      recipe.ingredients.push(
+        header !== undefined ? { header: header.trim() } : parseIngredientLine(content),
+      );
     } else {
       recipe.instructions.push(
         header !== undefined ? { header: header.trim() } : { text: content },
