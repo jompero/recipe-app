@@ -102,6 +102,8 @@ export default defineConfig({
 
 Lives in the repo and is deployed with the CLI. No emails are in it ([ADR-0002](../adr/0002-allowlist-collection.md)).
 
+> The repo's [`firestore.rules`](../../firestore.rules) is the source of truth. The copy below is the Epic 1 membership core. Since Epic 2 (US-2.4) the real file also checks the shape of `recipes` and `recipe_images` documents and denies deleting them.
+
 ```javascript
 rules_version = '2';
 service cloud.firestore {

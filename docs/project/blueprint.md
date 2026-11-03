@@ -88,30 +88,31 @@ Live updates: the recipe list and the visible range of the menu use `onSnapshot`
 
 ## Firestore schema
 
-Illustrative shapes. Each epic spec will make its part final.
+`recipes` and `recipe_images` are final (Epic 2, enforced by `firestore.rules`). `menu_days` is still illustrative until Epic 5.
 
 ```jsonc
-// recipes/{autoId}
+// recipes/{id}   id = kebab-case of the Pepperplate file name for imported recipes, auto ID otherwise
 {
-  "title": "15 Min Pulled Oats & Mushroom Pasta",
-  "description": "",
+  "title": "15 Min Pulled Oats & Mushroom Pasta",   // non-empty
+  "description": "",                         // imported Notes are added after a blank line
   "source": "", "sourceUrl": "",
-  "yield": "", "activeTime": "", "totalTime": "",
+  "yield": "", "activeTime": "", "totalTime": "",   // free text, as written
+  "tags": ["pasta"],                         // lowercase
   "ingredients": [
     { "raw": "400 g Pasta (Clam shaped)", "qty": 400, "unit": "g", "item": "Pasta (Clam shaped)" },
     { "header": "For the sauce" },
-    { "raw": "2 Onions", "qty": 2, "item": "Onions" }
+    { "raw": "1-2 cloves garlic", "qty": 1, "qtyMax": 2, "unit": "clove", "item": "garlic" },
+    { "raw": "Salt & pepper", "item": "Salt & pepper" }
   ],
   "instructions": [ { "text": "Boil pasta until al dente and drain" }, { "header": "While pasta is boiling" }, { "text": "…" } ],
-  "thumbnail": "data:image/jpeg;base64,…",   // ~15–40 KB, or null
+  "thumbnail": "data:image/jpeg;base64,…",   // ~15–40 KB, at most 60,000 characters, or null
   "hasImage": true,                          // full image is in recipe_images/{same id}
-  "archived": false,                         // archive instead of delete (ADR-0006)
-  "createdAt": "<serverTimestamp>", "createdBy": "<uid>",
-  "updatedAt": "<serverTimestamp>", "updatedBy": "<uid>"
+  "archived": false,                         // archive instead of delete; the rules deny deletes
+  "createdAt": "<timestamp>", "updatedAt": "<timestamp>"
 }
 
 // recipe_images/{recipeId}
-{ "data": "data:image/jpeg;base64,…" }        // ~100–300 KB; the document limit is 1 MiB
+{ "data": "data:image/jpeg;base64,…" }        // ~100–300 KB, at most 900,000 characters (document limit 1 MiB)
 
 // menu_days/{YYYY-MM-DD}
 { "entries": [ { "recipeId": "abc123", "slot": "dinner" } ] }
