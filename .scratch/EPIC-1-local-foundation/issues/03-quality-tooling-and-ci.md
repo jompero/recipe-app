@@ -21,10 +21,12 @@ Create a ruleset on `main`: require a pull request, require the CI check to pass
 
 ## Acceptance criteria
 
-- [ ] A file outside `src/data`/`src/config` importing `firebase/firestore` fails `npm run lint`.
-- [ ] Committing a badly formatted file gets it fixed by the hook.
+- [x] A file outside `src/data`/`src/config` importing `firebase/firestore` fails `npm run lint`.
+- [x] Committing a badly formatted file gets it fixed by the hook.
 - [ ] The CI run on this PR is green.
 - [ ] The ruleset is active: a direct push to `main` is rejected.
 - [ ] Dependabot config is valid (shows under Insights → Dependency graph → Dependabot).
 
 ## Comments
+
+**2026-11-03 (agent):** Versions: ESLint 10.14 (flat config via `eslint/config`), typescript-eslint 8.72 with **type-aware** `recommendedTypeChecked`, react-hooks 7, react-refresh 0.5, Prettier 3.9 (+ eslint-config-prettier), Husky 9, lint-staged 17; actions `checkout@v7`, `setup-node@v7` (Node from `.nvmrc`). `npm run lint` = ESLint + `prettier --check` (Markdown excluded from Prettier so docs aren't reflowed). Emulator wrapper and Java setup in CI deferred to US-1.2 (no `firebase.json` yet); see issue 04. npm 11.20 blocks dependency install scripts by default; `re2` (only for the Hosting emulator) and `protobufjs` (only a version warning) are recorded as denied in `package.json` `allowScripts`. Verified: a `firebase/firestore` import in `src/components` fails lint and the same import in `src/data` passes.

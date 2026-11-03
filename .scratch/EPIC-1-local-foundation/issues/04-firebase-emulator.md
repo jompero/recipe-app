@@ -24,3 +24,5 @@ Blocked by: 03
 - [ ] No real emails anywhere in the repo.
 
 ## Comments
+
+**2026-11-03 (agent, from US-1.4):** CI currently runs `npm test` directly, because `emulators:exec` needs the `firebase.json` this story adds. This story must also: add `actions/setup-java` (Temurin, **21**: firebase-tools 15.34 requires JDK 21+) to `.github/workflows/ci.yml`, and wrap the test step in `npx firebase emulators:exec --project demo-recipe-app --only auth,firestore "npm test"`. firebase-tools 15.34.2 is already a devDependency (added in US-1.4).

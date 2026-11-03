@@ -76,7 +76,7 @@ async function main(): Promise<void> {
   await mkdir(outDir, { recursive: true });
   const recipeFiles = (await readdir(recipesDir)).filter((f) => f.endsWith(".txt")).sort();
 
-  const entries: ManifestEntry[] = new Array(recipeFiles.length);
+  const entries = new Array<ManifestEntry>(recipeFiles.length);
   let next = 0;
   let done = 0;
   const worker = async () => {
@@ -86,7 +86,9 @@ async function main(): Promise<void> {
       entries[i] = entry;
       done++;
       if (entry.status === "saved" || entry.status === "failed") {
-        console.log(`[${done}/${recipeFiles.length}] ${entry.status}: ${entry.recipeFile}${entry.reason ? ` (${entry.reason})` : ""}`);
+        console.log(
+          `[${done}/${recipeFiles.length}] ${entry.status}: ${entry.recipeFile}${entry.reason ? ` (${entry.reason})` : ""}`,
+        );
       }
     }
   };
