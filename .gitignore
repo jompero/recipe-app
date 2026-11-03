@@ -5,6 +5,7 @@ dist
 build
 docs/pepperplate-data/
 .scratch/pepperplate-images/
+.scratch/base-data/
 .emulator-data/
 firebase-debug.log
 firestore-debug.log
