@@ -29,6 +29,7 @@ Open http://localhost:5173/recipe-app/. The `/recipe-app/` path matches the GitH
 
 | Script | What it does |
 |---|---|
+| `npm run dev:all` | Start everything: emulators (unless already running), seed, and Vite with `--host` |
 | `npm run dev` | Start the dev server |
 | `npm run build` | Build the static site into `dist/` |
 | `npm run preview` | Serve `dist/` locally |
@@ -52,6 +53,10 @@ A pre-commit hook (Husky + lint-staged) runs ESLint `--fix` and Prettier on the 
 
 The app talks to the Firebase Emulator Suite (Auth + Firestore) under the offline-only project `demo-recipe-app`. No real Firebase project is involved.
 
+**Quickest:** `npm run dev:all` does everything below in one terminal: it starts the emulators (or reuses ones already running), waits for them, seeds, and starts Vite with `--host`. Stop with **Ctrl+C** and wait for "Export complete".
+
+Or step by step:
+
 ```sh
 npm run emulators   # terminal 1: Auth on :9099, Firestore on :8080, Emulator UI on http://localhost:4000
 npm run seed        # terminal 2, once: adds fake members to allowed_users
@@ -71,7 +76,7 @@ npm run dev         # terminal 2
    New-NetFirewallRule -DisplayName "recipe-app dev" -Direction Inbound -Protocol TCP -LocalPort 5173,9099,8080 -Profile Private -Action Allow
    ```
 2. Make sure your Wi-Fi network is set to **Private** in Windows settings.
-3. Run `npm run emulators` and `npm run dev -- --host`, then open the "Network" address Vite prints (`http://<pc-ip>:5173/recipe-app/`) on your phone. The app connects to the emulator on the same host it was loaded from.
+3. Run `npm run dev:all` (or `npm run emulators` and `npm run dev -- --host` separately), then open the "Network" address Vite prints (`http://<pc-ip>:5173/recipe-app/`) on your phone. The app connects to the emulator on the same host it was loaded from.
 
 ## Pepperplate images
 
