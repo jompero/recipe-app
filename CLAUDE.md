@@ -3,7 +3,7 @@
 A recipe app and meal planner shared by a small, whitelisted group. It is a static React + TypeScript + Vite site hosted on GitHub Pages, with Firebase **Auth and Firestore only** (Spark plan, no Storage) as the backend. There is no custom server, so all logic runs in the browser.
 
 ## Status
-Docs only: no app code yet, nothing builds. Architecture was settled in a Nov 2026 plan review (see `docs/adr/`). Epic 1 (Local Foundation) is specified in `.scratch/EPIC-1-local-foundation/` and is next to build, starting with US-1.5 (image rescue).
+Epic 1 (Local Foundation) is built: Vite + React + Mantine scaffold, ESLint/Prettier/Husky, CI with a required `check` job on a protected `main`, the Firebase Emulator with seed data, the allowlist security rules with tests, and the Google sign-in shell. Spec and per-story notes: `.scratch/EPIC-1-local-foundation/`. Next up: grill Epic 2 (Pepperplate Import) into a spec. Architecture was settled in a Nov 2026 plan review (see `docs/adr/`).
 
 ## Key docs (read before working on a feature)
 - `docs/adr/`: the settled architecture decisions. Flag any conflict with them explicitly; don't silently override.
