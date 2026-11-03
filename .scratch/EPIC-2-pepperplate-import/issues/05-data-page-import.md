@@ -1,6 +1,6 @@
 # 05: Data page, Pepperplate import
 
-Status: ready-for-agent
+Status: done
 Story: US-2.5
 Branch: `EPIC-2/US-2.5-data-page-import`
 Spec: [../spec.md](../spec.md)
@@ -18,7 +18,7 @@ Blocked by: 02, 04
 
 - [x] Component tests with `src/data` faked: preview totals and warnings, the overwrite warning, progress and done states.
 - [x] Unit test for file name → ID.
-- [ ] By hand in the emulator: import all 198, check 181 have a thumbnail and a full image, then run it again and confirm there are no duplicates.
+- [x] By hand in the emulator: import all 198, check 181 have a thumbnail and a full image, then run it again and confirm there are no duplicates.
 
 ## Comments
 
@@ -28,4 +28,4 @@ Blocked by: 02, 04
 - **IDs:** kebab-case at lower→Upper, digit↔letter and ACRONYMWord boundaries. All-caps names stay one word (`EASYVEGGIEQUESADILLAS` → `easyveggiequesadillas`). The real-data test checks that all 198 IDs are unique and all 181 photos match.
 - **Change from the issue:** "lines with no amount" isn't a per-recipe warning. About 20% of lines have none ("Salt & pepper"), so it would flag most recipes and bury the real problems. The preview shows the total instead, and each recipe's parsed view marks those lines "no amount". Warnings are No photo / No ingredients / No instructions.
 - **Progress:** two phases, "Compressing photos: n of 181", then "Saving recipes: n of 198". A photo that fails to compress is skipped (recipe saved without it) and listed in the done summary. A failed save shows "Import failed: …" and the Import button stays.
-- Left for the owner: the by-hand run of all 198 in the emulator (the third criterion).
+- **2026-11-03 (owner):** by-hand run done exactly as described: 198 imported, 181 with photos, and a second run replaced them (198 still) instead of duplicating.

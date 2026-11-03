@@ -81,13 +81,16 @@ describe.skipIf(files.length === 0)("the real Pepperplate export", () => {
 });
 
 const imageFolder = join(process.cwd(), ".scratch", "pepperplate-images");
+const images = existsSync(imageFolder) ? readdirSync(imageFolder) : [];
 
-describe.skipIf(files.length === 0 || !existsSync(imageFolder))(
+// skipIf still runs the describe body to collect the tests, so the body must not touch the
+// folders itself: they're read above, guarded, and are empty lists in CI.
+describe.skipIf(files.length === 0 || images.length === 0)(
   "the real import preview (US-2.5)",
   () => {
     const preview = buildImportPreview(
       files.map((name) => ({ name, text: readFileSync(join(folder, name), "utf8") })),
-      readdirSync(imageFolder),
+      images,
     );
 
     it("gives all 198 recipes different IDs", () => {
