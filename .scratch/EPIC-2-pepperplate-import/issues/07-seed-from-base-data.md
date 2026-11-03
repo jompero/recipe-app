@@ -1,6 +1,6 @@
 # 07: Seed the emulator from the base data
 
-Status: ready-for-agent
+Status: done
 Story: US-2.7
 Branch: `EPIC-2/US-2.7-seed-base-data`
 Spec: [../spec.md](../spec.md)
@@ -14,8 +14,8 @@ Blocked by: 06
 
 ## Acceptance criteria
 
-- [ ] With the file present, a wiped emulator plus `npm run seed` shows all recipes with photos in the app.
-- [ ] Without the file, seed still adds the members and prints the hint, and exits successfully.
+- [x] With the file present, a wiped emulator plus `npm run seed` shows all recipes with photos in the app.
+- [x] Without the file, seed still adds the members and prints the hint, and exits successfully.
 - [x] CI doesn't need the file.
 
 ## Comments
@@ -27,3 +27,5 @@ Blocked by: 06
 - **Real file** (32 MB, loaded into a throwaway emulator project, emptied first): 198 recipes and 181 photos in 0.5 s. Against the owner's running emulator, `npm run seed` printed "Recipes are already there, so the base data was skipped" and changed nothing.
 - **Emulator quirk found:** a project ID the running emulator has never seen comes back with a copy of `demo-recipe-app`'s data (probably from `--import`). The tests clear their own project first, so they aren't affected, but a test or script that doesn't must empty its project before trusting its contents.
 - **Also in this PR:** `.scratch/base-data/` is gitignored (the export was untracked and could have been committed by accident). Vite's dev-server watcher now ignores `.scratch/`, `.emulator-data/` and `docs/pepperplate-data/`, which fixes the owner's "file watcher error: EBUSY" while the 32 MB export was being written. README documents the base-data flow and which folders to back up off the laptop.
+
+**2026-11-03 (owner):** both by-hand checks passed. A wiped emulator plus `dev:all` loaded all 198 recipes with photos, and without the file the seed added the members, printed the hint and exited cleanly.
