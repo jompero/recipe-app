@@ -1,6 +1,6 @@
 # EPIC-1: Local Foundation
 
-Status: ready-for-agent
+Status: done
 
 Replaces the Epic 1 placeholder in `docs/backlog.md`. Settled in a grilling session on 2026-11-02.
 
