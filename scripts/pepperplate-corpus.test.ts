@@ -62,4 +62,19 @@ describe.skipIf(files.length === 0)("the real Pepperplate export", () => {
 
     expect(leaks).toEqual([]);
   });
+
+  it("finds an amount in most ingredient lines, and a unit in most of those (US-2.2)", () => {
+    const lines = parsed.flatMap(({ recipe }) =>
+      recipe.ingredients.flatMap((line) => ("raw" in line ? [line] : [])),
+    );
+    const withAmount = lines.filter((line) => line.qty !== undefined);
+    const withUnit = lines.filter((line) => line.unit !== undefined);
+
+    // Floors from the first full run (2,188 lines: 1,754 with an amount, 1,335 with a unit).
+    // The rest are mostly "large"/"red"/"eggs" after the amount, or "Remoulade (see page 79)".
+    expect(lines).toHaveLength(2188);
+    expect(withAmount.length).toBeGreaterThanOrEqual(1754);
+    expect(withUnit.length).toBeGreaterThanOrEqual(1335);
+    expect(lines.every((line) => line.item !== undefined && line.item !== "")).toBe(true);
+  });
 });

@@ -1,5 +1,6 @@
 // Converts ingredient and instruction lists to and from the text the edit form shows (Epic 3):
 // one line per item, `[Header]` lines for sections, a blank line before each header.
+import { parseIngredientLine } from "./ingredientLine.ts";
 import type { IngredientLine, InstructionLine, SectionHeader } from "./types.ts";
 
 /** Splits text into its non-blank lines, each either a section header or plain content. */
@@ -24,7 +25,9 @@ function writeLines(lines: (SectionHeader | { content: string })[]): string {
 }
 
 export function textToIngredients(text: string): IngredientLine[] {
-  return readLines(text).map((line) => ("header" in line ? line : { raw: line.content }));
+  return readLines(text).map((line) =>
+    "header" in line ? line : parseIngredientLine(line.content),
+  );
 }
 
 export function ingredientsToText(lines: IngredientLine[]): string {

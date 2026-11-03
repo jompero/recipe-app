@@ -24,10 +24,10 @@ describe("instructions as edit-form text", () => {
 
 describe("ingredients as edit-form text", () => {
   const ingredients = [
-    { raw: "400 g Pasta (Clam shaped)" },
-    { raw: "2 Onions" },
+    { raw: "400 g Pasta (Clam shaped)", qty: 400, unit: "g", item: "Pasta (Clam shaped)" },
+    { raw: "2 Onions", qty: 2, item: "Onions" },
     { header: "For the sauce" },
-    { raw: "1 dl cream" },
+    { raw: "1 dl cream", qty: 1, unit: "dl", item: "cream" },
   ];
   const text = "400 g Pasta (Clam shaped)\n2 Onions\n\n[For the sauce]\n1 dl cream";
 

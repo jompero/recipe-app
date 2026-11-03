@@ -116,7 +116,7 @@ describe("parseRecipeText", () => {
     );
 
     expect(recipe.description).toBe("Variation\nIngredients:\n\tadd seeds");
-    expect(recipe.ingredients).toEqual([{ raw: "1 egg" }]);
+    expect(recipe.ingredients).toEqual([{ raw: "1 egg", qty: 1, item: "egg" }]);
   });
 
   it("has no warnings for a complete recipe", () => {
@@ -157,9 +157,9 @@ describe("parseRecipeText", () => {
     );
 
     expect(recipe.ingredients).toEqual([
-      { raw: "2 Onions" },
+      { raw: "2 Onions", qty: 2, item: "Onions" },
       { header: "For the sauce" },
-      { raw: "1 dl cream" },
+      { raw: "1 dl cream", qty: 1, unit: "dl", item: "cream" },
     ]);
     expect(recipe.instructions).toEqual([
       { text: "Boil pasta until al dente and drain" },
