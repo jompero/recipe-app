@@ -29,6 +29,7 @@
 * **3.1 Cookbook grid:** all active recipes loaded into the browser, shown with thumbnail and title. Search and filtering happen in the browser.
 * **3.2 Recipe details:** full image (loaded when opened), ingredients with section headers, step-by-step instructions.
 * **3.3 Edit and archive:** edit a recipe (if two people edit at once, the last save wins). Archive instead of delete.
+* **3.x Browser tests (decided 2026-11-03):** add Playwright end-to-end tests against the emulator, run in CI. First test: the sign-in flow from US-1.6 (member sees the shell, a new account sees "not on the list", sign-out), automating the emulator's fake Google popup. Include a phone-sized WebKit project. Real-phone checks stay manual (Epic 7 smoke test).
 
 ---
 
