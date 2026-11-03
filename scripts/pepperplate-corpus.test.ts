@@ -5,6 +5,7 @@ import { join } from "node:path";
 
 import { describe, expect, it } from "vitest";
 
+import { buildImportPreview } from "../src/import/pepperplateImport.ts";
 import { parseRecipeText } from "../src/parsing/recipeText.ts";
 
 const folder = join(process.cwd(), "docs", "pepperplate-data", "pepperplate_recipes");
@@ -78,3 +79,23 @@ describe.skipIf(files.length === 0)("the real Pepperplate export", () => {
     expect(lines.every((line) => line.item !== undefined && line.item !== "")).toBe(true);
   });
 });
+
+const imageFolder = join(process.cwd(), ".scratch", "pepperplate-images");
+
+describe.skipIf(files.length === 0 || !existsSync(imageFolder))(
+  "the real import preview (US-2.5)",
+  () => {
+    const preview = buildImportPreview(
+      files.map((name) => ({ name, text: readFileSync(join(folder, name), "utf8") })),
+      readdirSync(imageFolder),
+    );
+
+    it("gives all 198 recipes different IDs", () => {
+      expect(new Set(preview.recipes.map((recipe) => recipe.id)).size).toBe(198);
+    });
+
+    it("matches the 181 saved photos to their recipes", () => {
+      expect(preview.totals.withPhoto).toBe(181);
+    });
+  },
+);

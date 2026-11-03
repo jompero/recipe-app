@@ -79,3 +79,11 @@ test("member: sees the app shell with their name, the home page, and sign-out", 
   await userEvent.click(screen.getByRole("button", { name: "Sign out" }));
   expect(fakeAuth.signOut).toHaveBeenCalledOnce();
 });
+
+test("member: the home page links to the Data page", async () => {
+  fakeAuth.session = { status: "member", user: ada };
+  render(<App />, { route: "/" });
+  await userEvent.click(screen.getByRole("link", { name: "Data" }));
+  expect(screen.getByRole("heading", { name: "Data" })).toBeInTheDocument();
+  expect(screen.getByRole("heading", { name: "Import from Pepperplate" })).toBeInTheDocument();
+});
