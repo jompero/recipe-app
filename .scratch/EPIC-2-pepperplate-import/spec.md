@@ -1,6 +1,6 @@
 # EPIC-2: Pepperplate Import
 
-Status: needs-triage
+Status: done
 
 Replaces the Epic 2 placeholder in `docs/backlog.md`. Settled in a grilling session on 2026-11-03, held before Epic 3's grilling because Epic 3 depends on the recipe shape and real data this epic produces.
 

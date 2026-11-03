@@ -1,6 +1,6 @@
 # 03: Image compressor and images data module
 
-Status: ready-for-agent
+Status: done
 Story: US-2.3
 Branch: `EPIC-2/US-2.3-image-compressor`
 Spec: [../spec.md](../spec.md)

@@ -16,7 +16,7 @@
 ## Epic 2: Pepperplate Import
 **Goal:** Get the 198 seed recipes into the final format, so the later epics are built against real data.
 
-**Specified:** see [`.scratch/EPIC-2-pepperplate-import/spec.md`](../.scratch/EPIC-2-pepperplate-import/spec.md) (stories US-2.1 to US-2.7). The image compressor moved here from 4.3.
+**Done** (2026-11-03): see [`.scratch/EPIC-2-pepperplate-import/spec.md`](../.scratch/EPIC-2-pepperplate-import/spec.md) and its per-story issues (US-2.1 to US-2.7). The image compressor moved here from 4.3.
 
 ---
 
