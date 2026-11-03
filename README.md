@@ -36,11 +36,11 @@ Open http://localhost:5173/recipe-app/. The `/recipe-app/` path matches the GitH
 | `npm run emulators:save` | Save the running emulators' data to `.emulator-data/` |
 | `npm run seed` | Add fake allowlist members to the running emulator |
 | `npm run typecheck` | Type-check everything (`tsc -b`) |
-| `npm test` | Run the tests once (`npm run test:watch` to keep them running) |
+| `npm test` | Run the tests once (`npm run test:watch` to keep them running). The security rules tests need the emulators running (`npm run emulators`) |
 | `npm run test:ci` | Run the tests inside the emulators, as CI does |
 | `npm run lint` | ESLint plus a Prettier formatting check |
 | `npm run format` | Format everything with Prettier |
-| `npm run check` | Typecheck, lint and test: what CI runs, minus the build |
+| `npm run check` | Typecheck, lint and test (inside the emulators): what CI runs, minus the build |
 
 A pre-commit hook (Husky + lint-staged) runs ESLint `--fix` and Prettier on the files you commit. ESLint also enforces the data boundary: only `src/data` and `src/config` may import Firebase.
 
@@ -62,7 +62,7 @@ npm run dev         # terminal 2
 - **Data survives restarts:** it's loaded from `.emulator-data/` (gitignored) on start and saved back when you stop the emulators with **Ctrl+C** (wait for "Export complete"). Closing the terminal window instead skips the save, so run `npm run emulators:save` first if you've added data you want to keep.
 - **Starting over:** stop the emulators, delete `.emulator-data/`, start again and re-seed.
 - **Offline cache gotcha:** the app keeps an offline copy of Firestore data in the browser (IndexedDB). After wiping the emulator, the browser keeps showing the old documents until you clear the site data (DevTools → Application → Storage → Clear site data).
-- **Tests with the emulator:** `npm run test:ci` starts the emulators, runs the tests and stops them. This is what CI runs.
+- **Tests with the emulator:** `npm run test:ci` starts the emulators, runs the tests and stops them. This is what CI runs. If your dev emulators are already running, use `npm test` instead (test:ci would hit "port taken"). The security rules tests use their own project (`demo-recipe-app-rules-test`), so they never touch your dev data.
 
 ## Testing on your phone
 

@@ -1,11 +1,27 @@
 rules_version = '2';
 
-// Placeholder: deny everything. US-1.3 replaces this with the allowlist rules and their tests.
-// The seed script bypasses rules, so the emulator can still be filled.
+// Membership only (EPIC-1). Later epics add document-shape validation for their own collection.
+// See ADR-0002 and docs/project/project-setup.md.
 service cloud.firestore {
   match /databases/{database}/documents {
-    match /{document=**} {
-      allow read, write: if false;
+
+    function isMember() {
+      return request.auth != null
+        && request.auth.token.email_verified == true
+        && exists(/databases/$(database)/documents/allowed_users/$(request.auth.token.email));
+    }
+
+    // Each collection gets an explicit rule. Do NOT add a {document=**} catch-all:
+    // rules are OR-ed, so it would let members edit allowed_users. Anything not listed is denied.
+    match /recipes/{id}        { allow read, write: if isMember(); }
+    match /recipe_images/{id}  { allow read, write: if isMember(); }
+    match /menu_days/{date}    { allow read, write: if isMember(); }
+
+    // Signed-in users may read their own entry (so the app can tell members from non-members).
+    // Nobody can write here from the app: members are added by hand in the Firebase console.
+    match /allowed_users/{email} {
+      allow get: if request.auth != null && request.auth.token.email == email;
+      allow list, write: if false;
     }
   }
 }

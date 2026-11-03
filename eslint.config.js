@@ -33,7 +33,8 @@ export default defineConfig([
     },
   },
   {
-    files: ["src/data/**", "src/config/**"],
+    // Rules tests talk to the Firestore emulator directly; they're not app code.
+    files: ["src/data/**", "src/config/**", "tests/rules/**"],
     rules: { "no-restricted-imports": "off" },
   },
 
@@ -43,7 +44,7 @@ export default defineConfig([
     languageOptions: { globals: globals.browser },
   },
   {
-    files: ["scripts/**/*.ts", "vite.config.ts"],
+    files: ["scripts/**/*.ts", "tests/**/*.ts", "vite.config.ts"],
     languageOptions: { globals: globals.node },
   },
 

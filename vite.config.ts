@@ -25,6 +25,17 @@ export default defineConfig({
           include: ["scripts/**/*.test.ts"],
         },
       },
+      {
+        extends: true,
+        test: {
+          // Needs the Firestore emulator: npm run test:ci, or npm run emulators in another terminal.
+          name: "rules",
+          environment: "node",
+          include: ["tests/rules/**/*.test.ts"],
+          testTimeout: 15_000,
+          hookTimeout: 30_000,
+        },
+      },
     ],
   },
 });
