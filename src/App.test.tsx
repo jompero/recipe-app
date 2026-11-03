@@ -16,6 +16,13 @@ const fakeAuth = vi.hoisted((): FakeAuth => ({
   signOut: vi.fn(),
 }));
 
+// The Data page's database calls aren't under test here; faking the module also keeps the real
+// Firebase setup (src/config/firebase.ts) from loading, which needs the .env config CI doesn't have.
+vi.mock("./data/recipes.ts", () => ({
+  existingRecipeIds: vi.fn(),
+  saveRecipes: vi.fn(),
+}));
+
 vi.mock("./data/auth.ts", () => ({
   watchSession: (onChange: (session: Session) => void) => {
     onChange(fakeAuth.session);
