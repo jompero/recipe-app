@@ -1,6 +1,6 @@
 rules_version = '2';
 
-// Membership only (EPIC-1). Later epics add document-shape validation for their own collection.
+// Membership (EPIC-1) plus document-shape validation, added per collection by later epics.
 // See ADR-0002 and docs/project/project-setup.md.
 service cloud.firestore {
   match /databases/{database}/documents {
@@ -13,8 +13,47 @@ service cloud.firestore {
 
     // Each collection gets an explicit rule. Do NOT add a {document=**} catch-all:
     // rules are OR-ed, so it would let members edit allowed_users. Anything not listed is denied.
-    match /recipes/{id}        { allow read, write: if isMember(); }
-    match /recipe_images/{id}  { allow read, write: if isMember(); }
+    // Shape checks (US-2.4) guard against app bugs; the parsers and types guard each list item.
+    // request.resource.data is the whole document after the write, so partial updates are
+    // checked too. Recipes and their images are archived, never deleted (delete is denied).
+    function isValidRecipe(recipe) {
+      return recipe.keys().hasOnly([
+          'title', 'description', 'source', 'sourceUrl', 'yield', 'activeTime', 'totalTime',
+          'tags', 'ingredients', 'instructions', 'thumbnail', 'hasImage', 'archived',
+          'createdAt', 'updatedAt'])
+        && recipe.title is string && recipe.title.size() > 0
+        && recipe.description is string
+        && recipe.source is string
+        && recipe.sourceUrl is string
+        && recipe.yield is string
+        && recipe.activeTime is string
+        && recipe.totalTime is string
+        && recipe.tags is list
+        && recipe.ingredients is list
+        && recipe.instructions is list
+        // Data URL characters; matches THUMBNAIL.maxChars in src/utils/imageCompressor.ts.
+        && (recipe.thumbnail == null
+            || (recipe.thumbnail is string && recipe.thumbnail.size() <= 60000))
+        && recipe.hasImage is bool
+        && recipe.archived is bool
+        && recipe.createdAt is timestamp
+        && recipe.updatedAt is timestamp;
+    }
+
+    function isValidRecipeImage(image) {
+      // Matches FULL_IMAGE.maxChars in src/utils/imageCompressor.ts (the document limit is 1 MiB).
+      return image.keys().hasOnly(['data'])
+        && image.data is string && image.data.size() <= 900000;
+    }
+
+    match /recipes/{id} {
+      allow read: if isMember();
+      allow create, update: if isMember() && isValidRecipe(request.resource.data);
+    }
+    match /recipe_images/{id} {
+      allow read: if isMember();
+      allow create, update: if isMember() && isValidRecipeImage(request.resource.data);
+    }
     match /menu_days/{date}    { allow read, write: if isMember(); }
 
     // Signed-in users may read their own entry (so the app can tell members from non-members).

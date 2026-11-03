@@ -1,10 +1,15 @@
 // Full-size recipe photos, one document per recipe: recipe_images/{recipeId} = { data }.
 // The only code that knows where full images live (ADR-0001), so moving them to Firebase Storage
 // later changes this module and nothing else. Thumbnails travel on the recipe document instead.
-import { doc, getDoc, setDoc } from "firebase/firestore";
+import { doc, getDoc, setDoc, type WriteBatch } from "firebase/firestore";
 import { db } from "../config/firebase";
 
 const COLLECTION = "recipe_images";
+
+/** Adds saving a recipe's full image to a batch, so it's written together with its recipe. */
+export function addFullImageToBatch(batch: WriteBatch, recipeId: string, dataUrl: string): void {
+  batch.set(doc(db, COLLECTION, recipeId), { data: dataUrl });
+}
 
 /** Saves (or replaces) a recipe's full image: a JPEG data URL from compressImage(). */
 export async function saveFullImage(recipeId: string, dataUrl: string): Promise<void> {
