@@ -35,7 +35,7 @@ Open http://localhost:5173/recipe-app/. The `/recipe-app/` path matches the GitH
 | `npm run preview` | Serve `dist/` locally |
 | `npm run emulators` | Start the Firebase emulators with saved data |
 | `npm run emulators:save` | Save the running emulators' data to `.emulator-data/` |
-| `npm run seed` | Add fake allowlist members to the running emulator |
+| `npm run seed` | Add fake allowlist members to the running emulator, plus the base-data recipes if it has none |
 | `npm run typecheck` | Type-check everything (`tsc -b`) |
 | `npm test` | Run the tests once (`npm run test:watch` to keep them running). The security rules tests need the emulators running (`npm run emulators`) |
 | `npm run test:ci` | Run the tests inside the emulators, as CI does |
@@ -59,13 +59,14 @@ Or step by step:
 
 ```sh
 npm run emulators   # terminal 1: Auth on :9099, Firestore on :8080, Emulator UI on http://localhost:4000
-npm run seed        # terminal 2, once: adds fake members to allowed_users
+npm run seed        # terminal 2, once: adds fake members, and the base-data recipes if there are none
 npm run dev         # terminal 2
 ```
 
 - **Seeded members:** `member@example.com` and `alex@example.com`. In the emulator's Google sign-in popup, choose "Add new account" and enter one of these to sign in as a member; any other email is a non-member. `npm run seed` is safe to re-run.
 - **Data survives restarts:** it's loaded from `.emulator-data/` (gitignored) on start and saved back when you stop the emulators with **Ctrl+C** (wait for "Export complete"). Closing the terminal window instead skips the save, so run `npm run emulators:save` first if you've added data you want to keep.
-- **Starting over:** stop the emulators, delete `.emulator-data/`, start again and re-seed.
+- **Base data (all 198 recipes):** `npm run seed` loads `.scratch/base-data/recipes-export.json` (gitignored) when the emulator has **no recipes yet**, so a wiped emulator comes back with the full cookbook, while edits you make are never overwritten by a restart. To create or refresh the file: in the app, open **Data**, import the Pepperplate folders (`docs/pepperplate-data/pepperplate_recipes` and `.scratch/pepperplate-images`) or restore an export, then click **Export everything** and save the download under that name. The repo is public, so this file must never be committed.
+- **Starting over:** stop the emulators, delete `.emulator-data/`, start again and re-seed. You get the members and, if the base-data file exists, all recipes from it.
 - **Offline cache gotcha:** the app keeps an offline copy of Firestore data in the browser (IndexedDB). After wiping the emulator, the browser keeps showing the old documents until you clear the site data (DevTools → Application → Storage → Clear site data).
 - **Tests with the emulator:** `npm run test:ci` starts the emulators, runs the tests and stops them. This is what CI runs. If your dev emulators are already running, use `npm test` instead (test:ci would hit "port taken"). The security rules tests use their own project (`demo-recipe-app-rules-test`), so they never touch your dev data.
 
@@ -77,6 +78,14 @@ npm run dev         # terminal 2
    ```
 2. Make sure your Wi-Fi network is set to **Private** in Windows settings.
 3. Run `npm run dev:all` (or `npm run emulators` and `npm run dev -- --host` separately), then open the "Network" address Vite prints (`http://<pc-ip>:5173/recipe-app/`) on your phone. The app connects to the emulator on the same host it was loaded from.
+
+## Backups of the seed data
+
+These are the only copies of the cookbook outside the emulator, and none of them are in git. Keep them backed up off this laptop (e.g. a cloud drive):
+
+- `docs/pepperplate-data/`: the original Pepperplate export (never edit it).
+- `.scratch/pepperplate-images/`: the rescued recipe photos.
+- `.scratch/base-data/recipes-export.json`: the base data, i.e. everything as imported (and edited) in the app.
 
 ## Pepperplate images
 

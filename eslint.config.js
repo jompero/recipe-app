@@ -33,8 +33,9 @@ export default defineConfig([
     },
   },
   {
-    // Rules tests talk to the Firestore emulator directly; they're not app code.
-    files: ["src/data/**", "src/config/**", "tests/rules/**"],
+    // Rules tests and the seed's emulator test talk to the Firestore emulator directly; they're
+    // not app code.
+    files: ["src/data/**", "src/config/**", "tests/rules/**", "scripts/**/*.emulator.test.ts"],
     rules: { "no-restricted-imports": "off" },
   },
 

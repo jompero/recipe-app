@@ -5,6 +5,14 @@ export default defineConfig({
   plugins: [react()],
   // Must equal the GitHub repo name, or every asset 404s on GitHub Pages (ADR-0004).
   base: "/recipe-app/",
+  server: {
+    watch: {
+      // Large local data, never imported by the app. Watching it is wasted work, and on Windows a
+      // file still being written (e.g. a ~35 MB export) makes the watcher fail with EBUSY.
+      // Added to Vite's own ignore list (.git, node_modules, …), not replacing it.
+      ignored: ["**/.scratch/**", "**/.emulator-data/**", "**/docs/pepperplate-data/**"],
+    },
+  },
   test: {
     globals: true,
     projects: [
