@@ -20,7 +20,7 @@ Blocked by: 03
 
 - [x] `npm run emulators` starts Auth, Firestore and the UI; data written before a clean stop is there after a restart.
 - [x] `npm run seed` twice in a row leaves the same documents, visible in the Emulator UI.
-- [ ] The app loads with the emulator connected (no Firebase warnings about a real project). **Moved to US-1.6**: nothing imports the config module until the auth module exists.
+- [x] The app loads with the emulator connected (confirmed by the owner's US-1.6 sign-in checks on desktop and phone, 2026-11-03).
 - [x] No real emails anywhere in the repo.
 
 ## Comments
