@@ -16,6 +16,13 @@ const fakeAuth = vi.hoisted((): FakeAuth => ({
   signOut: vi.fn(),
 }));
 
+// The Data page's database calls aren't under test here; faking the module also keeps the real
+// Firebase setup (src/config/firebase.ts) from loading, which needs the .env config CI doesn't have.
+vi.mock("./data/recipes.ts", () => ({
+  existingRecipeIds: vi.fn(),
+  saveRecipes: vi.fn(),
+}));
+
 vi.mock("./data/auth.ts", () => ({
   watchSession: (onChange: (session: Session) => void) => {
     onChange(fakeAuth.session);
@@ -78,4 +85,12 @@ test("member: sees the app shell with their name, the home page, and sign-out", 
   expect(screen.getByRole("heading", { name: "Cookbook" })).toBeInTheDocument();
   await userEvent.click(screen.getByRole("button", { name: "Sign out" }));
   expect(fakeAuth.signOut).toHaveBeenCalledOnce();
+});
+
+test("member: the home page links to the Data page", async () => {
+  fakeAuth.session = { status: "member", user: ada };
+  render(<App />, { route: "/" });
+  await userEvent.click(screen.getByRole("link", { name: "Data" }));
+  expect(screen.getByRole("heading", { name: "Data" })).toBeInTheDocument();
+  expect(screen.getByRole("heading", { name: "Import from Pepperplate" })).toBeInTheDocument();
 });

@@ -1,4 +1,5 @@
 import { Route, Routes } from "react-router";
+import { DataPage } from "./components/DataPage.tsx";
 import { HomePage } from "./components/HomePage.tsx";
 import { MemberShell } from "./components/MemberShell.tsx";
 import {
@@ -27,6 +28,7 @@ export function App() {
         <MemberShell user={session.user}>
           <Routes>
             <Route path="/" element={<HomePage />} />
+            <Route path="/data" element={<DataPage />} />
           </Routes>
         </MemberShell>
       );
