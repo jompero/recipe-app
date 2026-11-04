@@ -74,15 +74,22 @@ export function MemberShell({ children }: { children: ReactNode }) {
         <Stack gap={0} w="100%">
           {actions.length > 0 && (
             <>
-              {actions.map(({ label, to }) => (
+              {actions.map((action) => (
                 <UnstyledButton
-                  key={label}
-                  onClick={() => menu.go(to)}
+                  key={action.label}
+                  onClick={() => {
+                    if ("to" in action) {
+                      menu.go(action.to);
+                    } else {
+                      menu.close();
+                      action.onSelect();
+                    }
+                  }}
                   py="sm"
                   ta="center"
                   style={{ ...LABEL_STYLE, fontSize: 12 }}
                 >
-                  {label}
+                  {action.label}
                 </UnstyledButton>
               ))}
               <Divider my="xl" mx={40} />

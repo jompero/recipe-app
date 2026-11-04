@@ -10,6 +10,7 @@ import {
   existingRecipeIds,
   loadAllRecipes,
   saveRecipes,
+  setArchived,
   watchRecipes,
   type RecipeToSave,
   type StoredRecipe,
@@ -194,5 +195,28 @@ describe("live recipe list", () => {
     );
 
     stop();
+  });
+});
+
+describe("archive", () => {
+  const find = async (id: string) => (await loadAllRecipes()).find((recipe) => recipe.id === id);
+
+  test("archiving and unarchiving pass the rules and move the updated date", async () => {
+    await saveRecipes([toSave("pasta")]);
+    const before = await find("pasta");
+
+    await setArchived("pasta", true);
+    const archived = await find("pasta");
+    expect(archived?.archived).toBe(true);
+    expect(archived?.updatedAt.getTime()).toBeGreaterThan(before?.updatedAt.getTime() ?? 0);
+    // Nothing else changes.
+    expect(archived).toMatchObject({ ...draft("pasta"), createdAt: before?.createdAt });
+
+    await setArchived("pasta", false);
+    expect((await find("pasta"))?.archived).toBe(false);
+  });
+
+  test("archiving a recipe that doesn't exist fails", async () => {
+    await expect(setArchived("nope", true)).rejects.toThrow();
   });
 });
