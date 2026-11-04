@@ -1,8 +1,8 @@
+import { within } from "@testing-library/react";
 import userEvent from "@testing-library/user-event";
 import type { Mock } from "vitest";
-import { App } from "./App.tsx";
 import type { Session } from "./data/auth.ts";
-import { render, screen } from "./test-utils/render.tsx";
+import { renderApp, screen } from "./test-utils/renderApp.tsx";
 
 // Fake the data seam: the tests decide which session the app sees.
 interface FakeAuth {
@@ -43,14 +43,14 @@ beforeEach(() => {
 
 test("while the session is loading, shows only a loader", () => {
   fakeAuth.session = { status: "loading" };
-  render(<App />);
+  renderApp();
   expect(screen.getByLabelText("Loading")).toBeInTheDocument();
   expect(screen.queryByRole("button")).not.toBeInTheDocument();
 });
 
 test("signed out: offers Google sign-in", async () => {
   fakeAuth.session = { status: "signed-out" };
-  render(<App />);
+  renderApp();
   await userEvent.click(screen.getByRole("button", { name: "Sign in with Google" }));
   expect(fakeAuth.signIn).toHaveBeenCalledOnce();
 });
@@ -58,14 +58,14 @@ test("signed out: offers Google sign-in", async () => {
 test("signed out: shows the reason when sign-in fails", async () => {
   fakeAuth.session = { status: "signed-out" };
   fakeAuth.signIn.mockRejectedValue(new Error("Your browser blocked the sign-in window."));
-  render(<App />);
+  renderApp();
   await userEvent.click(screen.getByRole("button", { name: "Sign in with Google" }));
   expect(await screen.findByText("Your browser blocked the sign-in window.")).toBeInTheDocument();
 });
 
 test("non-member: says they're not on the list, shows their email, and can sign out", async () => {
   fakeAuth.session = { status: "non-member", user: ada };
-  render(<App />);
+  renderApp();
   expect(screen.getByRole("heading", { name: "You're not on the list" })).toBeInTheDocument();
   expect(screen.getByText("ada@example.com")).toBeInTheDocument();
   expect(screen.queryByRole("heading", { name: "Cookbook" })).not.toBeInTheDocument();
@@ -75,24 +75,80 @@ test("non-member: says they're not on the list, shows their email, and can sign 
 
 test("membership check failed: explains it and offers sign-out", () => {
   fakeAuth.session = { status: "error", user: ada };
-  render(<App />);
+  renderApp();
   expect(screen.getByRole("heading", { name: "Couldn't check your access" })).toBeInTheDocument();
   expect(screen.getByRole("button", { name: "Sign out" })).toBeInTheDocument();
 });
 
-test("member: sees the app shell with their name, the home page, and sign-out", async () => {
-  fakeAuth.session = { status: "member", user: ada };
-  render(<App />, { route: "/" });
-  expect(screen.getByText("Ada Lovelace")).toBeInTheDocument();
-  expect(screen.getByRole("heading", { name: "Cookbook" })).toBeInTheDocument();
-  await userEvent.click(screen.getByRole("button", { name: "Sign out" }));
-  expect(fakeAuth.signOut).toHaveBeenCalledOnce();
-});
+describe("member shell: the bottom button and the menu overlay", () => {
+  beforeEach(() => {
+    fakeAuth.session = { status: "member", user: ada };
+  });
 
-test("member: the home page links to the Data page", async () => {
-  fakeAuth.session = { status: "member", user: ada };
-  render(<App />, { route: "/" });
-  await userEvent.click(screen.getByRole("link", { name: "Data" }));
-  expect(screen.getByRole("heading", { name: "Data" })).toBeInTheDocument();
-  expect(screen.getByRole("heading", { name: "Import from Pepperplate" })).toBeInTheDocument();
+  test("a fresh start at the cookbook opens on the menu, with Cookbook, Data and Account", async () => {
+    renderApp("/");
+    const menu = await screen.findByRole("dialog", { name: "Menu" });
+    for (const section of ["Cookbook", "Data", "Account"]) {
+      expect(within(menu).getByRole("button", { name: section })).toBeInTheDocument();
+    }
+  });
+
+  test("a deep link opens without the menu; the bottom button opens it and Back closes it", async () => {
+    const { back } = renderApp("/data");
+    expect(screen.getByRole("heading", { name: "Data" })).toBeInTheDocument();
+    expect(screen.queryByRole("dialog", { name: "Menu" })).not.toBeInTheDocument();
+
+    await userEvent.click(screen.getByRole("button", { name: "Menu" }));
+    expect(await screen.findByRole("dialog", { name: "Menu" })).toBeInTheDocument();
+
+    await back();
+    expect(screen.queryByRole("dialog", { name: "Menu" })).not.toBeInTheDocument();
+    expect(screen.getByRole("heading", { name: "Data" })).toBeInTheDocument();
+  });
+
+  test("choosing a section goes there and closes the menu; Back then returns to the page below", async () => {
+    const { back } = renderApp("/");
+    const menu = await screen.findByRole("dialog", { name: "Menu" });
+    await userEvent.click(within(menu).getByRole("button", { name: "Data" }));
+    expect(screen.queryByRole("dialog", { name: "Menu" })).not.toBeInTheDocument();
+    expect(screen.getByRole("heading", { name: "Data" })).toBeInTheDocument();
+
+    await back();
+    expect(screen.queryByRole("dialog", { name: "Menu" })).not.toBeInTheDocument();
+    expect(screen.getByRole("heading", { name: "Cookbook" })).toBeInTheDocument();
+  });
+
+  test("choosing Cookbook from the start menu just closes it", async () => {
+    renderApp("/");
+    const menu = await screen.findByRole("dialog", { name: "Menu" });
+    await userEvent.click(within(menu).getByRole("button", { name: "Cookbook" }));
+    expect(screen.queryByRole("dialog", { name: "Menu" })).not.toBeInTheDocument();
+    expect(screen.getByRole("heading", { name: "Cookbook" })).toBeInTheDocument();
+  });
+
+  test("the menu lists the current page's actions first; choosing one goes there", async () => {
+    const { router } = renderApp("/");
+    const menu = await screen.findByRole("dialog", { name: "Menu" });
+    expect(within(menu).getByRole("button", { name: "New recipe" })).toBeInTheDocument();
+    await userEvent.click(within(menu).getByRole("button", { name: "Show archived" }));
+    expect(screen.queryByRole("dialog", { name: "Menu" })).not.toBeInTheDocument();
+    expect(router.state.location.search).toBe("?archived=1");
+  });
+
+  test("a page without actions shows only the sections", async () => {
+    renderApp("/data");
+    await userEvent.click(screen.getByRole("button", { name: "Menu" }));
+    const menu = await screen.findByRole("dialog", { name: "Menu" });
+    expect(within(menu).queryByRole("button", { name: "New recipe" })).not.toBeInTheDocument();
+    expect(within(menu).getByRole("button", { name: "Account" })).toBeInTheDocument();
+  });
+
+  test("the Account page shows who you're signed in as and signs out", async () => {
+    renderApp("/account");
+    expect(screen.getByRole("heading", { name: "Account" })).toBeInTheDocument();
+    expect(screen.getByText("Ada Lovelace")).toBeInTheDocument();
+    expect(screen.getByText("ada@example.com")).toBeInTheDocument();
+    await userEvent.click(screen.getByRole("button", { name: "Sign out" }));
+    expect(fakeAuth.signOut).toHaveBeenCalledOnce();
+  });
 });

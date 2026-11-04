@@ -1,6 +1,5 @@
-import { Route, Routes } from "react-router";
-import { DataPage } from "./components/DataPage.tsx";
-import { HomePage } from "./components/HomePage.tsx";
+import { Outlet } from "react-router";
+import type { MemberContext } from "./components/member.ts";
 import { MemberShell } from "./components/MemberShell.tsx";
 import {
   AccessErrorScreen,
@@ -10,7 +9,7 @@ import {
 } from "./components/SessionScreens.tsx";
 import { useSession } from "./components/useSession.ts";
 
-/** Picks the screen for the current session; members get the routed app. */
+/** Picks the screen for the current session; members get the routed pages (see routes.tsx). */
 export function App() {
   const session = useSession();
 
@@ -25,11 +24,8 @@ export function App() {
       return <AccessErrorScreen user={session.user} />;
     case "member":
       return (
-        <MemberShell user={session.user}>
-          <Routes>
-            <Route path="/" element={<HomePage />} />
-            <Route path="/data" element={<DataPage />} />
-          </Routes>
+        <MemberShell>
+          <Outlet context={{ user: session.user } satisfies MemberContext} />
         </MemberShell>
       );
   }
