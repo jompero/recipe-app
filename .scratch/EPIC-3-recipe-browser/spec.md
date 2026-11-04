@@ -1,6 +1,6 @@
 # EPIC-3: Recipe Browser
 
-Status: needs-triage
+Status: ready-for-agent
 
 Replaces the Epic 3 placeholder in `docs/backlog.md`. Settled in a grilling session on 2026-11-03. **Built after Epic 2**, which provides the final recipe schema (see `.scratch/EPIC-2-pepperplate-import/spec.md`) and the 198 real recipes.
 
