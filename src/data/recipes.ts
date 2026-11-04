@@ -1,5 +1,6 @@
 // Recipes in Firestore: recipes/{id}, with the full photo in recipe_images/{id} (ADR-0001).
 import {
+  addDoc,
   collection,
   doc,
   documentId,
@@ -125,4 +126,26 @@ export function watchRecipes(
  */
 export async function setArchived(id: string, archived: boolean): Promise<void> {
   await updateDoc(doc(db, COLLECTION, id), { archived, updatedAt: serverTimestamp() });
+}
+
+/**
+ * Saves an edited recipe. Only the edited text fields and updatedAt are sent; the photo, the
+ * archive flag and createdAt stay as stored (the rules still check the whole document). Fails if
+ * the recipe doesn't exist. Last save wins: there's no conflict check.
+ */
+export async function updateRecipe(id: string, recipe: RecipeDraft): Promise<void> {
+  await updateDoc(doc(db, COLLECTION, id), { ...recipe, updatedAt: serverTimestamp() });
+}
+
+/** Adds a recipe typed in by hand (no photo until Epic 4) and returns its new ID. */
+export async function createRecipe(recipe: RecipeDraft): Promise<string> {
+  const ref = await addDoc(collection(db, COLLECTION), {
+    ...recipe,
+    thumbnail: null,
+    hasImage: false,
+    archived: false,
+    createdAt: serverTimestamp(),
+    updatedAt: serverTimestamp(),
+  });
+  return ref.id;
 }

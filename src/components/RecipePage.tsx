@@ -61,6 +61,7 @@ function useArchive(recipe: StoredRecipe) {
   };
 
   usePageMenu(recipe.title, [
+    { label: "Edit recipe", to: `/recipe/${recipe.id}/edit` },
     recipe.archived
       ? { label: "Unarchive", onSelect: () => void save(false) }
       : { label: "Archive", onSelect: () => setAsking(true) },

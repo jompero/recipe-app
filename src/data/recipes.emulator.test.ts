@@ -7,10 +7,12 @@ import firestoreRules from "../../firestore.rules?raw";
 import type { RecipeDraft } from "../parsing/types.ts";
 import { loadFullImage } from "./images";
 import {
+  createRecipe,
   existingRecipeIds,
   loadAllRecipes,
   saveRecipes,
   setArchived,
+  updateRecipe,
   watchRecipes,
   type RecipeToSave,
   type StoredRecipe,
@@ -218,5 +220,52 @@ describe("archive", () => {
 
   test("archiving a recipe that doesn't exist fails", async () => {
     await expect(setArchived("nope", true)).rejects.toThrow();
+  });
+});
+
+describe("editing", () => {
+  const find = async (id: string) => (await loadAllRecipes()).find((recipe) => recipe.id === id);
+
+  test("saving an edit replaces the text and keeps the photo, archive flag and creation date", async () => {
+    await saveRecipes([toSave("pasta", "data:image/jpeg;base64,FULL")]);
+    await setArchived("pasta", true);
+    const before = await find("pasta");
+
+    const edited = { ...draft("Better pasta"), tags: ["pasta", "quick"], ingredients: [] };
+    await updateRecipe("pasta", edited);
+
+    const after = await find("pasta");
+    expect(after).toMatchObject({
+      ...edited,
+      thumbnail: "data:image/jpeg;base64,THUMB",
+      hasImage: true,
+      archived: true,
+      createdAt: before?.createdAt,
+    });
+    expect(after?.updatedAt.getTime()).toBeGreaterThan(before?.updatedAt.getTime() ?? 0);
+    expect(await loadFullImage("pasta")).toBe("data:image/jpeg;base64,FULL");
+  });
+
+  test("an edit can't create a recipe that doesn't exist", async () => {
+    await expect(updateRecipe("nope", draft("Nope"))).rejects.toThrow();
+  });
+
+  test("the rules still refuse a recipe without a title", async () => {
+    await saveRecipes([toSave("pasta")]);
+    await expect(updateRecipe("pasta", draft(""))).rejects.toThrow();
+  });
+
+  test("a new recipe gets its own ID and the defaults", async () => {
+    const id = await createRecipe(draft("Toast"));
+
+    expect(id).toMatch(/^[A-Za-z0-9]{20}$/);
+    const toast = await find(id);
+    expect(toast).toMatchObject({
+      ...draft("Toast"),
+      thumbnail: null,
+      hasImage: false,
+      archived: false,
+    });
+    expect(toast?.createdAt.getFullYear()).toBeGreaterThan(2000);
   });
 });
