@@ -1,6 +1,6 @@
 # 01: Photo in the edit form
 
-Status: ready-for-agent
+Status: done
 Story: US-4.1
 Branch: `EPIC-4/US-4.1-photo`
 Spec: [../spec.md](../spec.md) (Photo)
