@@ -91,13 +91,14 @@ function validRecipe(): Record<string, unknown> {
   };
 }
 
-// Recipes and their images are archived, never deleted (Epic 2/3); menu days may be deleted.
+// Recipes are archived, never deleted (Epic 2/3). A recipe's image is deleted when its photo is
+// removed (US-4.1). Menu days may be deleted.
 const SAMPLE_DOCS = {
   recipes: { existing: "recipes/r1", data: validRecipe(), memberCanDelete: false },
   recipe_images: {
     existing: "recipe_images/r1",
     data: { data: "data:image/jpeg;base64,BBBB" },
-    memberCanDelete: false,
+    memberCanDelete: true,
   },
   menu_days: {
     existing: "menu_days/2026-11-03",

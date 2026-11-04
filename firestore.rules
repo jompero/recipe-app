@@ -15,7 +15,8 @@ service cloud.firestore {
     // rules are OR-ed, so it would let members edit allowed_users. Anything not listed is denied.
     // Shape checks (US-2.4) guard against app bugs; the parsers and types guard each list item.
     // request.resource.data is the whole document after the write, so partial updates are
-    // checked too. Recipes and their images are archived, never deleted (delete is denied).
+    // checked too. Recipes are archived, never deleted (delete is denied). A recipe's image is
+    // deleted when its photo is removed (US-4.1, ADR-0001).
     function isValidRecipe(recipe) {
       return recipe.keys().hasOnly([
           'title', 'description', 'source', 'sourceUrl', 'yield', 'activeTime', 'totalTime',
@@ -53,6 +54,7 @@ service cloud.firestore {
     match /recipe_images/{id} {
       allow read: if isMember();
       allow create, update: if isMember() && isValidRecipeImage(request.resource.data);
+      allow delete: if isMember();
     }
     match /menu_days/{date}    { allow read, write: if isMember(); }
 

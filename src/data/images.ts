@@ -11,6 +11,11 @@ export function addFullImageToBatch(batch: WriteBatch, recipeId: string, dataUrl
   batch.set(doc(db, COLLECTION, recipeId), { data: dataUrl });
 }
 
+/** Adds deleting a recipe's full image to a batch, for when its photo is removed. */
+export function addFullImageDeletionToBatch(batch: WriteBatch, recipeId: string): void {
+  batch.delete(doc(db, COLLECTION, recipeId));
+}
+
 /** Saves (or replaces) a recipe's full image: a JPEG data URL from compressImage(). */
 export async function saveFullImage(recipeId: string, dataUrl: string): Promise<void> {
   await setDoc(doc(db, COLLECTION, recipeId), { data: dataUrl });

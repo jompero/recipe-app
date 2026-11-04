@@ -1,6 +1,5 @@
 // Recipes in Firestore: recipes/{id}, with the full photo in recipe_images/{id} (ADR-0001).
 import {
-  addDoc,
   collection,
   doc,
   documentId,
@@ -11,13 +10,14 @@ import {
   Timestamp,
   updateDoc,
   where,
+  writeBatch,
   type DocumentData,
   type QueryDocumentSnapshot,
 } from "firebase/firestore";
 import { db } from "../config/firebase";
 import type { RecipeDraft } from "../parsing/types.ts";
 import { commitInBatches, type BatchItem } from "./batches";
-import { addFullImageToBatch } from "./images";
+import { addFullImageDeletionToBatch, addFullImageToBatch } from "./images";
 
 const COLLECTION = "recipes";
 
@@ -128,24 +128,62 @@ export async function setArchived(id: string, archived: boolean): Promise<void> 
   await updateDoc(doc(db, COLLECTION, id), { archived, updatedAt: serverTimestamp() });
 }
 
-/**
- * Saves an edited recipe. Only the edited text fields and updatedAt are sent; the photo, the
- * archive flag and createdAt stay as stored (the rules still check the whole document). Fails if
- * the recipe doesn't exist. Last save wins: there's no conflict check.
- */
-export async function updateRecipe(id: string, recipe: RecipeDraft): Promise<void> {
-  await updateDoc(doc(db, COLLECTION, id), { ...recipe, updatedAt: serverTimestamp() });
+/** A photo to save with a recipe: two JPEG data URLs from compressImage(). */
+export interface RecipePhoto {
+  thumbnail: string;
+  full: string;
 }
 
-/** Adds a recipe typed in by hand (no photo until Epic 4) and returns its new ID. */
-export async function createRecipe(recipe: RecipeDraft): Promise<string> {
-  const ref = await addDoc(collection(db, COLLECTION), {
+/** What saving an edit does to the recipe's photo: keep it, replace it with a new one, or remove it. */
+export type PhotoChange = "keep" | "remove" | RecipePhoto;
+
+/**
+ * Saves an edited recipe, and any photo change in the same batch. Only the edited text fields,
+ * updatedAt and (if it changes) the photo fields are sent; the archive flag and createdAt stay as
+ * stored (the rules still check the whole document). Removing the photo deletes its full image.
+ * Fails, writing nothing, if the recipe doesn't exist. Last save wins: there's no conflict check.
+ */
+export async function updateRecipe(
+  id: string,
+  recipe: RecipeDraft,
+  photo: PhotoChange = "keep",
+): Promise<void> {
+  const ref = doc(db, COLLECTION, id);
+  if (photo === "keep") {
+    await updateDoc(ref, { ...recipe, updatedAt: serverTimestamp() });
+    return;
+  }
+  const batch = writeBatch(db);
+  const update = { ...recipe, updatedAt: serverTimestamp() };
+  if (photo === "remove") {
+    batch.update(ref, { ...update, thumbnail: null, hasImage: false });
+    addFullImageDeletionToBatch(batch, id);
+  } else {
+    batch.update(ref, { ...update, thumbnail: photo.thumbnail, hasImage: true });
+    addFullImageToBatch(batch, id, photo.full);
+  }
+  await batch.commit();
+}
+
+/**
+ * Adds a recipe typed in by hand, with its photo (if any) in the same batch, and returns its new
+ * ID. The ID is made in the browser so both documents can be written together.
+ */
+export async function createRecipe(
+  recipe: RecipeDraft,
+  photo: RecipePhoto | null = null,
+): Promise<string> {
+  const ref = doc(collection(db, COLLECTION));
+  const batch = writeBatch(db);
+  batch.set(ref, {
     ...recipe,
-    thumbnail: null,
-    hasImage: false,
+    thumbnail: photo?.thumbnail ?? null,
+    hasImage: photo !== null,
     archived: false,
     createdAt: serverTimestamp(),
     updatedAt: serverTimestamp(),
   });
+  if (photo !== null) addFullImageToBatch(batch, ref.id, photo.full);
+  await batch.commit();
   return ref.id;
 }
