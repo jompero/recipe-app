@@ -1,5 +1,11 @@
 import type { RecipeDraft } from "../parsing/types.ts";
-import { draftFromForm, EMPTY_FORM, formErrors, formFromRecipe } from "./recipeForm.ts";
+import {
+  draftFromForm,
+  EMPTY_FORM,
+  formErrors,
+  formFromRecipe,
+  newRecipeState,
+} from "./recipeForm.ts";
 
 const stored: RecipeDraft = {
   title: "Chicken Soup",
@@ -88,5 +94,25 @@ describe("form errors", () => {
       title: "A recipe needs a title",
     });
     expect(formErrors({ ...EMPTY_FORM, title: "Toast" })).toEqual({});
+  });
+});
+
+describe("new recipe state (a draft passed to #/recipe/new)", () => {
+  const draft: RecipeDraft = { ...stored, tags: [] };
+
+  test("router state with a draft is read as is", () => {
+    expect(newRecipeState({ draft })).toEqual({ draft });
+    expect(newRecipeState({ draft, photoUrl: "https://example.com/dish.jpg" })).toEqual({
+      draft,
+      photoUrl: "https://example.com/dish.jpg",
+    });
+  });
+
+  test("anything else is no draft", () => {
+    expect(newRecipeState(null)).toBeNull();
+    expect(newRecipeState(undefined)).toBeNull();
+    expect(newRecipeState({ menu: true })).toBeNull();
+    expect(newRecipeState({ draft: "Soup" })).toBeNull();
+    expect(newRecipeState({ draft: null })).toBeNull();
   });
 });
