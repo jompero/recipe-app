@@ -47,9 +47,31 @@ Store them as trimmed `RecipePayload` JSON.
 
 ## Acceptance criteria
 
-- [ ] Unit tests for every fixture, checking the resulting draft fields.
-- [ ] Duration tests: `PT1H30M`, `PT45M`, `P0DT0H20M`, `PT90M` → "1 hr 30 min"; empty or invalid → "".
-- [ ] Codec round trip with æøå and äö; a bad string and the wrong `v` throw.
-- [ ] Missing fields give empty strings and lists, never a crash.
+- [x] Unit tests for every fixture, checking the resulting draft fields.
+- [x] Duration tests: `PT1H30M`, `PT45M`, `P0DT0H20M`, `PT90M` → "1 hr 30 min"; empty or invalid → "".
+- [x] Codec round trip with æøå and äö; a bad string and the wrong `v` throw.
+- [x] Missing fields give empty strings and lists, never a crash.
 
 ## Comments
+
+**2026-11-04 (agent):** Built test-first in `src/import/`: `jsonLd.ts` (`payloadToDraft`), `duration.ts` (`formatDuration`, plus `durationMinutes` / `formatMinutes` for prep + cook) and `payloadCodec.ts` (`encodePayload`, `decodePayload`, `InvalidPayloadError`), each with a test file. `recipePayload.ts` and `src/parsing/` are unchanged.
+
+- **Fixtures** (`src/import/fixtures/`), taken from the live pages' `ld+json` on 2026-11-04 and trimmed by hand to a few ingredients and steps. Values are copied as written, and `@id` references are inlined the way the bookmarklet will do it:
+  - RecipeTin Eats: WordPress/WPRM `@graph`, `HowToSection`s, no publisher, `&quot;`;
+  - Madens Verden (Danish): WPRM `@graph`, yield `["4", "4 personer"]`, æøå;
+  - Food Network UK: the steps as one HTML string (`<p>…</p>`, `&deg;`), yield as the number `6`, no `totalTime` (so prep + cook);
+  - NYT Cooking: an array of `ImageObject`s with `contentUrl`, publisher "NYT Cooking", only `totalTime`;
+  - BBC Good Food: `ImageObject` with `url`, author array, publisher object;
+  - Pinch of Yum: `&#8217;` and other entities in `HowToStep` text, yield `["12", "12 cookies"]`.
+- **Valdemarsro has no Recipe in its `ld+json`.** Two recipe pages (`/lasagne/`, `/boller-i-karry/`) had only a Yoast Article graph, so Madens Verden is the Danish fixture. The bookmarklet will show "No recipe found" on Valdemarsro unless its recipe data is somewhere else. Worth checking by hand in issue 04's site test.
+- **`@type` as an array:** the sites I know that use it (Allrecipes, Serious Eats and other Dotdash sites) refused scripted fetches. `@type` isn't in `RecipePayload` either, since the bookmarklet drops it, so it's covered by issue 04's extraction tests, not here. The converter does read `@type` arrays on instruction items (`HowToSection`).
+- **Choices the spec left open:**
+  - "Most descriptive" yield = the longest string.
+  - Source hostname drops a leading `www.` (`recipetineats.com`).
+  - `<br>` and closing `p`/`div`/`li`/`h1–6`/`tr` tags count as line breaks. Script and style contents are dropped. Inside one `HowToStep` or array entry, line breaks are joined, so one step stays one step.
+  - A `HowToStep` with no `text` falls back to its `name`, then to its own `itemListElement` (`HowToDirection`/`HowToTip`).
+  - Image URLs are resolved against the page (so Betty Crocker's `//mojo…` works), and only http(s) URLs are used. `url` is tried before `contentUrl`.
+  - Durations: days, hours, minutes and seconds (rounded to minutes); zero gives "". A `totalTime` that is missing, unreadable or zero falls back to prep + cook.
+  - `decodePayload` also accepts standard base64 and padding. It checks `v === 1`, that `url` is a string and that `recipe` is an object.
+- **For 06:** "the first usable image" is sometimes a thumbnail (Pinch of Yum lists a 225px one first, while WordPress/WPRM sites list the full image first). I followed the spec. If photos come out small, a later change could prefer the largest image.
+- Ran `npx vitest run src/import/` (91 tests), `npm run typecheck` and `npm run lint`, all passing. The full check (emulator) is left to CI.

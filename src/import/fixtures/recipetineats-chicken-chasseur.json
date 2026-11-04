@@ -1,0 +1,62 @@
+{
+  "v": 1,
+  "url": "https://www.recipetineats.com/chicken-chasseur/",
+  "recipe": {
+    "name": "JB's Chicken Chasseur",
+    "description": "Recipe video above. Chicken Chasseur (chasseur is French for “hunter”) is a classic French dish made with pieces of chicken cooked in a rich mushroom and tomato sauce with a gentle touch of brandy, finished with fresh tarragon.",
+    "recipeIngredient": [
+      "4  chicken thighs, bone-in, skin on ((~250g/8oz each) (Note 1))",
+      "3/4 tsp cooking salt / kosher salt",
+      "30g / 2 tbsp  unsalted butter",
+      "400g / 14oz  white mushrooms (, sliced 6mm/0.2”)",
+      "1/4 cup brandy ((Note 2))",
+      "Creamy mashed potato ((or rice or small pasta))"
+    ],
+    "recipeInstructions": [
+      {
+        "@type": "HowToSection",
+        "name": "Chicken",
+        "itemListElement": [
+          {
+            "@type": "HowToStep",
+            "text": "Season the chicken - Pat the chicken dry thoroughly with paper towels.",
+            "name": "Season the chicken - Pat the chicken dry thoroughly with paper towels.",
+            "url": "https://www.recipetineats.com/chicken-chasseur/#wprm-recipe-187046-step-1-0"
+          },
+          {
+            "@type": "HowToStep",
+            "text": "Brown the Chicken - Heat vegetable oil in a large (30cm/12&quot;) skillet (with lid) over medium-high heat.",
+            "name": "Brown the Chicken - Heat vegetable oil in a large (30cm/12&quot;) skillet (with lid) over medium-high heat.",
+            "url": "https://www.recipetineats.com/chicken-chasseur/#wprm-recipe-187046-step-1-1"
+          }
+        ]
+      },
+      {
+        "@type": "HowToSection",
+        "name": "Chasseur Sauce",
+        "itemListElement": [
+          {
+            "@type": "HowToStep",
+            "text": "Tomato and stock -  Stir in the tomato paste, cook for 1 minute. Then add the stock, salt, and pepper.",
+            "name": "Tomato and stock -  Stir in the tomato paste, cook for 1 minute. Then add the stock, salt, and pepper.",
+            "url": "https://www.recipetineats.com/chicken-chasseur/#wprm-recipe-187046-step-2-2"
+          }
+        ]
+      }
+    ],
+    "recipeYield": ["4"],
+    "prepTime": "PT15M",
+    "cookTime": "PT45M",
+    "totalTime": "PT60M",
+    "image": [
+      "https://www.recipetineats.com/tachyon/2025/10/Chicken-Chasseur-JB_7.jpg",
+      "https://www.recipetineats.com/tachyon/2025/10/Chicken-Chasseur-JB_7.jpg?resize=500%2C500"
+    ],
+    "author": {
+      "@type": "Person",
+      "@id": "https://www.recipetineats.com/#/schema/person/70765dc2e52fcc4e8c619f6b92a20bbc",
+      "name": "Chef JB (RecipeTin)",
+      "url": "https://www.recipetineats.com/author/jb/"
+    }
+  }
+}
