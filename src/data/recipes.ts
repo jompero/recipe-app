@@ -4,11 +4,13 @@ import {
   doc,
   documentId,
   getDocs,
+  onSnapshot,
   query,
   serverTimestamp,
   Timestamp,
   where,
   type DocumentData,
+  type QueryDocumentSnapshot,
 } from "firebase/firestore";
 import { db } from "../config/firebase";
 import type { RecipeDraft } from "../parsing/types.ts";
@@ -94,4 +96,24 @@ function fromFirestore(id: string, data: DocumentData): StoredRecipe {
 export async function loadAllRecipes(): Promise<StoredRecipe[]> {
   const snapshot = await getDocs(collection(db, COLLECTION));
   return snapshot.docs.map((snapshotDoc) => fromFirestore(snapshotDoc.id, snapshotDoc.data()));
+}
+
+function storedRecipe(snapshotDoc: QueryDocumentSnapshot): StoredRecipe {
+  // A write from this device shows up before the server has set its dates: use the estimate.
+  return fromFirestore(snapshotDoc.id, snapshotDoc.data({ serverTimestamps: "estimate" }));
+}
+
+/**
+ * Calls onChange with every recipe (archived ones included) now and after every change, from any
+ * device. Returns a function that stops listening.
+ */
+export function watchRecipes(
+  onChange: (recipes: StoredRecipe[]) => void,
+  onError?: (error: Error) => void,
+): () => void {
+  return onSnapshot(
+    collection(db, COLLECTION),
+    (snapshot) => onChange(snapshot.docs.map(storedRecipe)),
+    onError,
+  );
 }

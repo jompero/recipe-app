@@ -1,6 +1,6 @@
 # 02: Theme and app shell
 
-Status: ready-for-agent
+Status: done
 Story: US-3.2
 Branch: `EPIC-3/US-3.2-theme-and-shell`
 Spec: [../spec.md](../spec.md)
@@ -21,7 +21,7 @@ Blocked by: 01
 - [x] Component tests with `src/data` faked: the overlay lists the current page's actions plus the three sections; choosing a section navigates and closes it; Back closes it; it shows on a bare `#/` start and not on a deep link.
 - [x] Component test: the Account page shows the member's email and signs out.
 - [x] Existing session-screen and Data page tests still pass. Check with `VITE_FIREBASE_API_KEY= npx vitest run --project app`.
-- [ ] By hand on the owner's phone: the theme looks as agreed, and phone Back closes the overlay.
+- [x] By hand on the owner's phone: the theme looks as agreed, and phone Back closes the overlay.
 
 ## Comments
 
@@ -34,3 +34,5 @@ Blocked by: 01
 - **Theme:** `src/theme.ts` holds variant A: EB Garamond text, Cormorant titles (centred, italic, uppercase, letter-spaced), Jost labels and buttons, near-black `#1d1d1b`, and a `linen` primary palette with shade 6 = `#4f5d4a`. Fonts are bundled (`@fontsource-variable/*`, imported in `main.tsx`).
 - The bottom button shows on every member page for now. The edit page (05) will replace it with its Save / Cancel bar.
 - Test helpers: `renderApp` sits in its own file because it imports the whole route tree, so callers must fake every `src/data` module the pages use.
+
+**2026-11-04 (owner):** checked on the phone (theme, menu, Back), then merged PR #20.

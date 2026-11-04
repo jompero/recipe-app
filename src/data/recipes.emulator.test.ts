@@ -6,7 +6,14 @@ import { afterAll, beforeAll, beforeEach, describe, expect, test, vi } from "vit
 import firestoreRules from "../../firestore.rules?raw";
 import type { RecipeDraft } from "../parsing/types.ts";
 import { loadFullImage } from "./images";
-import { existingRecipeIds, loadAllRecipes, saveRecipes, type RecipeToSave } from "./recipes";
+import {
+  existingRecipeIds,
+  loadAllRecipes,
+  saveRecipes,
+  watchRecipes,
+  type RecipeToSave,
+  type StoredRecipe,
+} from "./recipes";
 
 const { PROJECT_ID, MEMBER, HOST, PORT } = vi.hoisted(() => {
   const [host = "127.0.0.1", port = "8080"] = (
@@ -146,5 +153,46 @@ describe("recipes data module", () => {
 
   test("finds no existing IDs when asked about none", async () => {
     expect(await existingRecipeIds([])).toEqual([]);
+  });
+});
+
+describe("live recipe list", () => {
+  const ids = (recipes: StoredRecipe[]) =>
+    recipes
+      .map((recipe) => recipe.id)
+      .sort()
+      .join(",");
+
+  /** Collects every delivery; `next(check)` waits for one that passes the check. */
+  function watch() {
+    const deliveries: StoredRecipe[][] = [];
+    const stop = watchRecipes((recipes) => deliveries.push(recipes));
+    const next = (check: (recipes: StoredRecipe[]) => boolean) =>
+      vi.waitFor(
+        () => {
+          const match = deliveries.find(check);
+          if (!match) throw new Error("not delivered yet");
+          return match;
+        },
+        { timeout: 5000 },
+      );
+    return { stop, next };
+  }
+
+  test("delivers all recipes, then again after a change", async () => {
+    await saveRecipes([toSave("pasta"), toSave("soup")]);
+    const { stop, next } = watch();
+
+    // Exact IDs, not counts: the client cache can briefly deliver documents from earlier tests.
+    await next((recipes) => ids(recipes) === "pasta,soup");
+
+    await saveRecipes([toSave("stew")]);
+    const second = await next((recipes) => ids(recipes) === "pasta,soup,stew");
+    // A just-saved recipe has an estimated date, not 1970, before the server sets it.
+    expect(second.find((recipe) => recipe.id === "stew")?.createdAt.getFullYear()).toBeGreaterThan(
+      2000,
+    );
+
+    stop();
   });
 });

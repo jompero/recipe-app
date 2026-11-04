@@ -6,6 +6,8 @@ import { vi } from "vitest";
 const getComputedStyle = window.getComputedStyle.bind(window);
 window.getComputedStyle = (elt) => getComputedStyle(elt);
 window.HTMLElement.prototype.scrollIntoView = () => {};
+// React Router's ScrollRestoration scrolls the window on every navigation; jsdom has no layout.
+window.scrollTo = () => {};
 
 Object.defineProperty(window, "matchMedia", {
   writable: true,
