@@ -1,0 +1,44 @@
+{
+  "v": 1,
+  "url": "https://pinchofyum.com/the-best-soft-chocolate-chip-cookies",
+  "recipe": {
+    "name": "The Best Soft Chocolate Chip Cookies",
+    "description": "These are THE BEST soft chocolate chip cookies! No chilling required. Just ultra thick, soft, classic chocolate chip cookies!",
+    "recipeIngredient": [
+      "8 tablespoons of salted butter",
+      "1/2 cup white sugar (I like to use raw cane sugar with a coarser texture)",
+      "1 egg",
+      "1 1/2 cups all purpose flour (6.75 ounces)"
+    ],
+    "recipeInstructions": [
+      {
+        "@type": "HowToStep",
+        "text": "Preheat the oven to 350 degrees. Microwave the butter for about 40 seconds to just barely melt it. It shouldn&#8217;t be hot &#8211; but it should be almost entirely in liquid form.",
+        "url": "https://pinchofyum.com/the-best-soft-chocolate-chip-cookies#instruction-step-1",
+        "video": {
+          "@type": "VideoObject",
+          "name": "Chocolate Chip Cookies Step 1",
+          "contentUrl": "https://vimeo.com/415271234"
+        }
+      },
+      {
+        "@type": "HowToStep",
+        "text": "Add the flour, baking soda, and salt. Mix until crumbles form. Use your hands to press the crumbles together into a dough. It should form one large ball that is easy to handle (right at the stage between &#8220;wet&#8221; dough and &#8220;dry&#8221; dough). Add the chocolate chips and incorporate with your hands.",
+        "url": "https://pinchofyum.com/the-best-soft-chocolate-chip-cookies#instruction-step-3"
+      }
+    ],
+    "recipeYield": ["12", "12 cookies"],
+    "prepTime": "PT10M",
+    "cookTime": "PT10M",
+    "totalTime": "PT20M",
+    "image": [
+      "https://pinchofyum.com/tachyon/Chocolate-Chip-Cookies-Recipe.jpg?fit=225%2C126",
+      "https://pinchofyum.com/tachyon/Chocolate-Chip-Cookies-Recipe.jpg"
+    ],
+    "author": {
+      "@type": "Person",
+      "name": "Lindsay Ostrom",
+      "url": "https://pinchofyum.com/author/lindsay"
+    }
+  }
+}

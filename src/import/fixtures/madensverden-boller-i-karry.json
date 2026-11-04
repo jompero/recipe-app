@@ -1,0 +1,49 @@
+{
+  "v": 1,
+  "url": "https://madensverden.dk/nem-boller-i-karry-opskrift/",
+  "recipe": {
+    "name": "Boller i karry",
+    "description": "Klassiske boller i karry med kødboller af kalv og svin og en cremet karrysovs lavet med bouillon fra kødbollerne. Server med kogte ris og gerne ærter.",
+    "recipeIngredient": [
+      "400 g hakket kalv og svin",
+      "1 tsk salt",
+      "friskkværnet peber",
+      "1 æg",
+      "1,5 dl mælk (måske lidt mere)",
+      "2 spsk. smør"
+    ],
+    "recipeInstructions": [
+      {
+        "@type": "HowToStep",
+        "text": "Kog 1 l vand op sammen med 2 bouillonterninger.",
+        "name": "Kog 1 l vand op sammen med 2 bouillonterninger.",
+        "url": "https://madensverden.dk/nem-boller-i-karry-opskrift/#wprm-recipe-133607-step-0-1"
+      },
+      {
+        "@type": "HowToStep",
+        "text": "Fisk de færdigkogte kødboller op af vandet med en hulske, og læg til side. Gem  kogevandet sovsen.",
+        "name": "Fisk de færdigkogte kødboller op af vandet med en hulske, og læg til side. Gem  kogevandet sovsen.",
+        "url": "https://madensverden.dk/nem-boller-i-karry-opskrift/#wprm-recipe-133607-step-0-3"
+      },
+      {
+        "@type": "HowToStep",
+        "text": "Læg kødbollerne i sovsen, og lad dem lige varme igennem.",
+        "name": "Læg kødbollerne i sovsen, og lad dem lige varme igennem.",
+        "url": "https://madensverden.dk/nem-boller-i-karry-opskrift/#wprm-recipe-133607-step-0-7"
+      }
+    ],
+    "recipeYield": ["4", "4 personer"],
+    "prepTime": "PT15M",
+    "cookTime": "PT30M",
+    "totalTime": "PT45M",
+    "image": [
+      "https://madensverden.dk/wp-content/uploads/2017/12/billede-med-boller-i-karry.jpg",
+      "https://madensverden.dk/wp-content/uploads/2017/12/billede-med-boller-i-karry-500x500.jpg"
+    ],
+    "author": {
+      "@type": "Person",
+      "@id": "https://madensverden.dk/#/schema/person/e83b01266decae6ba14b2e92d1c26a66",
+      "name": "Holger Rørby Madsen"
+    }
+  }
+}

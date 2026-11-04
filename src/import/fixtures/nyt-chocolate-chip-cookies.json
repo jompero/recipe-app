@@ -1,0 +1,57 @@
+{
+  "v": 1,
+  "url": "https://cooking.nytimes.com/recipes/1015819-chocolate-chip-cookies",
+  "recipe": {
+    "name": "Best Chocolate Chip Cookies",
+    "description": "You may have memorized the foolproof gem on the back of the Toll House bag, given to the world by Ruth Graves Wakefield in the 1930s. But this may become your new favorite chocolate chip cookie recipe.",
+    "recipeIngredient": [
+      "2 cups minus 2 tablespoons cake flour (8 ½ ounces)",
+      "1 ⅔ cups bread flour (8 ½ ounces)",
+      "1 ¼ teaspoons baking soda",
+      "2 large eggs",
+      "1 ¼ pounds bittersweet chocolate disks or fèves, at least 60 percent cacao content (see note)"
+    ],
+    "recipeInstructions": [
+      {
+        "@type": "HowToStep",
+        "text": "Sift flours, baking soda, baking powder and salt into a bowl. Set aside.",
+        "url": "https://cooking.nytimes.com/recipes/1015819-chocolate-chip-cookies#recipe-step-1"
+      },
+      {
+        "@type": "HowToStep",
+        "text": "When ready to bake, preheat oven to 350 degrees. Line a baking sheet with parchment paper or a nonstick baking mat. Set aside.",
+        "url": "https://cooking.nytimes.com/recipes/1015819-chocolate-chip-cookies#recipe-step-3"
+      }
+    ],
+    "recipeYield": "18 5-inch cookies",
+    "totalTime": "PT45M",
+    "image": [
+      {
+        "@id": "nyt://image/221a2f19-e3c7-5ea0-bfcb-67910aba12fe#videoSixteenByNineJumbo1600",
+        "@type": "ImageObject",
+        "contentUrl": "https://static01.nyt.com/images/2022/02/12/dining/JT-Chocolate-Chip-Cookies/JT-Chocolate-Chip-Cookies-videoSixteenByNineJumbo1600.jpg",
+        "height": "900",
+        "url": "https://static01.nyt.com/images/2022/02/12/dining/JT-Chocolate-Chip-Cookies/JT-Chocolate-Chip-Cookies-videoSixteenByNineJumbo1600.jpg",
+        "width": "1600"
+      },
+      {
+        "@id": "nyt://image/221a2f19-e3c7-5ea0-bfcb-67910aba12fe#googleFourByThree",
+        "@type": "ImageObject",
+        "contentUrl": "https://static01.nyt.com/images/2022/02/12/dining/JT-Chocolate-Chip-Cookies/JT-Chocolate-Chip-Cookies-googleFourByThree-v2.jpg",
+        "height": "600",
+        "url": "https://static01.nyt.com/images/2022/02/12/dining/JT-Chocolate-Chip-Cookies/JT-Chocolate-Chip-Cookies-googleFourByThree-v2.jpg",
+        "width": "800"
+      }
+    ],
+    "author": {
+      "@id": "nyt://person/07566d9b-eef7-50ad-b461-613c924cad75",
+      "@type": "Person",
+      "name": "David Leite"
+    },
+    "publisher": {
+      "@id": "https://cooking.nytimes.com/#publisher",
+      "@type": "Organization",
+      "name": "NYT Cooking"
+    }
+  }
+}
