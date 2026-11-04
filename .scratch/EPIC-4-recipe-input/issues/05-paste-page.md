@@ -1,6 +1,6 @@
 # 05: Paste page and draft into the form
 
-Status: ready-for-agent
+Status: done
 Story: US-4.2
 Branch: `EPIC-4/US-4.2-paste-page`
 Spec: [../spec.md](../spec.md) (The shared path, Quick Paste)
@@ -32,3 +32,5 @@ If you need to change anything else, stop and ask.
 ## Comments
 
 - 2026-11-04 (agent): Built on `EPIC-4/US-4.2-paste-page`. **The seam for 06:** `NewRecipeState` in `src/editing/recipeForm.ts` (`{ draft, photoUrl?, clearOnSave? }`) and a `newRecipeState(state)` guard. `EditPage` reads it on `#/recipe/new` and fills the form from `draft`, with the empty form as the "unsaved" baseline (`EditForm` gained a `baseline` prop), so Cancel or Back asks to discard even if the form is untouched. `photoUrl` is accepted but unused. **Choice beyond the issue:** `clearOnSave` is a sessionStorage key that the form removes after a successful save. That way the paste page owns its own storage key (`quickPaste.text`) and the form doesn't have to know about Quick Paste. 06 can use it for its kept `d` if useful. **Paste page:** `src/components/PastePage.tsx` at `#/paste`. It has a *Recipe text* box (saved to sessionStorage as you type) and *Make draft* (disabled when the box is empty or only spaces). *Make draft* runs `pasteToDraft` and navigates to `/recipe/new` with the state. *Paste recipe* sits in the cookbook overlay right after *New recipe*. The tests are in `PastePage.test.tsx` (overlay, disabled button, filled form, Cancel asks, Back keeps the text, Save creates the recipe and clears the text, plain New recipe still leaves without asking) and in `recipeForm.test.ts` (the guard). The emulator wasn't run; `npx vitest run` on components/editing/parsing (185 tests), `npm run typecheck` and `npm run lint` pass, and CI runs the full check. The by-hand check is left for the owner.
+
+**2026-11-05 (owner):** By-hand check: pasting works and the text gets parsed, so the basics get through. The filled-in form didn't always fill as the owner intuitively expected (checked against intuition, not against the coded rules). More thorough Quick Paste testing with real samples is wanted later; see the Epic 4 wrap-up.

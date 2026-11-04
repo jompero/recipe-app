@@ -1,6 +1,6 @@
 # 06: Import route, photo fetch, duplicate notice
 
-Status: needs-triage
+Status: ready-for-agent
 Story: US-4.3
 Branch: `EPIC-4/US-4.3-import-route`
 Spec: [../spec.md](../spec.md) (Bookmarklet and import)
