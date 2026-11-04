@@ -1,6 +1,6 @@
 # 03: `ld+json` converter
 
-Status: ready-for-agent
+Status: done
 Story: US-4.3
 Branch: `EPIC-4/US-4.3-jsonld-converter`
 Spec: [../spec.md](../spec.md) (Bookmarklet and import: Converter)

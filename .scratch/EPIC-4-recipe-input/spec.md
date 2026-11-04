@@ -29,6 +29,8 @@ The work is split so that pure logic can be built at the same time in separate g
 | 05 Paste page and draft into the form | US-4.2 | 2 | 01, 02 |
 | 06 Import route, photo fetch, duplicate notice | US-4.3 | 2 | 03, 05 |
 | 07 Install page | US-4.4 | 2 | 04 |
+| 08 Microdata fallback in the bookmarklet | US-4.4 | 2 | none (04 merged) |
+| 09 Largest site photo (follow-up, `needs-triage`) | US-4.3 | later | none |
 
 **The emulator can't be shared.** `npm run test:ci` / `npm run check` start the emulator on fixed ports (8080, 9099). Only one worktree, and not while the owner runs `dev:all`, may run them at a time. Issue 01 is the only wave-1 issue that needs the emulator. The others run `npx vitest run <their files>`, plus `npm run typecheck` and `npm run lint`, and leave the full check to CI on their PR.
 
@@ -82,6 +84,7 @@ The work is split so that pure logic can be built at the same time in separate g
 - **The bookmarklet stays minimal; the app does the work.** The bookmarklet:
   - finds the schema.org `Recipe` in the page's `<script type="application/ld+json">` blocks: a single object, an array, or `@graph`, with `@type` as a string or an array;
   - inlines `@id` references (image, author, publisher) from the same graph;
+  - with no `ld+json` Recipe, falls back to **schema.org microdata** (`itemtype="…schema.org/Recipe"`), which Valdemarsro uses. Added 2026-11-05 as issue 08; the payload format stays the same;
   - keeps only the fields in `RecipePayload` (`src/import/recipePayload.ts`, the shared contract) plus the page URL;
   - **navigates the same tab** to `<app>#/import?d=<base64url of UTF-8 JSON>`.
 - No popup and no `postMessage` (popup blockers and COOP break them).

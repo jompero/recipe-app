@@ -1,6 +1,6 @@
 # 02: Paste splitter
 
-Status: ready-for-agent
+Status: done
 Story: US-4.2
 Branch: `EPIC-4/US-4.2-paste-splitter`
 Spec: [../spec.md](../spec.md) (Quick Paste)

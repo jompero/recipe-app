@@ -1,6 +1,6 @@
 # 04: Bookmarklet script
 
-Status: ready-for-agent
+Status: done
 Story: US-4.4
 Branch: `EPIC-4/US-4.4-bookmarklet-script`
 Spec: [../spec.md](../spec.md) (Bookmarklet and import)
