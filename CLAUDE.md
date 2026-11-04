@@ -17,7 +17,7 @@ Epic 1 (Local Foundation) is built: Vite + React + Mantine scaffold, ESLint/Pret
 - `src/data/*.ts`: the **only** code that imports Firebase (`recipes`, `images`, `menu`, `backup`). Components call `src/data`, never Firebase directly.
 - `src/utils/imageCompressor.ts`: `browser-image-compression`, **JPEG** (not WebP): full ~1024px / ~100–300KB, thumbnail ~320px / ~15–40KB
 - `src/parsing/`: recipe and ingredient parsers, shared by the Pepperplate importer and Quick Paste
-- `src/components/*.tsx`: Mantine UI, designed for phones first, `HashRouter`
+- `src/components/*.tsx`: Mantine UI, designed for phones first, hash routing (`createHashRouter`, route tree in `src/routes.tsx`)
 
 ## Rules
 - **Never edit `docs/pepperplate-data/`.** It is the user's original Pepperplate export (198 `.txt` recipes plus a zip). Copy from it, never modify it. It is the seed data for importing into the final format. Downloaded images go to gitignored `.scratch/pepperplate-images/`.

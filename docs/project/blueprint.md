@@ -13,7 +13,7 @@ The decisions behind this design are in [`docs/adr/`](../adr/). This document wa
 
 | Layer | Technology | Notes |
 |---|---|---|
-| Hosting | GitHub Pages, deployed by GitHub's official Pages actions | Public repo, `HashRouter`, Vite `base` = `/<repo-name>/` ([ADR-0004](../adr/0004-official-pages-actions-hashrouter.md)) |
+| Hosting | GitHub Pages, deployed by GitHub's official Pages actions | Public repo, hash routing (`createHashRouter`), Vite `base` = `/<repo-name>/` ([ADR-0004](../adr/0004-official-pages-actions-hashrouter.md)) |
 | UI | React, TypeScript, Vite, Mantine (custom theme) | Designed for phones first. English UI, metric by default. |
 | Auth | Firebase Auth, Google sign-in via `signInWithPopup` | [ADR-0003](../adr/0003-google-sign-in-popup.md) |
 | Data | Cloud Firestore in `europe-west2` (London) | Offline copy on the device via `persistentLocalCache`. The region is permanent. |

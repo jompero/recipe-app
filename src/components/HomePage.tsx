@@ -1,15 +1,16 @@
-import { Anchor, Stack, Text, Title } from "@mantine/core";
-import { Link } from "react-router";
+import { Stack, Text, Title } from "@mantine/core";
+import { usePageActions } from "./pageActions.ts";
 
-/** Placeholder member home. Epic 3 puts the cookbook here, and the Data link moves to its menu. */
+/** Placeholder cookbook page. US-3.3 puts the grid here. */
 export function HomePage() {
+  usePageActions([
+    { label: "New recipe", to: "/recipe/new" },
+    { label: "Show archived", to: "/?archived=1" },
+  ]);
   return (
     <Stack gap="xs">
       <Title order={2}>Cookbook</Title>
       <Text c="dimmed">Your recipes will appear here.</Text>
-      <Anchor component={Link} to="/data">
-        Data
-      </Anchor>
     </Stack>
   );
 }
