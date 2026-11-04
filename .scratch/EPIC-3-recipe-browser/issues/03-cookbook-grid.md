@@ -1,6 +1,6 @@
 # 03: Cookbook grid
 
-Status: ready-for-agent
+Status: done
 Story: US-3.3
 Branch: `EPIC-3/US-3.3-cookbook-grid`
 Spec: [../spec.md](../spec.md)
@@ -27,7 +27,7 @@ Blocked by: 02
 - [x] Unit test: letter grouping for the list (dividers with A–Z, none with newest-first).
 - [x] Component tests with `src/data` faked: cards and placeholders render, search, tag chips and sort update the URL and the grid, the empty state clears filters, and live updates re-render.
 - [x] Component test: the toggle switches to the list and back, keeps the filters, and sets `view=list`.
-- [ ] By hand on the phone: browse the 198 recipes, open one, press Back, and land at the same scroll position with the filters kept.
+- [x] By hand on the phone: browse the 198 recipes, open one, press Back, and land at the same scroll position with the filters kept.
 
 ## Comments
 
@@ -46,3 +46,5 @@ Blocked by: 02
 - **Placeholder recipe page** at `#/recipe/:id` (title only) so a card doesn't land on the router's error screen, which would unmount the shell and break restore. 04 replaces it.
 - `HomePage.tsx` is gone; its page actions moved to `CookbookPage`.
 - Gotcha: a test that renders the app with a fake `src/data/recipes.ts` lacking `watchRecipes` doesn't fail cleanly. The run stalls until the worker is killed, so `App.test.tsx`'s fake now includes it.
+
+**2026-11-04 (owner):** by-hand check passed on the phone (browse, filters, Back to the same scroll position). Design tweak: the sort and view toggles were too prominent as segmented controls, so they became quiet label-style text toggles ("A–Z / Newest", "Grid / List"; the chosen one in ink and underlined, still a radio group for screen readers).

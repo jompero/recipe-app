@@ -5,7 +5,6 @@ import {
   Chip,
   Group,
   Image,
-  SegmentedControl,
   SimpleGrid,
   Skeleton,
   Stack,
@@ -96,22 +95,20 @@ export function CookbookPage() {
         ))}
       </Group>
       <Group justify="space-between">
-        <SegmentedControl
-          aria-label="Sort"
-          size="xs"
+        <QuietToggle
+          label="Sort"
           value={state.sort}
           onChange={(sort) => update({ sort })}
-          data={[
+          options={[
             { value: "az", label: "A–Z" },
             { value: "new", label: "Newest" },
           ]}
         />
-        <SegmentedControl
-          aria-label="View"
-          size="xs"
+        <QuietToggle
+          label="View"
           value={state.view}
           onChange={(view) => update({ view })}
-          data={[
+          options={[
             { value: "grid", label: "Grid" },
             { value: "list", label: "List" },
           ]}
@@ -228,5 +225,52 @@ function RecipeRow({ recipe }: { recipe: StoredRecipe }) {
         <Box bg="gray.1" w={56} h={56} style={{ flex: "none" }} />
       )}
     </UnstyledButton>
+  );
+}
+
+/**
+ * A quiet either/or choice in the label voice: "A–Z / Newest", the chosen one in ink and
+ * underlined, the other muted. Works as a radio group for screen readers.
+ */
+function QuietToggle<T extends string>({
+  label,
+  value,
+  onChange,
+  options,
+}: {
+  label: string;
+  value: T;
+  onChange: (value: T) => void;
+  options: { value: T; label: string }[];
+}) {
+  return (
+    <Group role="radiogroup" aria-label={label} gap={8}>
+      {options.map((option, i) => {
+        const chosen = option.value === value;
+        return (
+          <Fragment key={option.value}>
+            {i > 0 && (
+              <Text component="span" c="gray.4" style={labelStyle} aria-hidden>
+                /
+              </Text>
+            )}
+            <UnstyledButton
+              role="radio"
+              aria-checked={chosen}
+              onClick={() => onChange(option.value)}
+              c={chosen ? "dark.9" : "dimmed"}
+              style={{
+                ...labelStyle,
+                textDecoration: chosen ? "underline" : "none",
+                textUnderlineOffset: 4,
+                textDecorationThickness: 1,
+              }}
+            >
+              {option.label}
+            </UnstyledButton>
+          </Fragment>
+        );
+      })}
+    </Group>
   );
 }
