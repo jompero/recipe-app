@@ -5,6 +5,14 @@ import { Button, createTheme, Title, type MantineColorsTuple } from "@mantine/co
 
 /** Tiny tracked uppercase labels: time, yield, section names. */
 export const LABEL_FONT = "'Jost Variable', 'Helvetica Neue', Arial, sans-serif";
+/** The label voice as inline style: tiny, tracked, uppercase sans-serif. */
+export const LABEL_STYLE = {
+  fontFamily: LABEL_FONT,
+  fontSize: 10,
+  letterSpacing: "0.18em",
+  textTransform: "uppercase",
+} as const;
+
 const TITLE_FONT = "'Cormorant Variable', Georgia, serif";
 const TEXT_FONT = "'EB Garamond Variable', Georgia, serif";
 

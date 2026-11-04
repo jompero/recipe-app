@@ -2,6 +2,7 @@ import { act, within } from "@testing-library/react";
 import userEvent from "@testing-library/user-event";
 import type { Session } from "../data/auth.ts";
 import type { StoredRecipe } from "../data/recipes.ts";
+import { storedRecipe } from "../test-utils/recipeFixture.ts";
 import { renderApp, screen } from "../test-utils/renderApp.tsx";
 
 // Fake the data seam: a signed-in member, and a live recipe list the tests can change.
@@ -42,27 +43,7 @@ vi.mock("../data/auth.ts", () => ({
   signOut: vi.fn(),
 }));
 
-function recipe(title: string, extra: Partial<StoredRecipe> = {}): StoredRecipe {
-  return {
-    id: title.toLowerCase().replace(/\W+/g, "-"),
-    title,
-    description: "",
-    source: "",
-    sourceUrl: "",
-    yield: "",
-    activeTime: "",
-    totalTime: "",
-    tags: [],
-    ingredients: [],
-    instructions: [],
-    thumbnail: null,
-    hasImage: false,
-    archived: false,
-    createdAt: new Date("2026-11-03"),
-    updatedAt: new Date("2026-11-03"),
-    ...extra,
-  };
-}
+const recipe = storedRecipe;
 
 beforeEach(() => {
   live.listeners.clear();
