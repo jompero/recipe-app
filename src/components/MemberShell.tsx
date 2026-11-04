@@ -1,6 +1,6 @@
 import { ActionIcon, AppShell, Divider, Modal, Stack, Text, UnstyledButton } from "@mantine/core";
 import { useEffect, useRef, useState, type ReactNode } from "react";
-import { useLocation, useNavigate } from "react-router";
+import { matchPath, useLocation, useNavigate } from "react-router";
 import { LABEL_STYLE } from "../theme.ts";
 import { NO_PAGE_MENU, PageMenuContext, type PageMenu } from "./pageMenu.ts";
 
@@ -9,6 +9,12 @@ const SECTIONS = [
   { label: "Data", path: "/data" },
   { label: "Account", path: "/account" },
 ];
+
+function isEditForm(pathname: string): boolean {
+  return (
+    matchPath("/recipe/new", pathname) !== null || matchPath("/recipe/:id/edit", pathname) !== null
+  );
+}
 
 /** Whether the menu overlay is open: it's a history entry, so phone Back closes it. */
 function useMenu() {
@@ -48,19 +54,22 @@ export function MemberShell({ children }: { children: ReactNode }) {
       <AppShell.Main pb={100}>
         <PageMenuContext.Provider value={setPage}>{children}</PageMenuContext.Provider>
       </AppShell.Main>
-      <ActionIcon
-        aria-label="Menu"
-        onClick={menu.show}
-        size={52}
-        radius="xl"
-        variant="default"
-        pos="fixed"
-        bottom={18}
-        left="50%"
-        style={{ transform: "translateX(-50%)", zIndex: 100 }}
-      >
-        <MenuGlyph />
-      </ActionIcon>
+      {/* The edit form has its own Save / Cancel bar instead. */}
+      {!isEditForm(location.pathname) && (
+        <ActionIcon
+          aria-label="Menu"
+          onClick={menu.show}
+          size={52}
+          radius="xl"
+          variant="default"
+          pos="fixed"
+          bottom={18}
+          left="50%"
+          style={{ transform: "translateX(-50%)", zIndex: 100 }}
+        >
+          <MenuGlyph />
+        </ActionIcon>
+      )}
       <Modal
         opened={menu.open}
         onClose={menu.close}

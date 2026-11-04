@@ -5,6 +5,7 @@ import { join } from "node:path";
 
 import { describe, expect, it } from "vitest";
 
+import { draftFromForm, formFromRecipe } from "../src/editing/recipeForm.ts";
 import { buildImportPreview } from "../src/import/pepperplateImport.ts";
 import { parseRecipeText } from "../src/parsing/recipeText.ts";
 
@@ -16,6 +17,16 @@ describe.skipIf(files.length === 0)("the real Pepperplate export", () => {
     name,
     ...parseRecipeText(readFileSync(join(folder, name), "utf8")),
   }));
+
+  it("saving the edit form unchanged gives back every recipe exactly (US-3.5)", () => {
+    const changed = parsed
+      .filter(
+        ({ recipe }) =>
+          JSON.stringify(draftFromForm(formFromRecipe(recipe))) !== JSON.stringify(recipe),
+      )
+      .map(({ name }) => name);
+    expect(changed).toEqual([]);
+  });
 
   it("has all 198 recipes", () => {
     expect(parsed).toHaveLength(198);
