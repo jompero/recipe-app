@@ -12,7 +12,7 @@ Once Epic 2 has run, the shared cookbook is in Firestore, but the app has no way
 
 - Prototype a Nordic editorial cookbook look (reference: a Nordic winter cookbook spread: centred, letter-spaced uppercase italic serif title; italic serif intro; tiny tracked uppercase sans-serif labels for time and yield over a thin rule; plain ingredient list; numbered serif steps; large moody photo). Check it on a phone, then make it the theme.
 - Replace the app chrome with **one bottom button** that opens a **full-screen overlay**: actions for the current page, then Cookbook / Data / Account. The overlay is the front screen when the app opens.
-- A **cookbook grid** with search, tag filters and sort, all kept in the URL.
+- A **cookbook grid** (or an A–Z **list view**) with search, tag filters and sort, all kept in the URL.
 - A **recipe page** for cooking: screen kept awake, tick-off lines, scaling.
 - An **edit form** (also used blank for **New recipe**), and **archive / unarchive** in place of delete.
 
@@ -53,14 +53,15 @@ Once Epic 2 has run, the shared cookbook is in Firestore, but the app has no way
 24. As a member, I want a "New recipe" action that opens the edit form blank, so that I can add a recipe by hand before Epic 4.
 25. As a member, I want an "Archive" action (with a confirmation) that hides a recipe from the grid and search, so that the cookbook stays tidy without losing anything.
 26. As a member, I want a "Show archived" view with Unarchive buttons, so that an archived recipe can come back.
+27. As a member, I want to switch the cookbook to an A–Z list with small thumbnails, like a book's contents page, so that I can scan titles quickly when I already know roughly what I want.
 
 ## Implementation Decisions
 
 ### Look (US-3.1 → US-3.2)
 
-- **Prototype first:** a throwaway grid + recipe page in the reference style with a few real recipes, opened on the phone over Wi-Fi. Once agreed, the choices go into the single theme module from Epic 1 and the prototype is deleted.
-- **Starting direction:** white page, near-black text, generous spacing. Titles in a centred, letter-spaced, uppercase italic display serif. Body text and steps in a book serif. Time, yield and other labels in tiny, tracked uppercase sans-serif over a thin rule. One muted accent, the deep linen green, for buttons and active chips. Photos large, full-bleed on the recipe page.
-- **Fonts are bundled** with the app (e.g. via Fontsource), not loaded from a font CDN, so they work offline (Epic 8). Candidates: Cormorant (titles), EB Garamond (text), Jost (labels). The prototype settles them.
+- **Prototype done (US-3.1, 2026-11-04):** the owner compared three looks on their phone and chose variant A, "Book", for both the grid and the recipe page. The prototype is kept on the branch `prototype/EPIC-3-US-3.1-design` (`src/components/prototype/VariantBook.tsx` is the reference for US-3.2). Variant C's A–Z index was liked as a second way to browse, so it became the list view (US-3.3).
+- **Chosen look:** white page, near-black text (`#1d1d1b`), generous spacing. Titles in a centred, letter-spaced, uppercase italic display serif. Body text and steps in a book serif. Time, yield and other labels in tiny, tracked uppercase sans-serif over a thin rule. One muted accent, the deep linen green (`#4f5d4a`), for buttons, active chips and step numbers. Photos large, full-bleed on the recipe page. Grid cards are 4:5 photos with the title centred below.
+- **Fonts are bundled** with the app via Fontsource variable packages, not loaded from a font CDN, so they work offline (Epic 8): **Cormorant** (titles, italic), **EB Garamond** (text), **Jost** (labels).
 
 ### Shell and navigation (US-3.2)
 
@@ -74,7 +75,7 @@ Once Epic 2 has run, the shared cookbook is in Firestore, but the app has no way
 
 ### Routes (HashRouter)
 
-- `#/`: cookbook grid. Query: `q` (search), `tags` (comma-separated), `sort` (`az` | `new`), `archived=1` (Show archived view).
+- `#/`: cookbook grid. Query: `q` (search), `tags` (comma-separated), `sort` (`az` | `new`), `view=list` (list view; the grid is the default), `archived=1` (Show archived view).
 - `#/recipe/:id`: recipe page. `#/recipe/:id/edit`: edit page. `#/recipe/new`: blank edit form.
 - `#/data` (Epic 2) and `#/account`.
 
@@ -92,6 +93,7 @@ Once Epic 2 has run, the shared cookbook is in Firestore, but the app has no way
 - Tag chips are all tags in use, sorted by count. Selecting several means a recipe needs **all** of them.
 - Sort: A–Z by title (locale-aware) or newest `createdAt` first. Imported recipes share their import date.
 - Shows loading placeholders, and a "No recipes match" message with a clear-filters action.
+- **List view** (added after the prototype): a toggle on the cookbook page switches between the photo grid and an A–Z index list. Each row has the title, a small line with total time and the first tags, and a small square thumbnail (or placeholder). With A–Z sort the list has letter dividers; with newest-first it has none. It uses the same search, tags and sort, and the same typography as the grid. The choice is kept in the URL (`view=list`), like the filters.
 
 ### Recipe page (US-3.4)
 

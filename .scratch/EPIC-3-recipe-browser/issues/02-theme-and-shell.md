@@ -8,7 +8,7 @@ Blocked by: 01
 
 ## What to build
 
-- **Theme:** the look agreed in 01 goes into `src/theme.ts` (Mantine `createTheme`), replacing Epic 1's placeholder, with the fonts bundled. The prototype code is deleted.
+- **Theme:** the look agreed in 01 (variant A, "Book"; see the spec's "Look" section) goes into `src/theme.ts` (Mantine `createTheme`), replacing Epic 1's placeholder. Fonts bundled via `@fontsource-variable/cormorant` (with its `wght-italic.css`), `@fontsource-variable/eb-garamond` and `@fontsource-variable/jost`. Reference: `src/components/prototype/` on branch `prototype/EPIC-3-US-3.1-design`. That code isn't merged; rewrite it properly.
 - **Shell:** `MemberShell`'s header goes. One small button fixed at the bottom of content pages opens a **full-screen overlay**, which is UI state, not a route.
 - **Overlay contents:** page actions on top (each page supplies its own, e.g. via context; the grid and recipe pages fill them in 03–06), then the sections *Cookbook*, *Data*, *Account*.
 - **Opens on start:** when the app opens at `#/` with no query, the overlay shows over the grid. A deep link (a recipe, or a filtered grid) opens without it. Choosing *Cookbook* or pressing Back closes it.
