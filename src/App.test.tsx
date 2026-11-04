@@ -27,6 +27,7 @@ vi.mock("./data/recipes.ts", () => ({
   existingRecipeIds: vi.fn(),
   saveRecipes: vi.fn(),
 }));
+vi.mock("./data/images.ts", () => ({ loadFullImage: vi.fn(() => Promise.resolve(null)) }));
 vi.mock("./data/backup.ts", () => ({ exportEverything: vi.fn(), restoreEverything: vi.fn() }));
 
 vi.mock("./data/auth.ts", () => ({

@@ -24,9 +24,10 @@ import {
 } from "../cookbook/cookbook.ts";
 import { Fragment } from "react";
 import type { StoredRecipe } from "../data/recipes.ts";
-import { LABEL_FONT } from "../theme.ts";
+import { LABEL_STYLE } from "../theme.ts";
 import { useLiveRecipes } from "./liveRecipes.ts";
 import { usePageActions } from "./pageActions.ts";
+import { QuietToggle } from "./QuietToggle.tsx";
 
 /** The cookbook: every recipe as a photo card (or a list), with search, tags and sort. */
 export function CookbookPage() {
@@ -51,7 +52,7 @@ export function CookbookPage() {
       <Stack gap={4} pt="xl">
         <Title order={1}>Cookbook</Title>
         {live.status === "ready" && (
-          <Text ta="center" c="dimmed" style={labelStyle}>
+          <Text ta="center" c="dimmed" style={LABEL_STYLE}>
             {shown.length} {shown.length === 1 ? "recipe" : "recipes"}
           </Text>
         )}
@@ -163,13 +164,6 @@ function RecipeCard({ recipe }: { recipe: StoredRecipe }) {
   );
 }
 
-const labelStyle = {
-  fontFamily: LABEL_FONT,
-  fontSize: 10,
-  letterSpacing: "0.18em",
-  textTransform: "uppercase",
-} as const;
-
 /** The list view: an A–Z index like a book's contents page. */
 function RecipeList({ recipes, sort }: { recipes: StoredRecipe[]; sort: CookbookState["sort"] }) {
   return (
@@ -214,7 +208,7 @@ function RecipeRow({ recipe }: { recipe: StoredRecipe }) {
           {recipe.title}
         </Text>
         {meta && (
-          <Text c="dimmed" mt={3} style={labelStyle}>
+          <Text c="dimmed" mt={3} style={LABEL_STYLE}>
             {meta}
           </Text>
         )}
@@ -225,52 +219,5 @@ function RecipeRow({ recipe }: { recipe: StoredRecipe }) {
         <Box bg="gray.1" w={56} h={56} style={{ flex: "none" }} />
       )}
     </UnstyledButton>
-  );
-}
-
-/**
- * A quiet either/or choice in the label voice: "A–Z / Newest", the chosen one in ink and
- * underlined, the other muted. Works as a radio group for screen readers.
- */
-function QuietToggle<T extends string>({
-  label,
-  value,
-  onChange,
-  options,
-}: {
-  label: string;
-  value: T;
-  onChange: (value: T) => void;
-  options: { value: T; label: string }[];
-}) {
-  return (
-    <Group role="radiogroup" aria-label={label} gap={8}>
-      {options.map((option, i) => {
-        const chosen = option.value === value;
-        return (
-          <Fragment key={option.value}>
-            {i > 0 && (
-              <Text component="span" c="gray.4" style={labelStyle} aria-hidden>
-                /
-              </Text>
-            )}
-            <UnstyledButton
-              role="radio"
-              aria-checked={chosen}
-              onClick={() => onChange(option.value)}
-              c={chosen ? "dark.9" : "dimmed"}
-              style={{
-                ...labelStyle,
-                textDecoration: chosen ? "underline" : "none",
-                textUnderlineOffset: 4,
-                textDecorationThickness: 1,
-              }}
-            >
-              {option.label}
-            </UnstyledButton>
-          </Fragment>
-        );
-      })}
-    </Group>
   );
 }

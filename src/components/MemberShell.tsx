@@ -1,7 +1,7 @@
 import { ActionIcon, AppShell, Divider, Modal, Stack, Text, UnstyledButton } from "@mantine/core";
 import { useEffect, useRef, useState, type ReactNode } from "react";
 import { useLocation, useNavigate } from "react-router";
-import { LABEL_FONT } from "../theme.ts";
+import { LABEL_STYLE } from "../theme.ts";
 import { PageActionsContext, type PageAction } from "./pageActions.ts";
 
 const SECTIONS = [
@@ -9,13 +9,6 @@ const SECTIONS = [
   { label: "Data", path: "/data" },
   { label: "Account", path: "/account" },
 ];
-
-const labelStyle = {
-  fontFamily: LABEL_FONT,
-  fontSize: 12,
-  letterSpacing: "0.18em",
-  textTransform: "uppercase",
-} as const;
 
 /** Whether the menu overlay is open: it's a history entry, so phone Back closes it. */
 function useMenu() {
@@ -74,7 +67,7 @@ export function MemberShell({ children }: { children: ReactNode }) {
         fullScreen
         title="Menu"
         styles={{
-          title: { ...labelStyle, color: "var(--mantine-color-dimmed)" },
+          title: { ...LABEL_STYLE, fontSize: 12, color: "var(--mantine-color-dimmed)" },
           body: { minHeight: "80dvh", display: "flex", alignItems: "center" },
         }}
       >
@@ -87,7 +80,7 @@ export function MemberShell({ children }: { children: ReactNode }) {
                   onClick={() => menu.go(to)}
                   py="sm"
                   ta="center"
-                  style={labelStyle}
+                  style={{ ...LABEL_STYLE, fontSize: 12 }}
                 >
                   {label}
                 </UnstyledButton>

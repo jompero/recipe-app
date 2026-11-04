@@ -100,3 +100,33 @@ export function parseIngredientLine(raw: string): Ingredient {
   }
   return result;
 }
+
+/** The amount (and range) at the start of a line, with the separator captured. */
+const AMOUNT_AT_START = new RegExp(`^(${AMOUNT})(?:(\\s*[-–]\\s*|\\s+to\\s+)(${AMOUNT}))?`);
+
+/** A line cut around its amount, so the amount can be rewritten (scaling) without touching the rest. */
+export interface AmountParts {
+  /** Indentation and any bullet or "ca." before the amount. */
+  before: string;
+  amount: string;
+  /** "", or the range separator as written ("-", " –", " to "). */
+  separator: string;
+  amountMax: string | null;
+  after: string;
+}
+
+/** Splits a raw line around its leading amount, or returns null if it doesn't start with one. */
+export function splitAmount(raw: string): AmountParts | null {
+  const indent = /^\s*/.exec(raw)?.[0] ?? "";
+  const prefix = PREFIX.exec(raw.slice(indent.length))?.[0] ?? "";
+  const before = indent + prefix;
+  const match = AMOUNT_AT_START.exec(raw.slice(before.length));
+  if (!match?.[1]) return null;
+  return {
+    before,
+    amount: match[1],
+    separator: match[2] ?? "",
+    amountMax: match[3] ?? null,
+    after: raw.slice(before.length + match[0].length),
+  };
+}
