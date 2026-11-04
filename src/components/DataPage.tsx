@@ -14,6 +14,7 @@ import {
 import { useState, type ChangeEvent } from "react";
 import { existingRecipeIds } from "../data/recipes.ts";
 import { ExportSection, RestoreSection } from "./BackupSections.tsx";
+import { BookmarkletSection } from "./BookmarkletSection.tsx";
 import {
   buildImportPreview,
   type ImportPreview,
@@ -275,7 +276,7 @@ function PepperplateImport() {
   );
 }
 
-/** Import, export and restore (Epic 2). Every member can use it; Import asks before writing. */
+/** Import, export and restore (Epic 2), and the Recipe bookmarklet (US-4.4). */
 export function DataPage() {
   usePageMenu("Data");
   return (
@@ -284,6 +285,7 @@ export function DataPage() {
       <PepperplateImport />
       <ExportSection />
       <RestoreSection />
+      <BookmarkletSection />
     </Stack>
   );
 }
