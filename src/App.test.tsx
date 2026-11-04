@@ -20,6 +20,10 @@ const fakeAuth = vi.hoisted((): FakeAuth => ({
 // also keeps the real Firebase setup (src/config/firebase.ts) from loading, which needs the .env
 // config CI doesn't have.
 vi.mock("./data/recipes.ts", () => ({
+  watchRecipes: (onChange: (recipes: never[]) => void) => {
+    onChange([]);
+    return () => {};
+  },
   existingRecipeIds: vi.fn(),
   saveRecipes: vi.fn(),
 }));

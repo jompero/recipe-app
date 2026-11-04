@@ -1,4 +1,5 @@
-import { Outlet } from "react-router";
+import { Outlet, ScrollRestoration } from "react-router";
+import { LiveRecipesProvider } from "./components/LiveRecipesProvider.tsx";
 import type { MemberContext } from "./components/member.ts";
 import { MemberShell } from "./components/MemberShell.tsx";
 import {
@@ -24,9 +25,13 @@ export function App() {
       return <AccessErrorScreen user={session.user} />;
     case "member":
       return (
-        <MemberShell>
-          <Outlet context={{ user: session.user } satisfies MemberContext} />
-        </MemberShell>
+        <LiveRecipesProvider>
+          {/* Back returns to the same scroll position (needs the data router, see main.tsx). */}
+          <ScrollRestoration />
+          <MemberShell>
+            <Outlet context={{ user: session.user } satisfies MemberContext} />
+          </MemberShell>
+        </LiveRecipesProvider>
       );
   }
 }
