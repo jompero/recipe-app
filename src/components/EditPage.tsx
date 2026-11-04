@@ -22,6 +22,7 @@ import {
   EMPTY_FORM,
   formErrors,
   formFromRecipe,
+  newRecipeState,
   type RecipeForm,
 } from "../editing/recipeForm.ts";
 import { LABEL_STYLE } from "../theme.ts";
@@ -29,14 +30,29 @@ import { useLiveRecipes } from "./liveRecipes.ts";
 import { PhotoField } from "./PhotoField.tsx";
 import { usePhotoDraft } from "./usePhotoDraft.ts";
 
-/** The edit form for a recipe (#/recipe/:id/edit), or blank for a new one (#/recipe/new). */
+/**
+ * The edit form for a recipe (#/recipe/:id/edit), or for a new one (#/recipe/new): blank, or
+ * filled in from a draft passed in router state (NewRecipeState).
+ */
 export function EditPage() {
   const { id } = useParams();
+  const location = useLocation();
   const live = useLiveRecipes();
   if (live.status !== "ready") return null;
   const tags = tagChips(live.recipes, false);
 
-  if (id === undefined) return <EditForm initial={EMPTY_FORM} recipe={null} tags={tags} />;
+  if (id === undefined) {
+    const passed = newRecipeState(location.state as unknown);
+    return (
+      <EditForm
+        initial={passed ? formFromRecipe(passed.draft) : EMPTY_FORM}
+        baseline={EMPTY_FORM}
+        recipe={null}
+        tags={tags}
+        clearOnSave={passed?.clearOnSave}
+      />
+    );
+  }
   const recipe = live.recipes.find((r) => r.id === id);
   if (!recipe) {
     return (
@@ -50,17 +66,26 @@ export function EditPage() {
   }
   // Keyed by recipe so the form starts once from the stored recipe, then keeps its own draft
   // while the live data changes underneath (last save wins).
-  return <EditForm key={recipe.id} initial={formFromRecipe(recipe)} recipe={recipe} tags={tags} />;
+  const stored = formFromRecipe(recipe);
+  return (
+    <EditForm key={recipe.id} initial={stored} baseline={stored} recipe={recipe} tags={tags} />
+  );
 }
 
 function EditForm({
   initial,
+  baseline,
   recipe,
   tags,
+  clearOnSave,
 }: {
   initial: RecipeForm;
+  /** What counts as unchanged: a new recipe filled in from a draft is unsaved from the start. */
+  baseline: RecipeForm;
   recipe: StoredRecipe | null;
   tags: string[];
+  /** A sessionStorage key to remove once saved (NewRecipeState). */
+  clearOnSave?: string;
 }) {
   const navigate = useNavigate();
   const location = useLocation();
@@ -72,7 +97,7 @@ function EditForm({
   const photo = usePhotoDraft(recipe?.thumbnail ?? null);
 
   // Leaving with unsaved changes (Cancel, a link, or phone Back) asks first. Saving clears the way.
-  const dirty = JSON.stringify(form) !== JSON.stringify(initial) || photo.change !== "keep";
+  const dirty = JSON.stringify(form) !== JSON.stringify(baseline) || photo.change !== "keep";
   const blocker = useBlocker(
     ({ currentLocation, nextLocation }) =>
       dirty && !leaving.current && currentLocation.pathname !== nextLocation.pathname,
@@ -111,6 +136,7 @@ function EditForm({
           draft,
           typeof photo.change === "object" ? photo.change : null,
         );
+        if (clearOnSave) sessionStorage.removeItem(clearOnSave);
         void navigate(`/recipe/${id}`, { replace: true });
       }
     } catch (cause) {

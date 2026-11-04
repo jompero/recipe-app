@@ -77,3 +77,23 @@ export function draftFromForm(form: RecipeForm): RecipeDraft {
 export function formErrors(form: RecipeForm): Partial<Record<keyof RecipeForm, string>> {
   return form.title.trim() ? {} : { title: "A recipe needs a title" };
 }
+
+/**
+ * Router state for `#/recipe/new` that opens the form filled in from a draft (Quick Paste, the
+ * import route): `navigate("/recipe/new", { state })`. The form still counts as unsaved against
+ * the empty form, so leaving asks to discard. The state is lost if the page reloads.
+ */
+export interface NewRecipeState {
+  draft: RecipeDraft;
+  /** An image to try to fetch as the recipe's photo (issue 06). */
+  photoUrl?: string;
+  /** A sessionStorage key to remove once the recipe is saved (Quick Paste's text). */
+  clearOnSave?: string;
+}
+
+/** The draft passed in router state, or null when there is none. */
+export function newRecipeState(state: unknown): NewRecipeState | null {
+  if (typeof state !== "object" || state === null || !("draft" in state)) return null;
+  const { draft } = state;
+  return typeof draft === "object" && draft !== null ? (state as NewRecipeState) : null;
+}

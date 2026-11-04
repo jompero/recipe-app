@@ -41,6 +41,7 @@ export function CookbookPage() {
       ? []
       : [
           { label: "New recipe", to: "/recipe/new" },
+          { label: "Paste recipe", to: "/paste" },
           { label: "Show archived", to: "/?archived=1" },
         ],
   );
