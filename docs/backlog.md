@@ -63,7 +63,7 @@
 * **7.2 Rules and members:** deploy the rules with the CLI. Add `allowed_users` documents in the console.
 * **7.3 Pages deploy:** official Pages actions workflow, Firebase config as Actions variables.
 * **7.4 Data migration:** export from local, restore on live (or run the importer again).
-* **7.5 Phone smoke test:** sign-in popup, photo upload and live sync on iOS and Android.
+* **7.5 Phone smoke test:** sign-in popup, photo upload and live sync on iOS and Android. Also: the screen stays awake with a recipe open (Screen Wake Lock needs HTTPS, so it can't be checked over the LAN dev server; moved here from US-3.4).
 
 ---
 

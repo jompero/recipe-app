@@ -77,14 +77,19 @@ function Recipe({ recipe }: { recipe: StoredRecipe }) {
   return (
     <Stack gap={0} maw={640} mx="auto">
       {photo && (
-        // Full-bleed: out past the page padding to the screen edges.
+        // Full-bleed: out past the page padding on both sides. The height follows the photo's
+        // own shape, capped so a tall photo doesn't fill the screen, and never collapses.
         <Image
           src={photo}
           alt=""
           fit="cover"
           mx="calc(var(--mantine-spacing-md) * -1)"
           mt="calc(var(--mantine-spacing-md) * -1)"
-          style={{ aspectRatio: "4 / 3", maxWidth: "none" }}
+          w="calc(100% + 2 * var(--mantine-spacing-md))"
+          h="auto"
+          mah="70vh"
+          mih={180}
+          style={{ maxWidth: "none" }}
         />
       )}
       <Title order={1} pt="xl" fz={28} lh={1.25}>
@@ -172,7 +177,7 @@ function Recipe({ recipe }: { recipe: StoredRecipe }) {
             );
           }
           return (
-            <Box key={i} component="li" mb="md">
+            <Group key={i} component="li" mb="md" gap={14} wrap="nowrap" align="flex-start">
               <Text
                 component="span"
                 ff="heading"
@@ -181,16 +186,18 @@ function Recipe({ recipe }: { recipe: StoredRecipe }) {
                 lh={1.1}
                 c="linen.6"
                 miw={18}
-                style={{ float: "left" }}
+                style={{ flex: "none" }}
               >
                 {stepNumbers[i]}
               </Text>
-              <Tickable ticked={ticks.has(`s${i}`)} onToggle={() => toggle(`s${i}`)} pl={32}>
-                <Text fz={17} lh={1.55}>
-                  {line.text}
-                </Text>
-              </Tickable>
-            </Box>
+              <Box style={{ flex: 1, minWidth: 0 }}>
+                <Tickable ticked={ticks.has(`s${i}`)} onToggle={() => toggle(`s${i}`)}>
+                  <Text fz={17} lh={1.55}>
+                    {line.text}
+                  </Text>
+                </Tickable>
+              </Box>
+            </Group>
           );
         })}
       </Box>
@@ -202,12 +209,10 @@ function Recipe({ recipe }: { recipe: StoredRecipe }) {
 function Tickable({
   ticked,
   onToggle,
-  pl,
   children,
 }: {
   ticked: boolean;
   onToggle: () => void;
-  pl?: number;
   children: ReactNode;
 }) {
   return (
@@ -215,7 +220,6 @@ function Tickable({
       aria-pressed={ticked}
       onClick={onToggle}
       w="100%"
-      pl={pl}
       style={{
         display: "block",
         opacity: ticked ? 0.35 : 1,
