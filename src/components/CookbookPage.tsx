@@ -22,23 +22,38 @@ import {
   tagChips,
   type CookbookState,
 } from "../cookbook/cookbook.ts";
-import { Fragment } from "react";
-import type { StoredRecipe } from "../data/recipes.ts";
+import { Fragment, useState } from "react";
+import { setArchived, type StoredRecipe } from "../data/recipes.ts";
 import { LABEL_STYLE } from "../theme.ts";
 import { useLiveRecipes } from "./liveRecipes.ts";
-import { usePageActions } from "./pageActions.ts";
+import { usePageMenu } from "./pageMenu.ts";
 import { QuietToggle } from "./QuietToggle.tsx";
 
 /** The cookbook: every recipe as a photo card (or a list), with search, tags and sort. */
 export function CookbookPage() {
-  usePageActions([
-    { label: "New recipe", to: "/recipe/new" },
-    { label: "Show archived", to: "/?archived=1" },
-  ]);
   const live = useLiveRecipes();
   const [params] = useSearchParams();
   const navigate = useNavigate();
   const state = readCookbookState(params);
+  usePageMenu(
+    state.archived ? "Archived" : "Cookbook",
+    state.archived
+      ? []
+      : [
+          { label: "New recipe", to: "/recipe/new" },
+          { label: "Show archived", to: "/?archived=1" },
+        ],
+  );
+  const [unarchiveError, setUnarchiveError] = useState<string | null>(null);
+  // Only the Show archived view offers Unarchive on each recipe.
+  const onUnarchive = state.archived
+    ? (recipe: StoredRecipe) => {
+        setUnarchiveError(null);
+        setArchived(recipe.id, false).catch((cause: unknown) =>
+          setUnarchiveError(cause instanceof Error ? cause.message : String(cause)),
+        );
+      }
+    : undefined;
   // Filters replace the URL instead of adding history: Back leaves the cookbook.
   const update = (patch: Partial<CookbookState>) =>
     void navigate({ search: cookbookSearch({ ...state, ...patch }) }, { replace: true });
@@ -50,7 +65,7 @@ export function CookbookPage() {
   return (
     <Stack gap="lg">
       <Stack gap={4} pt="xl">
-        <Title order={1}>Cookbook</Title>
+        <Title order={1}>{state.archived ? "Archived" : "Cookbook"}</Title>
         {live.status === "ready" && (
           <Text ta="center" c="dimmed" style={LABEL_STYLE}>
             {shown.length} {shown.length === 1 ? "recipe" : "recipes"}
@@ -115,6 +130,11 @@ export function CookbookPage() {
           ]}
         />
       </Group>
+      {unarchiveError && (
+        <Alert color="red" title="Couldn't unarchive">
+          {unarchiveError}
+        </Alert>
+      )}
       {live.status === "error" ? (
         <Alert color="red" title="Couldn't load the recipes">
           {live.message}
@@ -135,11 +155,11 @@ export function CookbookPage() {
           </Button>
         </Stack>
       ) : state.view === "list" ? (
-        <RecipeList recipes={shown} sort={state.sort} />
+        <RecipeList recipes={shown} sort={state.sort} onUnarchive={onUnarchive} />
       ) : (
         <SimpleGrid cols={2} spacing="sm" verticalSpacing="xl">
           {shown.map((recipe) => (
-            <RecipeCard key={recipe.id} recipe={recipe} />
+            <RecipeCard key={recipe.id} recipe={recipe} onUnarchive={onUnarchive} />
           ))}
         </SimpleGrid>
       )}
@@ -149,9 +169,42 @@ export function CookbookPage() {
 
 const titleStyle = { letterSpacing: "0.16em", lineHeight: 1.35 } as const;
 
-function RecipeCard({ recipe }: { recipe: StoredRecipe }) {
+type Unarchive = ((recipe: StoredRecipe) => void) | undefined;
+
+/** Unarchive, in the Show archived view. */
+function UnarchiveButton({
+  recipe,
+  onUnarchive,
+}: {
+  recipe: StoredRecipe;
+  onUnarchive: Unarchive;
+}) {
+  if (!onUnarchive) return null;
   return (
-    <UnstyledButton component={Link} to={`/recipe/${recipe.id}`} ta="center">
+    <Button
+      variant="subtle"
+      size="compact-xs"
+      aria-label={`Unarchive ${recipe.title}`}
+      onClick={() => onUnarchive(recipe)}
+      style={{ flex: "none" }}
+    >
+      Unarchive
+    </Button>
+  );
+}
+
+function RecipeCard({ recipe, onUnarchive }: { recipe: StoredRecipe; onUnarchive: Unarchive }) {
+  return (
+    <Stack gap={4} align="center">
+      <RecipeCardLink recipe={recipe} />
+      <UnarchiveButton recipe={recipe} onUnarchive={onUnarchive} />
+    </Stack>
+  );
+}
+
+function RecipeCardLink({ recipe }: { recipe: StoredRecipe }) {
+  return (
+    <UnstyledButton component={Link} to={`/recipe/${recipe.id}`} ta="center" w="100%">
       {recipe.thumbnail ? (
         <Image src={recipe.thumbnail} alt="" style={{ aspectRatio: "4 / 5" }} fit="cover" />
       ) : (
@@ -165,7 +218,15 @@ function RecipeCard({ recipe }: { recipe: StoredRecipe }) {
 }
 
 /** The list view: an A–Z index like a book's contents page. */
-function RecipeList({ recipes, sort }: { recipes: StoredRecipe[]; sort: CookbookState["sort"] }) {
+function RecipeList({
+  recipes,
+  sort,
+  onUnarchive,
+}: {
+  recipes: StoredRecipe[];
+  sort: CookbookState["sort"];
+  onUnarchive: Unarchive;
+}) {
   return (
     <Box component="ul" aria-label="Recipes" p={0} m={0} style={{ listStyle: "none" }}>
       {letterGroups(recipes, sort).map(({ letter, recipes: group }) => (
@@ -179,7 +240,7 @@ function RecipeList({ recipes, sort }: { recipes: StoredRecipe[]; sort: Cookbook
           )}
           {group.map((recipe) => (
             <li key={recipe.id}>
-              <RecipeRow recipe={recipe} />
+              <RecipeRow recipe={recipe} onUnarchive={onUnarchive} />
             </li>
           ))}
         </Fragment>
@@ -188,36 +249,33 @@ function RecipeList({ recipes, sort }: { recipes: StoredRecipe[]; sort: Cookbook
   );
 }
 
-function RecipeRow({ recipe }: { recipe: StoredRecipe }) {
+function RecipeRow({ recipe, onUnarchive }: { recipe: StoredRecipe; onUnarchive: Unarchive }) {
   const meta = [recipe.totalTime, recipe.tags.slice(0, 2).join(", ")].filter(Boolean).join(" · ");
   return (
-    <UnstyledButton
-      component={Link}
-      to={`/recipe/${recipe.id}`}
-      py="sm"
-      w="100%"
-      style={{
-        display: "flex",
-        alignItems: "center",
-        gap: 12,
-        borderBottom: "1px solid var(--mantine-color-gray-3)",
-      }}
-    >
-      <Box style={{ flex: 1, minWidth: 0 }}>
-        <Text fz={19} lh={1.25}>
-          {recipe.title}
-        </Text>
-        {meta && (
-          <Text c="dimmed" mt={3} style={LABEL_STYLE}>
-            {meta}
+    <Group gap={8} wrap="nowrap" style={{ borderBottom: "1px solid var(--mantine-color-gray-3)" }}>
+      <UnstyledButton
+        component={Link}
+        to={`/recipe/${recipe.id}`}
+        py="sm"
+        style={{ flex: 1, minWidth: 0, display: "flex", alignItems: "center", gap: 12 }}
+      >
+        <Box style={{ flex: 1, minWidth: 0 }}>
+          <Text fz={19} lh={1.25}>
+            {recipe.title}
           </Text>
+          {meta && (
+            <Text c="dimmed" mt={3} style={LABEL_STYLE}>
+              {meta}
+            </Text>
+          )}
+        </Box>
+        {recipe.thumbnail ? (
+          <Image src={recipe.thumbnail} alt="" w={56} h={56} fit="cover" style={{ flex: "none" }} />
+        ) : (
+          <Box bg="gray.1" w={56} h={56} style={{ flex: "none" }} />
         )}
-      </Box>
-      {recipe.thumbnail ? (
-        <Image src={recipe.thumbnail} alt="" w={56} h={56} fit="cover" style={{ flex: "none" }} />
-      ) : (
-        <Box bg="gray.1" w={56} h={56} style={{ flex: "none" }} />
-      )}
-    </UnstyledButton>
+      </UnstyledButton>
+      <UnarchiveButton recipe={recipe} onUnarchive={onUnarchive} />
+    </Group>
   );
 }

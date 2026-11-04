@@ -1,12 +1,25 @@
-import { Anchor, Box, Group, Image, UnstyledButton, Stack, Text, Title } from "@mantine/core";
+import {
+  Alert,
+  Anchor,
+  Box,
+  Button,
+  Group,
+  Image,
+  Modal,
+  UnstyledButton,
+  Stack,
+  Text,
+  Title,
+} from "@mantine/core";
 import { useEffect, useState, type ReactNode } from "react";
-import { Link, useParams } from "react-router";
+import { Link, useNavigate, useParams } from "react-router";
 import { loadFullImage } from "../data/images.ts";
-import type { StoredRecipe } from "../data/recipes.ts";
+import { setArchived, type StoredRecipe } from "../data/recipes.ts";
 import { scaleIngredient } from "../parsing/scale.ts";
 import type { IngredientLine, InstructionLine, SectionHeader } from "../parsing/types.ts";
 import { LABEL_STYLE } from "../theme.ts";
 import { useLiveRecipes } from "./liveRecipes.ts";
+import { usePageMenu } from "./pageMenu.ts";
 import { QuietToggle } from "./QuietToggle.tsx";
 import { useTicks } from "./useTicks.ts";
 import { useWakeLock } from "./useWakeLock.ts";
@@ -22,6 +35,63 @@ const SCALES: { value: Scale; label: string }[] = [
   { value: "2", label: "2×" },
   { value: "3", label: "3×" },
 ];
+
+/**
+ * The menu's Archive (asks first, then returns to the cookbook) or Unarchive action, and the
+ * confirmation dialog to render.
+ */
+function useArchive(recipe: StoredRecipe) {
+  const navigate = useNavigate();
+  const [asking, setAsking] = useState(false);
+  const [busy, setBusy] = useState(false);
+  const [error, setError] = useState<string | null>(null);
+
+  const save = async (archived: boolean) => {
+    setError(null);
+    setBusy(true);
+    try {
+      await setArchived(recipe.id, archived);
+      return true;
+    } catch (cause) {
+      setError(cause instanceof Error ? cause.message : String(cause));
+      return false;
+    } finally {
+      setBusy(false);
+    }
+  };
+
+  usePageMenu(recipe.title, [
+    recipe.archived
+      ? { label: "Unarchive", onSelect: () => void save(false) }
+      : { label: "Archive", onSelect: () => setAsking(true) },
+  ]);
+
+  const confirm = (
+    <Modal opened={asking} onClose={() => setAsking(false)} title="Archive this recipe?" centered>
+      <Text>
+        “{recipe.title}” will be hidden from the cookbook and search. You can bring it back from{" "}
+        <em>Show archived</em>.
+      </Text>
+      <Group justify="flex-end" mt="lg">
+        <Button variant="subtle" onClick={() => setAsking(false)}>
+          Cancel
+        </Button>
+        <Button
+          loading={busy}
+          onClick={() =>
+            void save(true).then((saved) => {
+              setAsking(false);
+              if (saved) void navigate("/");
+            })
+          }
+        >
+          Archive
+        </Button>
+      </Group>
+    </Modal>
+  );
+  return { confirm, error };
+}
 
 /** The recipe's thumbnail at once, then its full photo once loaded (ADR-0001). */
 function usePhoto(recipe: StoredRecipe): string | null {
@@ -69,6 +139,7 @@ function Recipe({ recipe }: { recipe: StoredRecipe }) {
   ].filter(([, value]) => value);
   const photo = usePhoto(recipe);
   useWakeLock();
+  const archive = useArchive(recipe);
   const [ticks, toggle] = useTicks(recipe.id);
   // Scaling is for this cook only: never saved.
   const [scale, setScale] = useState<Scale>("1");
@@ -92,7 +163,18 @@ function Recipe({ recipe }: { recipe: StoredRecipe }) {
           style={{ maxWidth: "none" }}
         />
       )}
-      <Title order={1} pt="xl" fz={28} lh={1.25}>
+      {recipe.archived && (
+        <Text ta="center" c="dimmed" pt="xl" style={LABEL_STYLE}>
+          Archived
+        </Text>
+      )}
+      {archive.error && (
+        <Alert color="red" mt="md" title="Couldn't save">
+          {archive.error}
+        </Alert>
+      )}
+      {archive.confirm}
+      <Title order={1} pt={recipe.archived ? "xs" : "xl"} fz={28} lh={1.25}>
         {recipe.title}
       </Title>
       {recipe.source && (

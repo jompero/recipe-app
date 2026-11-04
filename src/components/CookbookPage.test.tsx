@@ -12,6 +12,7 @@ const live = vi.hoisted(() => ({
   listeners: new Set<(recipes: StoredRecipe[]) => void>(),
   /** Set to make the subscription fail. */
   error: null as Error | null,
+  setArchived: vi.fn<(id: string, archived: boolean) => Promise<void>>(() => Promise.resolve()),
   push(recipes: StoredRecipe[]) {
     live.recipes = recipes;
     for (const listener of live.listeners) listener(recipes);
@@ -27,6 +28,7 @@ vi.mock("../data/recipes.ts", () => ({
     if (live.recipes) onChange(live.recipes);
     return () => live.listeners.delete(onChange);
   },
+  setArchived: live.setArchived,
   existingRecipeIds: vi.fn(),
   saveRecipes: vi.fn(),
 }));
@@ -49,6 +51,7 @@ const recipe = storedRecipe;
 beforeEach(() => {
   live.listeners.clear();
   live.error = null;
+  live.setArchived.mockClear();
   live.recipes = [
     recipe("Spinach Pie", { thumbnail: "data:image/jpeg;base64,PIE", tags: ["baking"] }),
     recipe("Chicken Salad", { tags: ["chicken", "salad"] }),
@@ -176,4 +179,55 @@ test("if the recipes can't be loaded, says so", () => {
   openCookbook();
   expect(screen.getByText(/couldn't load the recipes/i)).toBeInTheDocument();
   expect(screen.getByText(/Missing or insufficient permissions/)).toBeInTheDocument();
+});
+
+describe("archived recipes", () => {
+  beforeEach(() => {
+    live.recipes = [
+      recipe("Chicken Soup", { tags: ["soup"] }),
+      recipe("Old Stew", { archived: true, tags: ["stew"] }),
+      recipe("Retired Pie", { archived: true }),
+    ];
+  });
+
+  test("the cookbook hides them", () => {
+    openCookbook();
+    expect(cardTitles()).toEqual(["Chicken Soup"]);
+  });
+
+  test("Show archived lists only archived recipes, each with Unarchive", async () => {
+    openCookbook("?archived=1");
+    expect(screen.getByRole("heading", { level: 1, name: "Archived" })).toBeInTheDocument();
+    expect(cardTitles()).toEqual(["Old Stew", "Retired Pie"]);
+
+    await userEvent.click(screen.getByRole("button", { name: "Unarchive Old Stew" }));
+    expect(live.setArchived).toHaveBeenCalledWith("old-stew", false);
+  });
+
+  test("the list view of archived recipes has Unarchive too", async () => {
+    openCookbook("?archived=1&view=list");
+    await userEvent.click(screen.getByRole("button", { name: "Unarchive Retired Pie" }));
+    expect(live.setArchived).toHaveBeenCalledWith("retired-pie", false);
+  });
+
+  test("the archived view offers no New recipe or Show archived in the menu", async () => {
+    openCookbook("?archived=1");
+    await userEvent.click(screen.getByRole("button", { name: "Menu" }));
+    const menu = await screen.findByRole("dialog", { name: "Menu" });
+    expect(within(menu).queryByRole("button", { name: "Show archived" })).not.toBeInTheDocument();
+    expect(within(menu).queryByRole("button", { name: "New recipe" })).not.toBeInTheDocument();
+  });
+});
+
+test("the menu names the page: Cookbook, or Archived in the archived view", async () => {
+  const { unmount } = openCookbook();
+  await userEvent.click(screen.getByRole("button", { name: "Menu" }));
+  let menu = await screen.findByRole("dialog", { name: "Menu" });
+  expect(within(menu).getByRole("heading", { name: "Cookbook" })).toBeInTheDocument();
+  unmount();
+
+  openCookbook("?archived=1");
+  await userEvent.click(screen.getByRole("button", { name: "Menu" }));
+  menu = await screen.findByRole("dialog", { name: "Menu" });
+  expect(within(menu).getByRole("heading", { name: "Archived" })).toBeInTheDocument();
 });

@@ -156,4 +156,17 @@ describe("member shell: the bottom button and the menu overlay", () => {
     await userEvent.click(screen.getByRole("button", { name: "Sign out" }));
     expect(fakeAuth.signOut).toHaveBeenCalledOnce();
   });
+
+  test("the menu names the page you're on, also on pages without actions", async () => {
+    for (const [route, name] of [
+      ["/data", "Data"],
+      ["/account", "Account"],
+    ]) {
+      const { unmount } = renderApp(route);
+      await userEvent.click(screen.getByRole("button", { name: "Menu" }));
+      const menu = await screen.findByRole("dialog", { name: "Menu" });
+      expect(within(menu).getByRole("heading", { name })).toBeInTheDocument();
+      unmount();
+    }
+  });
 });

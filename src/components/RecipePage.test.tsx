@@ -9,12 +9,14 @@ import { renderApp, screen } from "../test-utils/renderApp.tsx";
 const fake = vi.hoisted(() => ({
   recipes: [] as StoredRecipe[],
   fullImage: null as { resolve: (url: string | null) => void } | null,
+  setArchived: vi.fn<(id: string, archived: boolean) => Promise<void>>(() => Promise.resolve()),
 }));
 vi.mock("../data/recipes.ts", () => ({
   watchRecipes: (onChange: (recipes: StoredRecipe[]) => void) => {
     onChange(fake.recipes);
     return () => {};
   },
+  setArchived: fake.setArchived,
   existingRecipeIds: vi.fn(),
   saveRecipes: vi.fn(),
 }));
@@ -63,6 +65,7 @@ const soup = storedRecipe("Chicken Soup", {
 beforeEach(() => {
   fake.recipes = [soup];
   fake.fullImage = null;
+  fake.setArchived.mockClear();
   sessionStorage.clear();
 });
 
@@ -188,4 +191,59 @@ test("keeps the screen awake while the recipe is open", async () => {
   } finally {
     Reflect.deleteProperty(navigator, "wakeLock");
   }
+});
+
+async function chooseFromMenu(action: string) {
+  await userEvent.click(screen.getByRole("button", { name: "Menu" }));
+  const menu = await screen.findByRole("dialog", { name: "Menu" });
+  await userEvent.click(within(menu).getByRole("button", { name: action }));
+}
+
+describe("archive", () => {
+  test("Archive asks first; confirming archives the recipe and returns to the cookbook", async () => {
+    const { router } = renderApp("/recipe/chicken-soup");
+    await chooseFromMenu("Archive");
+
+    const confirm = await screen.findByRole("dialog", { name: "Archive this recipe?" });
+    expect(fake.setArchived).not.toHaveBeenCalled();
+    await userEvent.click(within(confirm).getByRole("button", { name: "Archive" }));
+
+    expect(fake.setArchived).toHaveBeenCalledWith("chicken-soup", true);
+    await waitFor(() => expect(router.state.location.pathname).toBe("/"));
+  });
+
+  test("Cancel leaves the recipe alone", async () => {
+    const { router } = renderApp("/recipe/chicken-soup");
+    await chooseFromMenu("Archive");
+    const confirm = await screen.findByRole("dialog", { name: "Archive this recipe?" });
+    await userEvent.click(within(confirm).getByRole("button", { name: "Cancel" }));
+
+    await waitFor(() =>
+      expect(
+        screen.queryByRole("dialog", { name: "Archive this recipe?" }),
+      ).not.toBeInTheDocument(),
+    );
+    expect(fake.setArchived).not.toHaveBeenCalled();
+    expect(router.state.location.pathname).toBe("/recipe/chicken-soup");
+  });
+
+  test("an archived recipe says so and offers Unarchive, which needs no confirmation", async () => {
+    fake.recipes = [{ ...soup, archived: true }];
+    renderApp("/recipe/chicken-soup");
+    expect(screen.getByText("Archived")).toBeInTheDocument();
+
+    await userEvent.click(screen.getByRole("button", { name: "Menu" }));
+    const menu = await screen.findByRole("dialog", { name: "Menu" });
+    expect(within(menu).queryByRole("button", { name: "Archive" })).not.toBeInTheDocument();
+    await userEvent.click(within(menu).getByRole("button", { name: "Unarchive" }));
+
+    expect(fake.setArchived).toHaveBeenCalledWith("chicken-soup", false);
+  });
+});
+
+test("the menu names the recipe it acts on", async () => {
+  renderApp("/recipe/chicken-soup");
+  await userEvent.click(screen.getByRole("button", { name: "Menu" }));
+  const menu = await screen.findByRole("dialog", { name: "Menu" });
+  expect(within(menu).getByRole("heading", { name: "Chicken Soup" })).toBeInTheDocument();
 });

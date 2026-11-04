@@ -8,6 +8,7 @@ import {
   query,
   serverTimestamp,
   Timestamp,
+  updateDoc,
   where,
   type DocumentData,
   type QueryDocumentSnapshot,
@@ -116,4 +117,12 @@ export function watchRecipes(
     (snapshot) => onChange(snapshot.docs.map(storedRecipe)),
     onError,
   );
+}
+
+/**
+ * Archives a recipe (hidden from the cookbook and search) or brings it back. Nothing in the app
+ * deletes recipes. Fails if the recipe doesn't exist.
+ */
+export async function setArchived(id: string, archived: boolean): Promise<void> {
+  await updateDoc(doc(db, COLLECTION, id), { archived, updatedAt: serverTimestamp() });
 }
