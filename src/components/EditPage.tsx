@@ -26,6 +26,8 @@ import {
 } from "../editing/recipeForm.ts";
 import { LABEL_STYLE } from "../theme.ts";
 import { useLiveRecipes } from "./liveRecipes.ts";
+import { PhotoField } from "./PhotoField.tsx";
+import { usePhotoDraft } from "./usePhotoDraft.ts";
 
 /** The edit form for a recipe (#/recipe/:id/edit), or blank for a new one (#/recipe/new). */
 export function EditPage() {
@@ -67,9 +69,10 @@ function EditForm({
   const [saving, setSaving] = useState(false);
   const [saveError, setSaveError] = useState<string | null>(null);
   const leaving = useRef(false);
+  const photo = usePhotoDraft(recipe?.thumbnail ?? null);
 
   // Leaving with unsaved changes (Cancel, a link, or phone Back) asks first. Saving clears the way.
-  const dirty = JSON.stringify(form) !== JSON.stringify(initial);
+  const dirty = JSON.stringify(form) !== JSON.stringify(initial) || photo.change !== "keep";
   const blocker = useBlocker(
     ({ currentLocation, nextLocation }) =>
       dirty && !leaving.current && currentLocation.pathname !== nextLocation.pathname,
@@ -100,10 +103,14 @@ function EditForm({
       const draft = draftFromForm(form);
       leaving.current = true;
       if (recipe) {
-        await updateRecipe(recipe.id, draft);
+        await updateRecipe(recipe.id, draft, photo.change);
         leave();
       } else {
-        const id = await createRecipe(draft);
+        // A new recipe has no stored photo, so its change is "keep" (none) or a new photo.
+        const id = await createRecipe(
+          draft,
+          typeof photo.change === "object" ? photo.change : null,
+        );
         void navigate(`/recipe/${id}`, { replace: true });
       }
     } catch (cause) {
@@ -129,6 +136,7 @@ function EditForm({
         {...text("title")}
         error={showErrors ? errors.title : undefined}
       />
+      <PhotoField photo={photo} />
       <Textarea label="Description" autosize minRows={2} {...text("description")} />
       <SimpleGrid cols={2} spacing="sm">
         <TextInput label="Source" {...text("source")} />
@@ -177,7 +185,12 @@ function EditForm({
           </Button>
         </Group>
       </Modal>
-      <SaveCancelBar saving={saving} onSave={() => void save()} onCancel={leave} />
+      <SaveCancelBar
+        saving={saving}
+        compressing={photo.busy}
+        onSave={() => void save()}
+        onCancel={leave}
+      />
     </Stack>
   );
 }
@@ -185,10 +198,13 @@ function EditForm({
 /** Fixed at the bottom in place of the menu button. */
 function SaveCancelBar({
   saving,
+  compressing,
   onSave,
   onCancel,
 }: {
   saving: boolean;
+  /** A photo is still being compressed: saving now would leave it out. */
+  compressing: boolean;
   onSave: () => void;
   onCancel: () => void;
 }) {
@@ -206,10 +222,7 @@ function SaveCancelBar({
         <Button variant="subtle" onClick={onCancel} disabled={saving}>
           Cancel
         </Button>
-        <Text c="dimmed" style={LABEL_STYLE} visibleFrom="xs">
-          Photos can be changed in a later version
-        </Text>
-        <Button onClick={onSave} loading={saving}>
+        <Button onClick={onSave} loading={saving} disabled={compressing}>
           Save
         </Button>
       </Group>

@@ -1,16 +1,24 @@
-import { within } from "@testing-library/react";
+import { fireEvent, within } from "@testing-library/react";
 import userEvent from "@testing-library/user-event";
 import type { Session } from "../data/auth.ts";
-import type { StoredRecipe } from "../data/recipes.ts";
+import type { PhotoChange, RecipePhoto, StoredRecipe } from "../data/recipes.ts";
 import type { RecipeDraft } from "../parsing/types.ts";
 import { storedRecipe } from "../test-utils/recipeFixture.ts";
 import { renderApp, screen } from "../test-utils/renderApp.tsx";
+import type { CompressedImage } from "../utils/imageCompressor.ts";
 
-// Fake the data seam: a member, the live recipe list, and the two saves.
+// Fake the seams: a member, the live recipe list, the two saves, and the canvas-based compressor
+// (jsdom has no canvas).
 const fake = vi.hoisted(() => ({
   recipes: [] as StoredRecipe[],
-  updateRecipe: vi.fn<(id: string, recipe: RecipeDraft) => Promise<void>>(),
-  createRecipe: vi.fn<(recipe: RecipeDraft) => Promise<string>>(),
+  updateRecipe: vi.fn<(id: string, recipe: RecipeDraft, photo?: PhotoChange) => Promise<void>>(),
+  createRecipe: vi.fn<(recipe: RecipeDraft, photo?: RecipePhoto | null) => Promise<string>>(),
+  compressImage: vi.fn<(file: File) => Promise<CompressedImage>>(),
+  ImageTooLargeError: class extends Error {},
+}));
+vi.mock("../utils/imageCompressor.ts", () => ({
+  compressImage: fake.compressImage,
+  ImageTooLargeError: fake.ImageTooLargeError,
 }));
 vi.mock("../data/recipes.ts", () => ({
   watchRecipes: (onChange: (recipes: StoredRecipe[]) => void) => {
@@ -49,6 +57,11 @@ beforeEach(() => {
   fake.recipes = [soup, storedRecipe("Salad", { tags: ["salad", "summer"] })];
   fake.updateRecipe.mockReset().mockResolvedValue(undefined);
   fake.createRecipe.mockReset().mockResolvedValue("NewRecipeId123");
+  fake.compressImage
+    .mockReset()
+    .mockImplementation((file) =>
+      Promise.resolve({ full: `full:${file.name}`, thumbnail: `thumb:${file.name}` }),
+    );
 });
 
 const field = (name: string) => screen.getByRole("textbox", { name });
@@ -94,6 +107,7 @@ test("saving sends the edited recipe, amounts recalculated, and returns to it", 
         { raw: "Salt", item: "Salt" },
       ],
     }),
+    "keep",
   );
   expect(router.state.location.pathname).toBe("/recipe/chicken-soup");
 });
@@ -158,6 +172,7 @@ test("tags: suggestions come from tags in use, and typed tags are saved lowercas
   expect(fake.updateRecipe).toHaveBeenCalledWith(
     "chicken-soup",
     expect.objectContaining({ tags: ["chicken", "soup", "dinner"] }),
+    "keep",
   );
 });
 
@@ -178,6 +193,7 @@ test("New recipe opens a blank form; saving creates the recipe and opens it", as
       title: "Toast",
       ingredients: [{ raw: "2 slices bread", qty: 2, unit: "slice", item: "bread" }],
     }),
+    null,
   );
   expect(router.state.location.pathname).toBe("/recipe/NewRecipeId123");
 });
@@ -191,4 +207,163 @@ test("a failed save says why and keeps the form", async () => {
   expect(await screen.findByText("Missing or insufficient permissions.")).toBeInTheDocument();
   expect(router.state.location.pathname).toBe("/recipe/chicken-soup/edit");
   expect(field("Title")).toHaveValue("Chicken Soup!");
+});
+
+describe("photo (US-4.1)", () => {
+  const dish = () => new File(["jpeg bytes"], "dish.jpg", { type: "image/jpeg" });
+  const photoArea = () => screen.getByRole("group", { name: "Photo" });
+  const preview = () => screen.getByRole("img", { name: "Recipe photo" });
+
+  beforeEach(() => {
+    fake.recipes = [{ ...soup, thumbnail: "data:image/jpeg;base64,THUMB", hasImage: true }];
+  });
+
+  test("an existing photo shows, and a recipe without one shows a placeholder", async () => {
+    renderApp("/recipe/chicken-soup/edit");
+    expect(preview()).toHaveAttribute("src", "data:image/jpeg;base64,THUMB");
+
+    fake.recipes = [];
+    renderApp("/recipe/new");
+    expect(await screen.findByText(/No photo/)).toBeInTheDocument();
+  });
+
+  test("picking a file compresses it and shows the preview", async () => {
+    renderApp("/recipe/chicken-soup/edit");
+    const picker = screen.getByLabelText("Choose a photo");
+    expect(picker).toHaveAttribute("accept", "image/*");
+    expect(picker).not.toHaveAttribute("capture");
+
+    await userEvent.upload(picker, dish());
+
+    expect(fake.compressImage).toHaveBeenCalledWith(expect.objectContaining({ name: "dish.jpg" }));
+    expect(await screen.findByRole("img", { name: "Recipe photo" })).toHaveAttribute(
+      "src",
+      "full:dish.jpg",
+    );
+  });
+
+  test("pasting an image anywhere outside the text boxes stages it", async () => {
+    renderApp("/recipe/chicken-soup/edit");
+
+    fireEvent.paste(document.body, { clipboardData: { files: [dish()], items: [] } });
+
+    expect(await screen.findByRole("img", { name: "Recipe photo" })).toHaveAttribute(
+      "src",
+      "full:dish.jpg",
+    );
+  });
+
+  test("pasting an image given only as a clipboard item stages it", async () => {
+    renderApp("/recipe/chicken-soup/edit");
+    const item = { kind: "file", type: "image/png", getAsFile: () => dish() };
+
+    fireEvent.paste(photoArea(), { clipboardData: { files: [], items: [item] } });
+
+    expect(await screen.findByRole("img", { name: "Recipe photo" })).toHaveAttribute(
+      "src",
+      "full:dish.jpg",
+    );
+  });
+
+  test("pasting into a text box is left to the text box", () => {
+    renderApp("/recipe/chicken-soup/edit");
+
+    fireEvent.paste(field("Method"), { clipboardData: { files: [dish()], items: [] } });
+
+    expect(fake.compressImage).not.toHaveBeenCalled();
+  });
+
+  test("dropping an image file on the photo area stages it", async () => {
+    renderApp("/recipe/chicken-soup/edit");
+
+    fireEvent.drop(photoArea(), { dataTransfer: { files: [dish()], types: ["Files"] } });
+
+    expect(await screen.findByRole("img", { name: "Recipe photo" })).toHaveAttribute(
+      "src",
+      "full:dish.jpg",
+    );
+  });
+
+  test("dropping a file that isn't an image says so and keeps the photo", async () => {
+    renderApp("/recipe/chicken-soup/edit");
+    const notes = new File(["text"], "notes.txt", { type: "text/plain" });
+
+    fireEvent.drop(photoArea(), { dataTransfer: { files: [notes], types: ["Files"] } });
+
+    expect(await screen.findByText(/isn't an image/)).toBeInTheDocument();
+    expect(fake.compressImage).not.toHaveBeenCalled();
+    expect(preview()).toHaveAttribute("src", "data:image/jpeg;base64,THUMB");
+  });
+
+  test("a photo too large to store shows an error and keeps the previous photo", async () => {
+    fake.compressImage.mockRejectedValue(new fake.ImageTooLargeError("too big"));
+    renderApp("/recipe/chicken-soup/edit");
+
+    await userEvent.upload(screen.getByLabelText("Choose a photo"), dish());
+
+    expect(await screen.findByText(/too large/)).toBeInTheDocument();
+    expect(preview()).toHaveAttribute("src", "data:image/jpeg;base64,THUMB");
+  });
+
+  test("Remove clears the photo, and Save removes it", async () => {
+    renderApp("/recipe/chicken-soup/edit");
+
+    await userEvent.click(screen.getByRole("button", { name: "Remove photo" }));
+    expect(screen.queryByRole("img", { name: "Recipe photo" })).not.toBeInTheDocument();
+    expect(screen.getByText(/No photo/)).toBeInTheDocument();
+
+    await userEvent.click(screen.getByRole("button", { name: "Save" }));
+    expect(fake.updateRecipe).toHaveBeenCalledWith("chicken-soup", expect.anything(), "remove");
+  });
+
+  test("Save sends a new photo for an existing recipe", async () => {
+    renderApp("/recipe/chicken-soup/edit");
+    await userEvent.upload(screen.getByLabelText("Choose a photo"), dish());
+    await screen.findByRole("img", { name: "Recipe photo" });
+
+    await userEvent.click(screen.getByRole("button", { name: "Save" }));
+
+    expect(fake.updateRecipe).toHaveBeenCalledWith("chicken-soup", expect.anything(), {
+      thumbnail: "thumb:dish.jpg",
+      full: "full:dish.jpg",
+    });
+  });
+
+  test("Save sends the photo with a new recipe", async () => {
+    const { router } = renderApp("/recipe/new");
+    await userEvent.type(field("Title"), "Toast");
+    await userEvent.upload(screen.getByLabelText("Choose a photo"), dish());
+    await screen.findByRole("img", { name: "Recipe photo" });
+
+    await userEvent.click(screen.getByRole("button", { name: "Save" }));
+
+    expect(fake.createRecipe).toHaveBeenCalledWith(expect.objectContaining({ title: "Toast" }), {
+      thumbnail: "thumb:dish.jpg",
+      full: "full:dish.jpg",
+    });
+    expect(router.state.location.pathname).toBe("/recipe/NewRecipeId123");
+  });
+
+  test("Cancel after changing the photo asks to discard, and Discard saves nothing", async () => {
+    const { router } = renderApp("/recipe/chicken-soup");
+    await chooseFromMenu("Edit recipe");
+    await userEvent.upload(screen.getByLabelText("Choose a photo"), dish());
+    await screen.findByRole("img", { name: "Recipe photo" });
+
+    await userEvent.click(screen.getByRole("button", { name: "Cancel" }));
+    const prompt = await screen.findByRole("dialog", { name: "Discard changes?" });
+    await userEvent.click(within(prompt).getByRole("button", { name: "Discard" }));
+
+    expect(router.state.location.pathname).toBe("/recipe/chicken-soup");
+    expect(fake.updateRecipe).not.toHaveBeenCalled();
+  });
+
+  test("Cancel after removing the photo asks to discard too", async () => {
+    renderApp("/recipe/chicken-soup");
+    await chooseFromMenu("Edit recipe");
+    await userEvent.click(screen.getByRole("button", { name: "Remove photo" }));
+
+    await userEvent.click(screen.getByRole("button", { name: "Cancel" }));
+    expect(await screen.findByRole("dialog", { name: "Discard changes?" })).toBeInTheDocument();
+  });
 });

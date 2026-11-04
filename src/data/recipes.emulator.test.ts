@@ -1,4 +1,4 @@
-// Emulator test for src/data/recipes.ts (US-2.4), with the real firestore.rules loaded.
+// Emulator test for src/data/recipes.ts (US-2.4, US-4.1), with the real firestore.rules loaded.
 //   npm run test:ci                      (starts and stops the emulators)
 //   npm test  with `npm run emulators` running in another terminal
 import { initializeTestEnvironment, type RulesTestEnvironment } from "@firebase/rules-unit-testing";
@@ -267,5 +267,82 @@ describe("editing", () => {
       archived: false,
     });
     expect(toast?.createdAt.getFullYear()).toBeGreaterThan(2000);
+  });
+});
+
+describe("photos (US-4.1)", () => {
+  const find = async (id: string) => (await loadAllRecipes()).find((recipe) => recipe.id === id);
+  const photo = (name: string) => ({
+    thumbnail: `data:image/jpeg;base64,THUMB-${name}`,
+    full: `data:image/jpeg;base64,FULL-${name}`,
+  });
+
+  test("a new recipe with a photo saves both documents", async () => {
+    const id = await createRecipe(draft("Toast"), photo("toast"));
+
+    expect(id).toMatch(/^[A-Za-z0-9]{20}$/);
+    expect(await find(id)).toMatchObject({
+      ...draft("Toast"),
+      thumbnail: "data:image/jpeg;base64,THUMB-toast",
+      hasImage: true,
+      archived: false,
+    });
+    expect(await loadFullImage(id)).toBe("data:image/jpeg;base64,FULL-toast");
+  });
+
+  test("an existing recipe without a photo gets one", async () => {
+    await saveRecipes([toSave("pasta")]);
+
+    await updateRecipe("pasta", draft("Pasta with a photo"), photo("new"));
+
+    expect(await find("pasta")).toMatchObject({
+      title: "Pasta with a photo",
+      thumbnail: "data:image/jpeg;base64,THUMB-new",
+      hasImage: true,
+    });
+    expect(await loadFullImage("pasta")).toBe("data:image/jpeg;base64,FULL-new");
+  });
+
+  test("a photo is replaced", async () => {
+    await saveRecipes([toSave("pasta", "data:image/jpeg;base64,FULL")]);
+
+    await updateRecipe("pasta", draft("pasta"), photo("better"));
+
+    expect(await find("pasta")).toMatchObject({
+      thumbnail: "data:image/jpeg;base64,THUMB-better",
+      hasImage: true,
+    });
+    expect(await loadFullImage("pasta")).toBe("data:image/jpeg;base64,FULL-better");
+  });
+
+  test("a photo is removed: the image document goes, the recipe stays", async () => {
+    await saveRecipes([toSave("pasta", "data:image/jpeg;base64,FULL")]);
+
+    await updateRecipe("pasta", draft("pasta"), "remove");
+
+    expect(await find("pasta")).toMatchObject({
+      ...draft("pasta"),
+      thumbnail: null,
+      hasImage: false,
+    });
+    expect(await loadFullImage("pasta")).toBeNull();
+  });
+
+  test("a text-only save leaves the photo alone", async () => {
+    await saveRecipes([toSave("pasta", "data:image/jpeg;base64,FULL")]);
+
+    await updateRecipe("pasta", draft("Renamed"), "keep");
+
+    expect(await find("pasta")).toMatchObject({
+      title: "Renamed",
+      thumbnail: "data:image/jpeg;base64,THUMB",
+      hasImage: true,
+    });
+    expect(await loadFullImage("pasta")).toBe("data:image/jpeg;base64,FULL");
+  });
+
+  test("a photo can't be added to a recipe that doesn't exist", async () => {
+    await expect(updateRecipe("nope", draft("Nope"), photo("x"))).rejects.toThrow();
+    expect(await loadFullImage("nope")).toBeNull();
   });
 });

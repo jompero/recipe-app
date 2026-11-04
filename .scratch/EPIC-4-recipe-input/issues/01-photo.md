@@ -35,10 +35,12 @@ If you need to change anything else, stop and ask.
 
 ## Acceptance criteria
 
-- [ ] Rules tests: a member can delete a `recipe_images` doc and a non-member can't; deleting a recipe is still denied for members.
-- [ ] Emulator tests: new recipe with a photo (both docs, `hasImage: true`, thumbnail set); existing recipe gets a photo; photo replaced; photo removed (image doc gone, `thumbnail: null`, `hasImage: false`); text-only save leaves the photo alone.
-- [ ] Component tests (`src/data` faked, compressor faked): pick, paste and drop each stage a preview; Remove clears it; the too-large error keeps the old photo; Save sends the photo change; Cancel with a photo change asks to discard.
-- [ ] `npm run check` passes (run it only when no other worktree or `dev:all` is using the emulator ports 8080/9099).
+- [x] Rules tests: a member can delete a `recipe_images` doc and a non-member can't; deleting a recipe is still denied for members.
+- [x] Emulator tests: new recipe with a photo (both docs, `hasImage: true`, thumbnail set); existing recipe gets a photo; photo replaced; photo removed (image doc gone, `thumbnail: null`, `hasImage: false`); text-only save leaves the photo alone.
+- [x] Component tests (`src/data` faked, compressor faked): pick, paste and drop each stage a preview; Remove clears it; the too-large error keeps the old photo; Save sends the photo change; Cancel with a photo change asks to discard.
+- [x] `npm run check` passes (run it only when no other worktree or `dev:all` is using the emulator ports 8080/9099).
 - [ ] By hand (owner): add a photo with the phone camera; on a PC, "Copy image" on a website and Ctrl+V it in.
 
 ## Comments
+
+- 2026-11-04 (agent): Built on `EPIC-4/US-4.1-photo`. Data: `updateRecipe(id, draft, photo = "keep")` takes a `PhotoChange` (`"keep"`, `"remove"` or `{ thumbnail, full }`) and writes recipe + image (set or delete) in one batch; `createRecipe(draft, photo = null)` gets its ID from `doc(collection(...))` and batches both docs. `src/data/images.ts` gained `addFullImageDeletionToBatch`. Rules allow members to delete `recipe_images`; recipes still can't be deleted; ADR-0001 has the Consequences bullet. UI: `src/components/PhotoField.tsx` (pick, document-level paste outside text boxes, drop on the area; a stray file drop elsewhere is swallowed so the tab doesn't navigate away) and `src/components/usePhotoDraft.ts`. The hook is in its own file because `react-refresh/only-export-components` forbids exporting it from the component file; its `stage(blob)` is what issue 06 should call with a fetched image. Save is disabled while a photo is compressing. Removed the "Photos can be changed in a later version" note from the Save bar. `recipeForm.ts` is unchanged (the photo lives in the hook, not the form state). `npm run check` passes (362 tests). The by-hand check (phone camera, Ctrl+V on a PC) is left for the owner.
