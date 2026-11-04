@@ -1,6 +1,6 @@
 # 04: Recipe page
 
-Status: ready-for-agent
+Status: done
 Story: US-3.4
 Branch: `EPIC-3/US-3.4-recipe-page`
 Spec: [../spec.md](../spec.md)

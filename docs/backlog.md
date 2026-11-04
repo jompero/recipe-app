@@ -23,7 +23,7 @@
 ## Epic 3: Recipe Browser
 **Goal:** A fast, phone-friendly way to explore the shared cookbook.
 
-**Specified:** see [`.scratch/EPIC-3-recipe-browser/spec.md`](../.scratch/EPIC-3-recipe-browser/spec.md) (stories US-3.1 to US-3.6). Built after Epic 2. The earlier plan to add Playwright tests here was dropped in the Epic 3 grilling; revisit end-to-end tests in Epic 5.
+**Done** (2026-11-05): see [`.scratch/EPIC-3-recipe-browser/spec.md`](../.scratch/EPIC-3-recipe-browser/spec.md) and its per-story issues (US-3.1 to US-3.6). Beyond the spec: an A–Z list view next to the grid (from the prototype), and the menu names the current page. The earlier plan to add Playwright tests here was dropped in the Epic 3 grilling; revisit end-to-end tests in Epic 5. The phone check that the screen stays awake moved to 7.5 (Wake Lock needs HTTPS).
 
 ---
 
@@ -33,6 +33,7 @@
 * **4.1 Quick Paste:** paste rough recipe text and get a parsed draft to correct (reuses the 2.1 and 2.2 parsers).
 * **4.2 Recipe bookmarklet:** a bookmarklet run on a recipe website reads its `ld+json` Recipe data and hands it to the app as a draft. No server and no CORS proxy.
 * **4.3 Photo upload:** take or pick a photo for a recipe. Reuses the JPEG compressor built in Epic 2 (US-2.3).
+* Note from Epic 3: Quick Paste and the bookmarklet can hand their draft to the US-3.5 edit form (`src/editing/recipeForm.ts`, `EditPage`), which already does New recipe, validation and saving.
 
 ---
 
@@ -51,7 +52,7 @@
 **Goal:** Turn a range of menu dates into one combined shopping list.
 
 * **6.1 Date range selection:** choose the range of dates the list is built from.
-* **6.2 Unit conversion:** convert between units (volume, mass) using the parsed ingredient fields, metric by default.
+* **6.2 Unit conversion:** convert between units (volume, mass) using the parsed ingredient fields, metric by default. Review the unit spellings in `src/parsing/ingredientLine.ts` first: e.g. "tlk" (seen in the owner's US-3.5 test) isn't recognised yet.
 * **6.3 Ingredient merging:** combine ingredients across recipes (e.g. `1 cup milk` + `250 ml milk`) into a checklist with checkboxes. Lines that couldn't be parsed are listed separately, never dropped.
 
 ---
