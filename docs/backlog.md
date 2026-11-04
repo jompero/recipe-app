@@ -30,10 +30,7 @@
 ## Epic 4: Recipe Input
 **Goal:** Adding a recipe should be quick, from any source.
 
-* **4.1 Quick Paste:** paste rough recipe text and get a parsed draft to correct (reuses the 2.1 and 2.2 parsers).
-* **4.2 Recipe bookmarklet:** a bookmarklet run on a recipe website reads its `ld+json` Recipe data and hands it to the app as a draft. No server and no CORS proxy.
-* **4.3 Photo upload:** take or pick a photo for a recipe. Reuses the JPEG compressor built in Epic 2 (US-2.3).
-* Note from Epic 3: Quick Paste and the bookmarklet can hand their draft to the US-3.5 edit form (`src/editing/recipeForm.ts`, `EditPage`), which already does New recipe, validation and saving.
+**Specified:** see [`.scratch/EPIC-4-recipe-input/spec.md`](../.scratch/EPIC-4-recipe-input/spec.md): US-4.1 Photo, US-4.2 Quick Paste, US-4.3 Draft import, US-4.4 Bookmarklet, split into 7 issues built in two parallel waves. The bookmarklet targets desktop browsers first; phones are best effort.
 
 ---
 
