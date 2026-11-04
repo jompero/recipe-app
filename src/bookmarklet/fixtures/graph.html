@@ -1,0 +1,47 @@
+<!doctype html>
+<html>
+  <head>
+    <script type="application/ld+json">
+      {
+        "@context": "https://schema.org",
+        "@graph": [
+          {
+            "@type": "Organization",
+            "@id": "https://example.com/#organization",
+            "name": "Example Kitchen",
+            "logo": { "@id": "https://example.com/#logo" }
+          },
+          {
+            "@type": "Person",
+            "@id": "https://example.com/#/schema/person/1",
+            "name": "Mette"
+          },
+          {
+            "@type": "ImageObject",
+            "@id": "https://example.com/kanelsnegle/#primaryimage",
+            "url": "https://example.com/kanelsnegle.jpg",
+            "width": 1200,
+            "height": 800
+          },
+          {
+            "@type": "WebPage",
+            "@id": "https://example.com/kanelsnegle/",
+            "name": "Kanelsnegle"
+          },
+          {
+            "@type": "Recipe",
+            "@id": "https://example.com/kanelsnegle/#recipe",
+            "name": "Kanelsnegle",
+            "image": { "@id": "https://example.com/kanelsnegle/#primaryimage" },
+            "author": { "@id": "https://example.com/#/schema/person/1" },
+            "publisher": { "@id": "https://example.com/#organization" },
+            "mainEntityOfPage": { "@id": "https://example.com/kanelsnegle/" },
+            "recipeIngredient": ["500 g mel"],
+            "recipeInstructions": [{ "@type": "HowToStep", "text": "Ælt dejen." }]
+          }
+        ]
+      }
+    </script>
+  </head>
+  <body></body>
+</html>
