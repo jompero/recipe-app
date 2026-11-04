@@ -21,6 +21,7 @@ import {
 } from "../import/pepperplateImport.ts";
 import { runImport, type ImportProgress, type ImportResult } from "../import/runImport.ts";
 import type { IngredientLine } from "../parsing/types.ts";
+import { usePageMenu } from "./pageMenu.ts";
 
 function plural(count: number, one: string, many: string): string {
   return `${count} ${count === 1 ? one : many}`;
@@ -276,6 +277,7 @@ function PepperplateImport() {
 
 /** Import, export and restore (Epic 2). Every member can use it; Import asks before writing. */
 export function DataPage() {
+  usePageMenu("Data");
   return (
     <Stack gap="lg">
       <Title order={2}>Data</Title>

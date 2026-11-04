@@ -240,3 +240,10 @@ describe("archive", () => {
     expect(fake.setArchived).toHaveBeenCalledWith("chicken-soup", false);
   });
 });
+
+test("the menu names the recipe it acts on", async () => {
+  renderApp("/recipe/chicken-soup");
+  await userEvent.click(screen.getByRole("button", { name: "Menu" }));
+  const menu = await screen.findByRole("dialog", { name: "Menu" });
+  expect(within(menu).getByRole("heading", { name: "Chicken Soup" })).toBeInTheDocument();
+});

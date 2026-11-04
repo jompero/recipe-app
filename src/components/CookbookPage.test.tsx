@@ -218,3 +218,16 @@ describe("archived recipes", () => {
     expect(within(menu).queryByRole("button", { name: "New recipe" })).not.toBeInTheDocument();
   });
 });
+
+test("the menu names the page: Cookbook, or Archived in the archived view", async () => {
+  const { unmount } = openCookbook();
+  await userEvent.click(screen.getByRole("button", { name: "Menu" }));
+  let menu = await screen.findByRole("dialog", { name: "Menu" });
+  expect(within(menu).getByRole("heading", { name: "Cookbook" })).toBeInTheDocument();
+  unmount();
+
+  openCookbook("?archived=1");
+  await userEvent.click(screen.getByRole("button", { name: "Menu" }));
+  menu = await screen.findByRole("dialog", { name: "Menu" });
+  expect(within(menu).getByRole("heading", { name: "Archived" })).toBeInTheDocument();
+});

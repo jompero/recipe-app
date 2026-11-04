@@ -26,7 +26,7 @@ import { Fragment, useState } from "react";
 import { setArchived, type StoredRecipe } from "../data/recipes.ts";
 import { LABEL_STYLE } from "../theme.ts";
 import { useLiveRecipes } from "./liveRecipes.ts";
-import { usePageActions } from "./pageActions.ts";
+import { usePageMenu } from "./pageMenu.ts";
 import { QuietToggle } from "./QuietToggle.tsx";
 
 /** The cookbook: every recipe as a photo card (or a list), with search, tags and sort. */
@@ -35,7 +35,8 @@ export function CookbookPage() {
   const [params] = useSearchParams();
   const navigate = useNavigate();
   const state = readCookbookState(params);
-  usePageActions(
+  usePageMenu(
+    state.archived ? "Archived" : "Cookbook",
     state.archived
       ? []
       : [

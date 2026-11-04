@@ -1,10 +1,12 @@
 import { Avatar, Button, Stack, Text, Title } from "@mantine/core";
 import { signOut } from "../data/auth.ts";
 import { useMember } from "./member.ts";
+import { usePageMenu } from "./pageMenu.ts";
 
 /** Who you're signed in as, and Sign out. */
 export function AccountPage() {
   const user = useMember();
+  usePageMenu("Account");
   return (
     <Stack align="center" gap="sm" pt="xl">
       <Title order={1}>Account</Title>

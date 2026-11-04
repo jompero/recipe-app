@@ -19,7 +19,7 @@ import { scaleIngredient } from "../parsing/scale.ts";
 import type { IngredientLine, InstructionLine, SectionHeader } from "../parsing/types.ts";
 import { LABEL_STYLE } from "../theme.ts";
 import { useLiveRecipes } from "./liveRecipes.ts";
-import { usePageActions } from "./pageActions.ts";
+import { usePageMenu } from "./pageMenu.ts";
 import { QuietToggle } from "./QuietToggle.tsx";
 import { useTicks } from "./useTicks.ts";
 import { useWakeLock } from "./useWakeLock.ts";
@@ -60,7 +60,7 @@ function useArchive(recipe: StoredRecipe) {
     }
   };
 
-  usePageActions([
+  usePageMenu(recipe.title, [
     recipe.archived
       ? { label: "Unarchive", onSelect: () => void save(false) }
       : { label: "Archive", onSelect: () => setAsking(true) },

@@ -2,7 +2,7 @@ import { ActionIcon, AppShell, Divider, Modal, Stack, Text, UnstyledButton } fro
 import { useEffect, useRef, useState, type ReactNode } from "react";
 import { useLocation, useNavigate } from "react-router";
 import { LABEL_STYLE } from "../theme.ts";
-import { PageActionsContext, type PageAction } from "./pageActions.ts";
+import { NO_PAGE_MENU, PageMenuContext, type PageMenu } from "./pageMenu.ts";
 
 const SECTIONS = [
   { label: "Cookbook", path: "/" },
@@ -32,7 +32,7 @@ function useMenu() {
 export function MemberShell({ children }: { children: ReactNode }) {
   const location = useLocation();
   const menu = useMenu();
-  const [actions, setActions] = useState<PageAction[]>([]);
+  const [page, setPage] = useState<PageMenu>(NO_PAGE_MENU);
 
   // The menu is the front page: a fresh start at the bare cookbook opens it, once per app load.
   const started = useRef(false);
@@ -46,7 +46,7 @@ export function MemberShell({ children }: { children: ReactNode }) {
     <AppShell padding="md">
       {/* Bottom padding keeps the last lines of a page clear of the menu button. */}
       <AppShell.Main pb={100}>
-        <PageActionsContext.Provider value={setActions}>{children}</PageActionsContext.Provider>
+        <PageMenuContext.Provider value={setPage}>{children}</PageMenuContext.Provider>
       </AppShell.Main>
       <ActionIcon
         aria-label="Menu"
@@ -72,9 +72,25 @@ export function MemberShell({ children }: { children: ReactNode }) {
         }}
       >
         <Stack gap={0} w="100%">
-          {actions.length > 0 && (
+          {(page.title !== null || page.actions.length > 0) && (
             <>
-              {actions.map((action) => (
+              {page.title !== null && (
+                <Text
+                  component="h2"
+                  ff="heading"
+                  fs="italic"
+                  fw={400}
+                  fz={24}
+                  lh={1.25}
+                  ta="center"
+                  m={0}
+                  mb="xs"
+                  px="md"
+                >
+                  {page.title}
+                </Text>
+              )}
+              {page.actions.map((action) => (
                 <UnstyledButton
                   key={action.label}
                   onClick={() => {
