@@ -1,6 +1,7 @@
 import { act, waitFor, within } from "@testing-library/react";
 import userEvent from "@testing-library/user-event";
 import type { Session } from "../data/auth.ts";
+import type { NewMenuEntry } from "../data/menu.ts";
 import type { StoredRecipe } from "../data/recipes.ts";
 import { storedRecipe } from "../test-utils/recipeFixture.ts";
 import { renderApp, screen } from "../test-utils/renderApp.tsx";
@@ -10,6 +11,7 @@ const fake = vi.hoisted(() => ({
   recipes: [] as StoredRecipe[],
   fullImage: null as { resolve: (url: string | null) => void } | null,
   setArchived: vi.fn<(id: string, archived: boolean) => Promise<void>>(() => Promise.resolve()),
+  addEntry: vi.fn<(date: string, entry: NewMenuEntry) => Promise<unknown>>(),
 }));
 vi.mock("../data/recipes.ts", () => ({
   watchRecipes: (onChange: (recipes: StoredRecipe[]) => void) => {
@@ -29,7 +31,7 @@ vi.mock("../data/images.ts", () => ({
   ),
 }));
 vi.mock("../data/backup.ts", () => ({ exportEverything: vi.fn(), restoreEverything: vi.fn() }));
-vi.mock("../data/menu.ts", () => ({ watchDays: () => () => {} }));
+vi.mock("../data/menu.ts", () => ({ watchDays: () => () => {}, addEntry: fake.addEntry }));
 vi.mock("../data/auth.ts", () => ({
   watchSession: (onChange: (session: Session) => void) => {
     onChange({ status: "member", user: { name: "Ada", email: "ada@example.com", photoUrl: null } });
@@ -67,6 +69,7 @@ beforeEach(() => {
   fake.recipes = [soup];
   fake.fullImage = null;
   fake.setArchived.mockClear();
+  fake.addEntry.mockReset().mockResolvedValue({ id: "new" });
   sessionStorage.clear();
 });
 
@@ -247,4 +250,77 @@ test("the menu names the recipe it acts on", async () => {
   await userEvent.click(screen.getByRole("button", { name: "Menu" }));
   const menu = await screen.findByRole("dialog", { name: "Menu" });
   expect(within(menu).getByRole("heading", { name: "Chicken Soup" })).toBeInTheDocument();
+});
+
+describe("Add to plan… (US-5.3)", () => {
+  beforeEach(() => {
+    // Thursday 5 Nov 2026. Time still runs, so user events work; advanceTimersByTime jumps ahead.
+    vi.useFakeTimers({ shouldAdvanceTime: true });
+    vi.setSystemTime(new Date(2026, 10, 5, 18, 0));
+  });
+  afterEach(() => {
+    vi.useRealTimers();
+  });
+
+  async function addToPlan(day: string) {
+    await userEvent.click(screen.getByRole("button", { name: "Menu" }));
+    const menu = await screen.findByRole("dialog", { name: "Menu" });
+    await userEvent.click(within(menu).getByRole("button", { name: "Add to plan…" }));
+    const picker = await screen.findByRole("dialog", { name: "Add to plan" });
+    await userEvent.click(within(picker).getByRole("button", { name: day }));
+  }
+
+  test("adds the recipe to the picked date and links to that week", async () => {
+    const { router } = renderApp("/recipe/chicken-soup");
+
+    await addToPlan("Fri 20 Nov");
+
+    expect(fake.addEntry).toHaveBeenCalledWith("2026-11-20", { recipeId: "chicken-soup" });
+    expect(screen.queryByRole("dialog", { name: "Add to plan" })).not.toBeInTheDocument();
+    expect(screen.getByText(/Added to Fri 20 Nov./)).toBeInTheDocument();
+    await userEvent.click(screen.getByRole("link", { name: "Show the week" }));
+    expect(router.state.location.pathname).toBe("/plan");
+    expect(router.state.location.search).toBe("?week=2026-11-16");
+  });
+
+  test("the calendar opens on this month", async () => {
+    renderApp("/recipe/chicken-soup");
+
+    await addToPlan("Thu 5 Nov");
+
+    expect(fake.addEntry).toHaveBeenCalledWith("2026-11-05", { recipeId: "chicken-soup" });
+  });
+
+  test("is offered for an archived recipe too", async () => {
+    fake.recipes = [{ ...soup, archived: true }];
+    renderApp("/recipe/chicken-soup");
+
+    await addToPlan("Sat 7 Nov");
+
+    expect(fake.addEntry).toHaveBeenCalledWith("2026-11-07", { recipeId: "chicken-soup" });
+  });
+
+  test("the notice goes away by itself, or when closed", async () => {
+    renderApp("/recipe/chicken-soup");
+
+    await addToPlan("Fri 20 Nov");
+    act(() => {
+      vi.advanceTimersByTime(6100);
+    });
+    expect(screen.queryByText(/Added to/)).not.toBeInTheDocument();
+
+    await addToPlan("Sat 21 Nov");
+    await userEvent.click(screen.getByRole("button", { name: "Close" }));
+    expect(screen.queryByText(/Added to/)).not.toBeInTheDocument();
+  });
+
+  test("a failure to add shows why", async () => {
+    fake.addEntry.mockRejectedValue(new Error("Missing or insufficient permissions."));
+    renderApp("/recipe/chicken-soup");
+
+    await addToPlan("Fri 20 Nov");
+
+    expect(await screen.findByText("Couldn't add to the plan")).toBeInTheDocument();
+    expect(screen.getByText("Missing or insufficient permissions.")).toBeInTheDocument();
+  });
 });

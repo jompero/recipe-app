@@ -6,6 +6,7 @@ import {
   Group,
   Image,
   Modal,
+  Notification,
   UnstyledButton,
   Stack,
   Text,
@@ -14,12 +15,15 @@ import {
 import { useEffect, useState, type ReactNode } from "react";
 import { Link, useNavigate, useParams } from "react-router";
 import { loadFullImage } from "../data/images.ts";
+import { addEntry } from "../data/menu.ts";
 import { setArchived, type StoredRecipe } from "../data/recipes.ts";
 import { scaleIngredient } from "../parsing/scale.ts";
 import type { IngredientLine, InstructionLine, SectionHeader } from "../parsing/types.ts";
+import { dayLabel, mondayOf, parseDateKey, toDateKey } from "../plan/week.ts";
 import { LABEL_STYLE } from "../theme.ts";
 import { useLiveRecipes } from "./liveRecipes.ts";
-import { usePageMenu } from "./pageMenu.ts";
+import { usePageMenu, type PageAction } from "./pageMenu.ts";
+import { PlanDatePicker } from "./PlanDatePicker.tsx";
 import { QuietToggle } from "./QuietToggle.tsx";
 import { useTicks } from "./useTicks.ts";
 import { useWakeLock } from "./useWakeLock.ts";
@@ -60,12 +64,9 @@ function useArchive(recipe: StoredRecipe) {
     }
   };
 
-  usePageMenu(recipe.title, [
-    { label: "Edit recipe", to: `/recipe/${recipe.id}/edit` },
-    recipe.archived
-      ? { label: "Unarchive", onSelect: () => void save(false) }
-      : { label: "Archive", onSelect: () => setAsking(true) },
-  ]);
+  const action: PageAction = recipe.archived
+    ? { label: "Unarchive", onSelect: () => void save(false) }
+    : { label: "Archive", onSelect: () => setAsking(true) };
 
   const confirm = (
     <Modal opened={asking} onClose={() => setAsking(false)} title="Archive this recipe?" centered>
@@ -91,7 +92,85 @@ function useArchive(recipe: StoredRecipe) {
       </Group>
     </Modal>
   );
-  return { confirm, error };
+  return { action, confirm, error };
+}
+
+/** How long "Added to …" stays up, in milliseconds. */
+const ADDED_NOTICE_MS = 6000;
+
+/**
+ * The menu's "Add to plan…" (US-5.3): pick a date, the recipe is added to it, and a short notice
+ * links to that week. Offered for archived recipes too.
+ */
+function useAddToPlan(recipe: StoredRecipe) {
+  const [picking, setPicking] = useState(false);
+  const [notice, setNotice] = useState<
+    { kind: "added"; date: string } | { kind: "error"; message: string } | null
+  >(null);
+
+  useEffect(() => {
+    if (notice?.kind !== "added") return;
+    const timer = setTimeout(() => setNotice(null), ADDED_NOTICE_MS);
+    return () => clearTimeout(timer);
+  }, [notice]);
+
+  const pick = (date: string) => {
+    setPicking(false);
+    setNotice({ kind: "added", date });
+    // Not awaited: offline, the write only settles once the device is back online (as on the Plan).
+    addEntry(date, { recipeId: recipe.id }).catch((cause: unknown) =>
+      setNotice({ kind: "error", message: cause instanceof Error ? cause.message : String(cause) }),
+    );
+  };
+
+  const action: PageAction = { label: "Add to plan…", onSelect: () => setPicking(true) };
+  const day = notice?.kind === "added" ? parseDateKey(notice.date) : null;
+  const ui = (
+    <>
+      <PlanDatePicker
+        opened={picking}
+        title="Add to plan"
+        start={toDateKey(new Date())}
+        onPick={pick}
+        onClose={() => setPicking(false)}
+      />
+      {notice && (
+        // Above the menu button, wherever the page is scrolled to.
+        <Box
+          pos="fixed"
+          bottom={84}
+          left={16}
+          right={16}
+          maw={480}
+          mx="auto"
+          style={{ zIndex: 150 }}
+        >
+          <Notification
+            withBorder
+            color={notice.kind === "error" ? "red" : "linen"}
+            title={notice.kind === "error" ? "Couldn't add to the plan" : undefined}
+            onClose={() => setNotice(null)}
+            closeButtonProps={{ "aria-label": "Close" }}
+          >
+            {notice.kind === "error" ? (
+              notice.message
+            ) : (
+              <>
+                Added to {day ? dayLabel(day) : notice.date}.{" "}
+                <Anchor
+                  component={Link}
+                  to={`/plan?week=${day ? toDateKey(mondayOf(day)) : notice.date}`}
+                >
+                  Show the week
+                </Anchor>
+              </>
+            )}
+          </Notification>
+        </Box>
+      )}
+    </>
+  );
+  return { action, ui };
 }
 
 /** The recipe's thumbnail at once, then its full photo once loaded (ADR-0001). */
@@ -141,6 +220,12 @@ function Recipe({ recipe }: { recipe: StoredRecipe }) {
   const photo = usePhoto(recipe);
   useWakeLock();
   const archive = useArchive(recipe);
+  const addToPlan = useAddToPlan(recipe);
+  usePageMenu(recipe.title, [
+    { label: "Edit recipe", to: `/recipe/${recipe.id}/edit` },
+    addToPlan.action,
+    archive.action,
+  ]);
   const [ticks, toggle] = useTicks(recipe.id);
   // Scaling is for this cook only: never saved.
   const [scale, setScale] = useState<Scale>("1");
@@ -175,6 +260,7 @@ function Recipe({ recipe }: { recipe: StoredRecipe }) {
         </Alert>
       )}
       {archive.confirm}
+      {addToPlan.ui}
       <Title order={1} pt={recipe.archived ? "xs" : "xl"} fz={28} lh={1.25}>
         {recipe.title}
       </Title>

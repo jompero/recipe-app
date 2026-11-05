@@ -1,6 +1,6 @@
 # 03: "Add to plan…" from the recipe page
 
-Status: ready-for-agent
+Status: in-review
 Story: US-5.3
 Branch: `EPIC-5/US-5.3-add-from-recipe`
 Spec: [../spec.md](../spec.md) ("Add to plan…")
@@ -19,7 +19,9 @@ If you need to change anything else, stop and ask.
 
 ## Acceptance criteria
 
-- [ ] Component tests: the action is listed, archived recipes included; picking a date adds the recipe to that date; the confirmation links to the right week.
-- [ ] `npm run check` passes.
+- [x] Component tests: the action is listed, archived recipes included; picking a date adds the recipe to that date; the confirmation links to the right week.
+- [x] `npm run check` passes.
 
 ## Comments
+
+- 2026-11-05 (agent): Built on `EPIC-5/US-5.3-add-from-recipe`. The recipe menu reads Edit recipe, **Add to plan…**, Archive/Unarchive (`useArchive` now returns its action instead of setting the menu itself). The picker is `PlanDatePicker` from 02, titled "Add to plan", opening on this month. The write isn't awaited (as on the Plan). The notice is a Mantine `Notification` fixed above the menu button, so it's seen wherever the page is scrolled: "Added to Fri 20 Nov. Show the week" (link to `#/plan?week=<Monday>`). It closes by itself after 6 s or with its close button. A failed write replaces it with "Couldn't add to the plan" and the reason, which stays until closed. `npm run check` passes (605 tests).

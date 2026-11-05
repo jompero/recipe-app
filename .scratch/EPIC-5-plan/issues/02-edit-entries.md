@@ -1,6 +1,6 @@
 # 02: Add, remove and move entries on the Plan page
 
-Status: in-review
+Status: done
 Story: US-5.2
 Branch: `EPIC-5/US-5.2-edit-entries`
 Spec: [../spec.md](../spec.md) (Plan page)
@@ -27,7 +27,7 @@ If you need to change anything else, stop and ask.
 ## Acceptance criteria
 
 - [x] Component tests: add a recipe; add a note; empty and too-long notes are refused; archived recipes aren't offered; remove; move calls `moveEntry` with the right dates; the picker marks days with entries.
-- [ ] By hand (owner): on a phone over the LAN dev server, add, remove and move entries; a change on the PC shows on the phone.
+- [x] By hand (owner): on a phone over the LAN dev server, add, remove and move entries; a change on the PC shows on the phone.
 - [x] `npm run check` passes.
 
 ## Comments
@@ -41,3 +41,5 @@ If you need to change anything else, stop and ask.
   - Typecheck, lint and all 600 tests pass, run against the owner's running emulator (the test projects are separate from `demo-recipe-app`). The by-hand phone check is left for the owner.
 
 **2026-11-05 (owner, agent):** Owner's phone check: the recipe list in the add sheet didn't scroll on the phone (fine on the PC). Changed: the list no longer sits in its own `ScrollArea` (55dvh) inside the Modal; it scrolls with the Modal's own (native) scrolling, and the sheet is full screen on narrow screens (`max-width: 48em`). Waiting for the owner to check again on the phone.
+
+**2026-11-05 (owner):** The list scrolls on the phone now. Manual review passed. PR #39 merged.
