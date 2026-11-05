@@ -4,6 +4,7 @@ import { AccountPage } from "./components/AccountPage.tsx";
 import { CookbookPage } from "./components/CookbookPage.tsx";
 import { DataPage } from "./components/DataPage.tsx";
 import { EditPage } from "./components/EditPage.tsx";
+import { ImportPage } from "./components/ImportPage.tsx";
 import { PastePage } from "./components/PastePage.tsx";
 import { RecipePage } from "./components/RecipePage.tsx";
 
@@ -17,6 +18,7 @@ export const routes: RouteObject[] = [
     children: [
       { path: "/", element: <CookbookPage /> },
       { path: "/paste", element: <PastePage /> },
+      { path: "/import", element: <ImportPage /> },
       { path: "/recipe/new", element: <EditPage /> },
       { path: "/recipe/:id", element: <RecipePage /> },
       { path: "/recipe/:id/edit", element: <EditPage /> },
