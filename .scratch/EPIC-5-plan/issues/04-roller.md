@@ -1,6 +1,6 @@
 # 04: The roller
 
-Status: ready-for-agent
+Status: in-review
 Story: US-5.4
 Branch: `EPIC-5/US-5.4-roller`
 Spec: [../spec.md](../spec.md) (Roller)
@@ -31,10 +31,18 @@ If you need to change anything else, stop and ask.
 
 ## Acceptance criteria
 
-- [ ] Unit tests: every picking rule above with a seeded random source; the state round trip, and a corrupt or old stored value is ignored.
-- [ ] Emulator test: `saveRoll` adds to several days, including one that already has entries.
-- [ ] Component tests: lock and skip survive a roll; Save sends only Rolled and Locked days; Discard clears; leaving and coming back restores the roll; the range limit; reduced motion shows results at once.
+- [x] Unit tests: every picking rule above with a seeded random source; the state round trip, and a corrupt or old stored value is ignored.
+- [x] Emulator test: `saveRoll` adds to several days, including one that already has entries.
+- [x] Component tests: lock and skip survive a roll; Save sends only Rolled and Locked days; Discard clears; leaving and coming back restores the roll; the range limit; reduced motion shows results at once.
 - [ ] By hand (owner): on a phone, the shuffle feels right.
-- [ ] `npm run check` passes.
+- [x] `npm run check` passes.
 
 ## Comments
+
+- 2026-11-05 (agent): Built on `EPIC-5/US-5.4-roller`.
+  - **Rules:** `src/plan/roll.ts` (pure): `rollPool`, `rollRows` (tiers: not taken and not planned → not taken → anything), `clampRange`, `rowsForRange`, `rollAdditions`, and `encodeRoll`/`decodeRoll` (versioned; anything damaged, from another version, or whose rows don't match the range is ignored). The random source is `src/plan/random.ts`, so tests fake it there: faking `Math.random` itself broke Mantine's element IDs.
+  - **Page:** `#/plan/roll?week=…` from **Roll…** in the Plan's menu. From and To are native date inputs (`type="date"`, good on phones); changing one end moves the other to keep 1–28 days. Tag chips as in the cookbook (any tag matches). Each day shows what it already has ("Planned: …"), the pick (opens the recipe), and Lock / Skip toggles (`aria-pressed`); Lock is disabled with no pick.
+  - **Differences from the spec:** the ±14-day Plan days are **watched live** with `usePlanDays` rather than read once, so the "Planned:" lines stay current and no extra read function was needed. New days (first open, or a longer range) get picks as soon as the recipes and nearby days are known, set during render (React's pattern for state that follows other data; the lint rules don't allow setting it from an effect). Rolled days keep their picks when the tags change, until Roll is pressed.
+  - **Save** sends one `saveRoll` batch (all or nothing), not awaited (offline), clears the stored roll and replaces the roller with the Plan at the range's first week. A failed save only goes to the console, because the page has already left: the Plan then simply doesn't show the meals. Worth a better message if it ever happens (the only likely cause is a day reaching 20 entries).
+  - **Shuffle:** 500 ms of titles stepping through the pool every 70 ms, Roll and Save disabled meanwhile; none with `prefers-reduced-motion`.
+  - Typecheck, lint and all 646 tests pass, run against the owner's running emulator. The by-hand phone check (does the shuffle feel right) is left for the owner.

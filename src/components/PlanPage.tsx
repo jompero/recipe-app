@@ -38,7 +38,6 @@ import { usePlanDays } from "./usePlanDays.ts";
  * Members add recipes and notes to a day, and remove or move entries.
  */
 export function PlanPage() {
-  usePageMenu("Plan");
   const [params] = useSearchParams();
   const navigate = useNavigate();
   const today = new Date();
@@ -49,6 +48,7 @@ export function PlanPage() {
   const live = usePlanDays(first, toDateKey(days[6]!));
   const recipes = useLiveRecipes();
   const isThisWeek = first === toDateKey(mondayOf(today));
+  usePageMenu("Plan", [{ label: "Roll…", to: `/plan/roll?week=${first}` }]);
 
   /** The day whose "+" sheet is open. */
   const [addingTo, setAddingTo] = useState<string | null>(null);
