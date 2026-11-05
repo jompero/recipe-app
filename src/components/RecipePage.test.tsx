@@ -29,6 +29,7 @@ vi.mock("../data/images.ts", () => ({
   ),
 }));
 vi.mock("../data/backup.ts", () => ({ exportEverything: vi.fn(), restoreEverything: vi.fn() }));
+vi.mock("../data/menu.ts", () => ({ watchDays: () => () => {} }));
 vi.mock("../data/auth.ts", () => ({
   watchSession: (onChange: (session: Session) => void) => {
     onChange({ status: "member", user: { name: "Ada", email: "ada@example.com", photoUrl: null } });

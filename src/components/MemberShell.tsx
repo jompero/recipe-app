@@ -6,6 +6,7 @@ import { NO_PAGE_MENU, PageMenuContext, type PageMenu } from "./pageMenu.ts";
 
 const SECTIONS = [
   { label: "Cookbook", path: "/" },
+  { label: "Plan", path: "/plan" },
   { label: "Data", path: "/data" },
   { label: "Account", path: "/account" },
 ];

@@ -29,7 +29,7 @@ export type Section = keyof typeof SECTIONS;
 export const TIMESTAMP_FIELDS: Record<Section, readonly string[]> = {
   recipes: ["createdAt", "updatedAt"],
   recipeImages: [],
-  menuDays: [],
+  menuDays: ["updatedAt"],
 };
 
 function isObject(value: unknown): value is Record<string, unknown> {
