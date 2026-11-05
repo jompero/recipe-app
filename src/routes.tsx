@@ -8,6 +8,7 @@ import { ImportPage } from "./components/ImportPage.tsx";
 import { PastePage } from "./components/PastePage.tsx";
 import { PlanPage } from "./components/PlanPage.tsx";
 import { RecipePage } from "./components/RecipePage.tsx";
+import { RollPage } from "./components/RollPage.tsx";
 
 /**
  * The app's route tree. `main.tsx` mounts it with `createHashRouter` (hash URLs, ADR-0004); tests
@@ -24,6 +25,7 @@ export const routes: RouteObject[] = [
       { path: "/recipe/:id", element: <RecipePage /> },
       { path: "/recipe/:id/edit", element: <EditPage /> },
       { path: "/plan", element: <PlanPage /> },
+      { path: "/plan/roll", element: <RollPage /> },
       { path: "/data", element: <DataPage /> },
       { path: "/account", element: <AccountPage /> },
     ],

@@ -22,7 +22,15 @@ import { afterAll, beforeAll, beforeEach, describe, expect, test, vi } from "vit
 import firestoreRules from "../../firestore.rules?raw";
 import { NOTE_MAX } from "../plan/note.ts";
 import { db } from "../config/firebase";
-import { addEntry, moveEntry, removeEntry, watchDays, type MenuEntry, type PlanDays } from "./menu";
+import {
+  addEntry,
+  moveEntry,
+  removeEntry,
+  saveRoll,
+  watchDays,
+  type MenuEntry,
+  type PlanDays,
+} from "./menu";
 
 const { PROJECT_ID, MEMBER, HOST, PORT, TOKEN } = vi.hoisted(() => {
   const [host = "127.0.0.1", port = "8080"] = (
@@ -220,5 +228,18 @@ describe("menu data module", () => {
   ])("an %s note is refused before anything is written", async (_, note) => {
     await expect(addEntry("2026-11-04", { note })).rejects.toThrow();
     expect(await readDays("2026-11-04", "2026-11-04")).toEqual({});
+  });
+
+  test("saving a roll adds to several days in one batch, after any entries already there", async () => {
+    const existing = await addEntry("2026-11-04", { note: "Guests" });
+
+    const saved = await saveRoll([
+      { date: "2026-11-03", recipeId: "pasta" },
+      { date: "2026-11-04", recipeId: "soup" },
+    ]);
+
+    const days = await readDays("2026-11-02", "2026-11-08");
+    expect(withoutIds(days["2026-11-03"])).toEqual([{ recipeId: "pasta" }]);
+    expect(days["2026-11-04"]).toEqual([existing, saved[1]?.entry]);
   });
 });

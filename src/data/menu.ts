@@ -118,3 +118,24 @@ export async function moveEntry(from: string, to: string, entry: MenuEntry): Pro
   );
   await batch.commit();
 }
+
+/**
+ * Saves a roll (US-5.4): adds each recipe to the end of its Plan day, in one batch, so either all
+ * of them are added or none. Returns the saved entries by date.
+ */
+export async function saveRoll(
+  additions: { date: string; recipeId: string }[],
+): Promise<{ date: string; entry: MenuEntry }[]> {
+  const batch = writeBatch(db);
+  const saved = additions.map(({ date, recipeId }) => {
+    const entry = withId({ recipeId });
+    batch.set(
+      dayRef(date),
+      { entries: arrayUnion(entry), updatedAt: serverTimestamp() },
+      { merge: true },
+    );
+    return { date, entry };
+  });
+  await batch.commit();
+  return saved;
+}
