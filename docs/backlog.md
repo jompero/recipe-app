@@ -42,14 +42,10 @@ Left for later:
 
 ---
 
-## Epic 5: "Yahtzee-Style" Calendar
+## Epic 5: Plan (shared meal calendar)
 **Goal:** Plan meals together, with live sync and dice-roll suggestions.
 
-* **5.1 Calendar navigation:** browse any date range, past or future. Data is one `menu_days/{YYYY-MM-DD}` document per date ([ADR-0006](adr/0006-menu-one-document-per-date.md)).
-* **5.2 Manual assignment:** add a recipe to a date (merge-safe with `arrayUnion`). Supports several meals per day.
-* **5.3 Recipe roller:** pick a range of dates, roll random recipes, lock the days you like, re-roll the rest, then save.
-* **5.4 Live sync:** the visible range uses `onSnapshot`, so changes on one device appear on the others.
-* **Open question:** decide whether to add end-to-end browser tests (e.g. Playwright with a phone-sized WebKit project), since live sync across devices is the riskiest flow so far. Deferred from Epic 3.
+**Specified** (2026-11-05): see [`.scratch/EPIC-5-plan/spec.md`](../.scratch/EPIC-5-plan/spec.md) and its issues (US-5.1 week view and live sync, US-5.2 add/remove/move entries, US-5.3 "Add to plan…" from a recipe page, US-5.4 roller, US-5.5 Playwright). Called "Plan" in the interface. No meal slots, and entries can be notes ([ADR-0006](adr/0006-menu-one-document-per-date.md) amended). The end-to-end question is settled: a minimal Playwright setup (Chromium, phone size) with a two-window live sync test.
 
 ---
 
