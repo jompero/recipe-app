@@ -112,9 +112,13 @@ function EditForm({
   const leaving = useRef(false);
   const photo = usePhotoDraft(recipe?.thumbnail ?? null);
   const photoFetch = useSitePhoto(photoUrl, photo);
-  const duplicate = recipes.find(
-    (other) => other.id !== recipe?.id && sameRecipeUrl(other.sourceUrl, form.sourceUrl),
-  );
+  // Not while saving: Firestore lists a new recipe before the server confirms the write, so it
+  // would show up here as its own duplicate.
+  const duplicate = saving
+    ? undefined
+    : recipes.find(
+        (other) => other.id !== recipe?.id && sameRecipeUrl(other.sourceUrl, form.sourceUrl),
+      );
 
   // Leaving with unsaved changes (Cancel, a link, or phone Back) asks first. Saving clears the way.
   const dirty = JSON.stringify(form) !== JSON.stringify(baseline) || photo.change !== "keep";

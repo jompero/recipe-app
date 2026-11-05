@@ -13,6 +13,7 @@ import type { CompressedImage } from "../utils/imageCompressor.ts";
 const fake = vi.hoisted(() => ({
   session: { status: "member" } as Session,
   emitSession: null as ((session: Session) => void) | null,
+  emitRecipes: null as ((recipes: StoredRecipe[]) => void) | null,
   recipes: [] as StoredRecipe[],
   createRecipe: vi.fn<(recipe: RecipeDraft, photo?: RecipePhoto | null) => Promise<string>>(),
   compressImage: vi.fn<(file: File) => Promise<CompressedImage>>(),
@@ -23,6 +24,7 @@ vi.mock("../utils/imageCompressor.ts", () => ({
 }));
 vi.mock("../data/recipes.ts", () => ({
   watchRecipes: (onChange: (recipes: StoredRecipe[]) => void) => {
+    fake.emitRecipes = onChange;
     onChange(fake.recipes);
     return () => {};
   },
@@ -262,6 +264,22 @@ describe("the duplicate notice", () => {
     ).toBeInTheDocument();
 
     await userEvent.type(field("Source URL"), "-2");
+    expect(notice()).not.toBeInTheDocument();
+  });
+
+  test("the recipe being saved doesn't count as a duplicate of itself", async () => {
+    // Firestore lists a write before the server confirms it, so the new recipe shows up in the
+    // live list while Save is still waiting.
+    fake.createRecipe.mockReturnValue(new Promise(() => {}));
+    renderApp(`/import?d=${NO_PHOTO_D}`);
+    await screen.findByRole("heading", { name: "New recipe" });
+
+    await userEvent.click(screen.getByRole("button", { name: "Save" }));
+    act(() =>
+      fake.emitRecipes?.([
+        storedRecipe("Æbleskiver", { sourceUrl: "https://example.com/aebleskiver" }),
+      ]),
+    );
     expect(notice()).not.toBeInTheDocument();
   });
 
