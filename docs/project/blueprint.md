@@ -88,7 +88,7 @@ Live updates: the recipe list and the visible range of the menu use `onSnapshot`
 
 ## Firestore schema
 
-`recipes` and `recipe_images` are final (Epic 2, enforced by `firestore.rules`). `menu_days` is still illustrative until Epic 5.
+`recipes` and `recipe_images` are final (Epic 2, enforced by `firestore.rules`). `menu_days` is settled in the Epic 5 spec (`.scratch/EPIC-5-plan/spec.md`, ADR-0006 amendment) and gets rules shape validation in its issue 01.
 
 ```jsonc
 // recipes/{id}   id = kebab-case of the Pepperplate file name for imported recipes, auto ID otherwise
@@ -115,7 +115,13 @@ Live updates: the recipe list and the visible range of the menu use `onSnapshot`
 { "data": "data:image/jpeg;base64,…" }        // ~100–300 KB, at most 900,000 characters (document limit 1 MiB)
 
 // menu_days/{YYYY-MM-DD}
-{ "entries": [ { "recipeId": "abc123", "slot": "dinner" } ] }
+{
+  "entries": [                               // at most 20; order added; [] once the last is removed
+    { "id": "k3f9x2", "recipeId": "abc123" },  // id: random, made in the browser
+    { "id": "p81qza", "note": "Leftovers" }    // note: 1–80 characters
+  ],
+  "updatedAt": "<timestamp>"
+}
 
 // allowed_users/{email}   (edited by hand in the console; never in the repo)
 { }
