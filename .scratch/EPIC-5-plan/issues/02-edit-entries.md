@@ -1,6 +1,6 @@
 # 02: Add, remove and move entries on the Plan page
 
-Status: ready-for-agent
+Status: in-review
 Story: US-5.2
 Branch: `EPIC-5/US-5.2-edit-entries`
 Spec: [../spec.md](../spec.md) (Plan page)
@@ -26,8 +26,18 @@ If you need to change anything else, stop and ask.
 
 ## Acceptance criteria
 
-- [ ] Component tests: add a recipe; add a note; empty and too-long notes are refused; archived recipes aren't offered; remove; move calls `moveEntry` with the right dates; the picker marks days with entries.
+- [x] Component tests: add a recipe; add a note; empty and too-long notes are refused; archived recipes aren't offered; remove; move calls `moveEntry` with the right dates; the picker marks days with entries.
 - [ ] By hand (owner): on a phone over the LAN dev server, add, remove and move entries; a change on the PC shows on the phone.
-- [ ] `npm run check` passes.
+- [x] `npm run check` passes.
 
 ## Comments
+
+- 2026-11-05 (agent): Built on `EPIC-5/US-5.2-edit-entries`.
+  - **"+"** next to each day's heading opens `AddEntrySheet` (Recipe / Note tabs). The recipe search is the cookbook's `selectRecipes` with only `q` set, so archived recipes are left out and matching is the same as the cookbook's. The note shows a count, and an error only once it's over 80; Add stays disabled while empty.
+  - **"⋯"** on each entry: Move to… and Remove. The rules for notes moved to `src/plan/note.ts` (`NOTE_MAX`, `noteProblem`), shared by the form and `menu.ts`.
+  - **`PlanDatePicker`** (for 03 as well): Mantine's `DatePicker` from `@mantine/dates` 9.7.4 (matches `@mantine/core`; its peer `dayjs` added). It watches the month on screen with `usePlanDays` only while open; days with entries get a dot and ", has meals" in their label. Move to… opens on the entry's day, shown as selected.
+  - **Writes aren't awaited.** Firestore's write promise only settles when the server confirms, which never happens offline, so the sheet closes at once and the live week shows the change. A failure shows "Couldn't save the change" above the week.
+  - **Beyond Touches:** `src/main.tsx` imports `@mantine/dates/styles.css` (needed by the picker). The bundle grew by ~92 kB (~25 kB gzipped) for `@mantine/dates` and `dayjs`.
+  - Typecheck, lint and all 600 tests pass, run against the owner's running emulator (the test projects are separate from `demo-recipe-app`). The by-hand phone check is left for the owner.
+
+**2026-11-05 (owner, agent):** Owner's phone check: the recipe list in the add sheet didn't scroll on the phone (fine on the PC). Changed: the list no longer sits in its own `ScrollArea` (55dvh) inside the Modal; it scrolls with the Modal's own (native) scrolling, and the sheet is full screen on narrow screens (`max-width: 48em`). Waiting for the owner to check again on the phone.

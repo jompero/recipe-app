@@ -1,7 +1,7 @@
 import { act, within } from "@testing-library/react";
 import userEvent from "@testing-library/user-event";
 import type { Session } from "../data/auth.ts";
-import type { PlanDays } from "../data/menu.ts";
+import type { MenuEntry, NewMenuEntry, PlanDays } from "../data/menu.ts";
 import type { StoredRecipe } from "../data/recipes.ts";
 import { storedRecipe } from "../test-utils/recipeFixture.ts";
 import { renderApp, screen } from "../test-utils/renderApp.tsx";
@@ -13,6 +13,9 @@ const fake = vi.hoisted(() => ({
   watched: [] as string[],
   listeners: new Map<string, (days: PlanDays) => void>(),
   errorListeners: new Map<string, (error: Error) => void>(),
+  addEntry: vi.fn<(date: string, entry: NewMenuEntry) => Promise<unknown>>(),
+  removeEntry: vi.fn<(date: string, entry: MenuEntry) => Promise<void>>(),
+  moveEntry: vi.fn<(from: string, to: string, entry: MenuEntry) => Promise<void>>(),
   /** Delivers days to whoever watches the range. */
   push(range: string, days: PlanDays) {
     fake.listeners.get(range)?.(days);
@@ -34,6 +37,9 @@ vi.mock("../data/menu.ts", () => ({
       fake.errorListeners.delete(range);
     };
   },
+  addEntry: fake.addEntry,
+  removeEntry: fake.removeEntry,
+  moveEntry: fake.moveEntry,
 }));
 vi.mock("../data/recipes.ts", () => ({
   watchRecipes: (onChange: (recipes: StoredRecipe[]) => void) => {
@@ -62,6 +68,9 @@ beforeEach(() => {
   fake.watched = [];
   fake.listeners.clear();
   fake.errorListeners.clear();
+  fake.addEntry.mockReset().mockResolvedValue({ id: "new" });
+  fake.removeEntry.mockReset().mockResolvedValue();
+  fake.moveEntry.mockReset().mockResolvedValue();
   fake.recipes = [
     storedRecipe("Spinach Pie", { thumbnail: "data:image/jpeg;base64,PIE" }),
     storedRecipe("Chicken Soup"),
@@ -209,4 +218,139 @@ test("the menu lists the Plan and names the page", async () => {
 
   await userEvent.click(screen.getByRole("button", { name: "Menu" }));
   expect(screen.getByRole("heading", { name: "Plan", level: 2 })).toBeInTheDocument();
+});
+
+describe("adding, removing and moving (US-5.2)", () => {
+  /** The whole November 2026 calendar, as the date picker shows it: whole weeks, Mon–Sun. */
+  const NOVEMBER_GRID = "2026-10-26/2026-12-06";
+
+  test("adds a recipe found by searching, from the day's +", async () => {
+    renderApp("/plan");
+    act(() => fake.push(THIS_WEEK, {}));
+
+    await userEvent.click(screen.getByRole("button", { name: "Add to Fri 6 Nov" }));
+    const sheet = within(screen.getByRole("dialog", { name: "Add to Fri 6 Nov" }));
+    await userEvent.type(sheet.getByRole("searchbox", { name: "Search recipes" }), "soup");
+    expect(sheet.queryByRole("button", { name: "Spinach Pie" })).not.toBeInTheDocument();
+    await userEvent.click(sheet.getByRole("button", { name: "Chicken Soup" }));
+
+    expect(fake.addEntry).toHaveBeenCalledWith("2026-11-06", { recipeId: "chicken-soup" });
+    expect(screen.queryByRole("dialog")).not.toBeInTheDocument();
+  });
+
+  test("archived recipes aren't offered", async () => {
+    renderApp("/plan");
+
+    await userEvent.click(screen.getByRole("button", { name: "Add to Fri 6 Nov" }));
+
+    const sheet = within(screen.getByRole("dialog", { name: "Add to Fri 6 Nov" }));
+    expect(sheet.getByRole("button", { name: "Spinach Pie" })).toBeInTheDocument();
+    expect(sheet.queryByRole("button", { name: "Old Stew" })).not.toBeInTheDocument();
+  });
+
+  test("adds a trimmed note, also to a past day", async () => {
+    renderApp("/plan");
+
+    await userEvent.click(screen.getByRole("button", { name: "Add to Mon 2 Nov" }));
+    const sheet = within(screen.getByRole("dialog", { name: "Add to Mon 2 Nov" }));
+    await userEvent.click(sheet.getByRole("tab", { name: "Note" }));
+    await userEvent.type(sheet.getByRole("textbox", { name: "Note" }), "  Leftovers {Enter}");
+
+    expect(fake.addEntry).toHaveBeenCalledWith("2026-11-02", { note: "Leftovers" });
+    expect(screen.queryByRole("dialog")).not.toBeInTheDocument();
+  });
+
+  test("an empty or too-long note can't be added", async () => {
+    renderApp("/plan");
+    await userEvent.click(screen.getByRole("button", { name: "Add to Fri 6 Nov" }));
+    const sheet = within(screen.getByRole("dialog", { name: "Add to Fri 6 Nov" }));
+    await userEvent.click(sheet.getByRole("tab", { name: "Note" }));
+    const note = sheet.getByRole("textbox", { name: "Note" });
+    const add = sheet.getByRole("button", { name: "Add" });
+
+    expect(add).toBeDisabled();
+    await userEvent.type(note, "   ");
+    expect(add).toBeDisabled();
+
+    await userEvent.clear(note);
+    await userEvent.click(note);
+    await userEvent.paste("x".repeat(81));
+    expect(add).toBeDisabled();
+    expect(sheet.getByText("A note can be at most 80 characters.")).toBeInTheDocument();
+
+    await userEvent.type(note, "{Backspace}{Enter}");
+    expect(fake.addEntry).toHaveBeenCalledWith("2026-11-06", { note: "x".repeat(80) });
+  });
+
+  test("removes an entry at once", async () => {
+    renderApp("/plan");
+    const pie = { id: "b", recipeId: "spinach-pie" };
+    act(() => fake.push(THIS_WEEK, { "2026-11-05": [pie, { id: "c", note: "Salad" }] }));
+
+    await userEvent.click(screen.getByRole("button", { name: "Options for Spinach Pie" }));
+    await userEvent.click(screen.getByRole("menuitem", { name: "Remove" }));
+
+    expect(fake.removeEntry).toHaveBeenCalledWith("2026-11-05", pie);
+  });
+
+  test("a missing recipe can still be removed", async () => {
+    renderApp("/plan");
+    const gone = { id: "d", recipeId: "gone" };
+    act(() => fake.push(THIS_WEEK, { "2026-11-06": [gone] }));
+
+    await userEvent.click(screen.getByRole("button", { name: "Options for Missing recipe" }));
+    await userEvent.click(screen.getByRole("menuitem", { name: "Remove" }));
+
+    expect(fake.removeEntry).toHaveBeenCalledWith("2026-11-06", gone);
+  });
+
+  test("moves an entry to the day picked in the calendar", async () => {
+    renderApp("/plan");
+    const salad = { id: "c", note: "Salad" };
+    act(() => fake.push(THIS_WEEK, { "2026-11-05": [salad] }));
+
+    await userEvent.click(screen.getByRole("button", { name: "Options for Salad" }));
+    await userEvent.click(screen.getByRole("menuitem", { name: "Move to…" }));
+    const picker = within(screen.getByRole("dialog", { name: "Move to…" }));
+    await userEvent.click(picker.getByRole("button", { name: "Fri 20 Nov" }));
+
+    expect(fake.moveEntry).toHaveBeenCalledWith("2026-11-05", "2026-11-20", salad);
+    expect(screen.queryByRole("dialog")).not.toBeInTheDocument();
+  });
+
+  test("the calendar marks days that already have entries, and stops watching when closed", async () => {
+    renderApp("/plan");
+    act(() => fake.push(THIS_WEEK, { "2026-11-05": [{ id: "c", note: "Salad" }] }));
+
+    await userEvent.click(screen.getByRole("button", { name: "Options for Salad" }));
+    await userEvent.click(screen.getByRole("menuitem", { name: "Move to…" }));
+    act(() =>
+      fake.push(NOVEMBER_GRID, {
+        "2026-11-05": [{ id: "c", note: "Salad" }],
+        "2026-11-20": [{ id: "e", recipeId: "chicken-soup" }],
+        "2026-11-21": [],
+      }),
+    );
+
+    const picker = within(screen.getByRole("dialog", { name: "Move to…" }));
+    expect(picker.getByRole("button", { name: "Fri 20 Nov, has meals" })).toBeInTheDocument();
+    expect(picker.getByRole("button", { name: "Thu 5 Nov, has meals" })).toBeInTheDocument();
+    expect(picker.getByRole("button", { name: "Sat 21 Nov" })).toBeInTheDocument();
+
+    await userEvent.keyboard("{Escape}");
+    expect(fake.listeners.has(NOVEMBER_GRID)).toBe(false);
+    expect(fake.moveEntry).not.toHaveBeenCalled();
+  });
+
+  test("a change that fails to save shows why", async () => {
+    fake.removeEntry.mockRejectedValue(new Error("Missing or insufficient permissions."));
+    renderApp("/plan");
+    act(() => fake.push(THIS_WEEK, { "2026-11-05": [{ id: "c", note: "Salad" }] }));
+
+    await userEvent.click(screen.getByRole("button", { name: "Options for Salad" }));
+    await userEvent.click(screen.getByRole("menuitem", { name: "Remove" }));
+
+    expect(await screen.findByText("Couldn't save the change")).toBeInTheDocument();
+    expect(screen.getByText("Missing or insufficient permissions.")).toBeInTheDocument();
+  });
 });

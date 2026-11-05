@@ -20,16 +20,9 @@ import {
 } from "firebase/firestore";
 import { afterAll, beforeAll, beforeEach, describe, expect, test, vi } from "vitest";
 import firestoreRules from "../../firestore.rules?raw";
+import { NOTE_MAX } from "../plan/note.ts";
 import { db } from "../config/firebase";
-import {
-  addEntry,
-  moveEntry,
-  NOTE_MAX,
-  removeEntry,
-  watchDays,
-  type MenuEntry,
-  type PlanDays,
-} from "./menu";
+import { addEntry, moveEntry, removeEntry, watchDays, type MenuEntry, type PlanDays } from "./menu";
 
 const { PROJECT_ID, MEMBER, HOST, PORT, TOKEN } = vi.hoisted(() => {
   const [host = "127.0.0.1", port = "8080"] = (
