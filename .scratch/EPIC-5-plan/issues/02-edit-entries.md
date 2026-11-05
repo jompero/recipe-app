@@ -39,3 +39,5 @@ If you need to change anything else, stop and ask.
   - **Writes aren't awaited.** Firestore's write promise only settles when the server confirms, which never happens offline, so the sheet closes at once and the live week shows the change. A failure shows "Couldn't save the change" above the week.
   - **Beyond Touches:** `src/main.tsx` imports `@mantine/dates/styles.css` (needed by the picker). The bundle grew by ~92 kB (~25 kB gzipped) for `@mantine/dates` and `dayjs`.
   - Typecheck, lint and all 600 tests pass, run against the owner's running emulator (the test projects are separate from `demo-recipe-app`). The by-hand phone check is left for the owner.
+
+**2026-11-05 (owner, agent):** Owner's phone check: the recipe list in the add sheet didn't scroll on the phone (fine on the PC). Changed: the list no longer sits in its own `ScrollArea` (55dvh) inside the Modal; it scrolls with the Modal's own (native) scrolling, and the sheet is full screen on narrow screens (`max-width: 48em`). Waiting for the owner to check again on the phone.

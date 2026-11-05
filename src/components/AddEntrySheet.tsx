@@ -4,13 +4,13 @@ import {
   Group,
   Image,
   Modal,
-  ScrollArea,
   Stack,
   Tabs,
   Text,
   TextInput,
   UnstyledButton,
 } from "@mantine/core";
+import { useMediaQuery } from "@mantine/hooks";
 import { useState } from "react";
 import { DEFAULT_STATE, selectRecipes } from "../cookbook/cookbook.ts";
 import type { NewMenuEntry } from "../data/menu.ts";
@@ -32,8 +32,11 @@ export function AddEntrySheet({
   onAdd: (entry: NewMenuEntry) => void;
   onClose: () => void;
 }) {
+  const isPhone = useMediaQuery("(max-width: 48em)") ?? false;
   return (
-    <Modal opened={opened} onClose={onClose} title={`Add to ${dayLabel}`}>
+    // Full screen on a phone, and the long recipe list scrolls with the sheet itself: a scroll box
+    // nested inside the sheet didn't respond to touch on a phone (US-5.2 review).
+    <Modal opened={opened} onClose={onClose} title={`Add to ${dayLabel}`} fullScreen={isPhone}>
       {/* Mounted only while open, so the search and note start empty each time. */}
       {opened && (
         <Tabs defaultValue="recipe">
@@ -75,32 +78,30 @@ function RecipePicker({
         onChange={(event) => setQuery(event.currentTarget.value)}
         data-autofocus
       />
-      <ScrollArea.Autosize mah="55dvh">
-        {shown.length === 0 ? (
-          <Text fs="italic" c="dimmed" ta="center" py="md">
-            No recipes match
-          </Text>
-        ) : (
-          <Stack component="ul" gap={2} p={0} m={0} style={{ listStyle: "none" }}>
-            {shown.map((recipe) => (
-              <li key={recipe.id}>
-                <UnstyledButton onClick={() => onPick(recipe.id)} w="100%" py={6}>
-                  <Group gap="sm" wrap="nowrap">
-                    {recipe.thumbnail ? (
-                      <Image src={recipe.thumbnail} alt="" w={THUMB} h={THUMB} fit="cover" />
-                    ) : (
-                      <Box bg="gray.1" w={THUMB} h={THUMB} style={{ flex: "none" }} />
-                    )}
-                    <Text ff="heading" fz={17} lh={1.25}>
-                      {recipe.title}
-                    </Text>
-                  </Group>
-                </UnstyledButton>
-              </li>
-            ))}
-          </Stack>
-        )}
-      </ScrollArea.Autosize>
+      {shown.length === 0 ? (
+        <Text fs="italic" c="dimmed" ta="center" py="md">
+          No recipes match
+        </Text>
+      ) : (
+        <Stack component="ul" gap={2} p={0} m={0} style={{ listStyle: "none" }}>
+          {shown.map((recipe) => (
+            <li key={recipe.id}>
+              <UnstyledButton onClick={() => onPick(recipe.id)} w="100%" py={6}>
+                <Group gap="sm" wrap="nowrap">
+                  {recipe.thumbnail ? (
+                    <Image src={recipe.thumbnail} alt="" w={THUMB} h={THUMB} fit="cover" />
+                  ) : (
+                    <Box bg="gray.1" w={THUMB} h={THUMB} style={{ flex: "none" }} />
+                  )}
+                  <Text ff="heading" fz={17} lh={1.25}>
+                    {recipe.title}
+                  </Text>
+                </Group>
+              </UnstyledButton>
+            </li>
+          ))}
+        </Stack>
+      )}
     </Stack>
   );
 }
