@@ -78,7 +78,80 @@ export function findRecipe(
     }
     return { v: 1, url, recipe: trimmed };
   }
-  return null;
+
+  // No ld+json Recipe: fall back to schema.org microdata (issue 08), as Valdemarsro writes it.
+  const root = Array.from(doc.querySelectorAll("[itemscope][itemtype]")).find((element) =>
+    (element.getAttribute("itemtype") || "")
+      .split(/\s+/)
+      .some((type) => /^https?:\/\/schema\.org\/Recipe$/.test(type)),
+  );
+  if (!root) return null;
+
+  // An element's props are the itemprops whose nearest scope is that element, so nested scopes
+  // (comments, the publisher's logo) keep theirs to themselves.
+  const propsOf = (scope: Element) =>
+    Array.from(scope.querySelectorAll("[itemprop]")).filter(
+      (element) => element.parentElement?.closest("[itemscope]") === scope,
+    );
+  const namesOf = (element: Element) =>
+    (element.getAttribute("itemprop") || "").split(/\s+/).filter(Boolean);
+  // One line: markup line breaks and indentation inside an element aren't the site's text.
+  const text = (element: Element) => (element.textContent || "").replace(/\s+/g, " ").trim();
+  const paragraphs = (element: Element) =>
+    Array.from(element.children)
+      .filter((child) => child.tagName === "P" || child.tagName === "LI")
+      .map(text)
+      .filter(Boolean);
+  const valueOf = (element: Element): unknown => {
+    if (element.hasAttribute("itemscope")) {
+      const object: JsonObject = {};
+      const type = (element.getAttribute("itemtype") || "").split("/").pop();
+      if (type) object["@type"] = type;
+      for (const prop of propsOf(element)) {
+        for (const name of namesOf(prop)) if (!(name in object)) object[name] = valueOf(prop);
+      }
+      return object;
+    }
+    for (const attribute of ["content", "datetime", "src", "href"]) {
+      const value = element.getAttribute(attribute);
+      if (value !== null) return value.trim();
+    }
+    const parts = paragraphs(element);
+    return parts.length > 0 ? parts.join("\n") : text(element);
+  };
+
+  const values: Record<string, unknown[]> = {};
+  const add = (key: string, value: unknown) => (values[key] = (values[key] || []).concat(value));
+  const listsDone = new Set<Element>();
+  for (const prop of propsOf(root)) {
+    for (const name of namesOf(prop)) {
+      if (!keys.includes(name)) continue;
+      const list = prop.parentElement;
+      if (name === "recipeIngredient" && list && /^[OU]L$/.test(list.tagName)) {
+        // The whole list in order, so section headers between ingredients stay in place.
+        if (listsDone.has(list)) continue;
+        listsDone.add(list);
+        for (const item of Array.from(list.children)) {
+          if (namesOf(item).includes(name)) add(name, valueOf(item));
+          else if (!item.hasAttribute("itemprop") && text(item)) add(name, "[" + text(item) + "]");
+        }
+      } else if (name === "recipeInstructions" && !prop.hasAttribute("itemscope")) {
+        // One step per paragraph or list item.
+        const steps = paragraphs(prop);
+        add(name, steps.length > 0 ? steps : text(prop));
+      } else {
+        add(name, valueOf(prop));
+      }
+    }
+  }
+
+  const recipe: JsonObject = {};
+  // A prop found once is a single value, except the lists the converter reads as lists.
+  for (const [key, list] of Object.entries(values)) {
+    recipe[key] =
+      list.length === 1 && !/^recipe(Ingredient|Instructions)$/.test(key) ? list[0] : list;
+  }
+  return { v: 1, url, recipe };
 }
 
 /** Encodes a payload as UTF-8 JSON → base64url, without padding. Self-contained. */

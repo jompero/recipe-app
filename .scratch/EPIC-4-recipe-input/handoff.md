@@ -17,7 +17,7 @@ For the agent that finishes Epic 4. Read `CLAUDE.md`, then [spec.md](spec.md), t
 
 ## Where things stand
 
-Merged on `main`: issues 01 (photo), 02 (paste splitter), 03 (`ld+json` converter and codec), 04 (bookmarklet script), 05 (paste page and the `NewRecipeState` seam) and 07 (install section on the Data page). **Each issue's Comments section says what was actually built and the choices made beyond the spec.** Read the comments on the issues the next one depends on before writing code.
+Merged on `main`: issues 01 (photo), 02 (paste splitter), 03 (`ld+json` converter and codec), 04 (bookmarklet script), 05 (paste page and the `NewRecipeState` seam), 06 (import route, photo fetch, duplicate notice; by-hand checks passed) and 07 (install section on the Data page). **Each issue's Comments section says what was actually built and the choices made beyond the spec.** Read the comments on the issues the next one depends on before writing code.
 
 The current branch, `EPIC-4/US-4.3-import-route`, already has one docs commit (05 and 07 marked done, the owner's notes, 06 marked ready, this file and a note in the spec). Keep it; it goes into 06's PR.
 
