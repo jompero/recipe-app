@@ -126,7 +126,8 @@ test("Cancel on the filled-in form asks to discard, even untouched", async () =>
     }),
   );
   expect(router.state.location.pathname).toBe("/paste");
-  expect(pasteBox()).toHaveValue(PANCAKES);
+  // The router moves first; the paste page renders just after (a transition), so wait for it.
+  expect(await screen.findByRole("textbox", { name: "Recipe text" })).toHaveValue(PANCAKES);
   expect(fake.createRecipe).not.toHaveBeenCalled();
 });
 
@@ -138,7 +139,7 @@ test("phone Back from the form asks, then returns to the paste page with the tex
   await userEvent.click(within(prompt).getByRole("button", { name: "Discard" }));
 
   expect(router.state.location.pathname).toBe("/paste");
-  expect(pasteBox()).toHaveValue(PANCAKES);
+  expect(await screen.findByRole("textbox", { name: "Recipe text" })).toHaveValue(PANCAKES);
 });
 
 test("saving creates the recipe from the draft and clears the pasted text", async () => {

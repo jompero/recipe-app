@@ -1,6 +1,6 @@
 # EPIC-4: Recipe Input
 
-Status: ready-for-agent
+Status: done
 
 Replaces the Epic 4 placeholder in `docs/backlog.md`. Settled in a grilling session on 2026-11-04/05. **Built after Epic 3**: the US-3.5 edit form (`src/components/EditPage.tsx`, `src/editing/recipeForm.ts`) already does New recipe, validation and saving.
 
