@@ -6,6 +6,7 @@ import { DataPage } from "./components/DataPage.tsx";
 import { EditPage } from "./components/EditPage.tsx";
 import { ImportPage } from "./components/ImportPage.tsx";
 import { PastePage } from "./components/PastePage.tsx";
+import { PlanPage } from "./components/PlanPage.tsx";
 import { RecipePage } from "./components/RecipePage.tsx";
 
 /**
@@ -22,6 +23,7 @@ export const routes: RouteObject[] = [
       { path: "/recipe/new", element: <EditPage /> },
       { path: "/recipe/:id", element: <RecipePage /> },
       { path: "/recipe/:id/edit", element: <EditPage /> },
+      { path: "/plan", element: <PlanPage /> },
       { path: "/data", element: <DataPage /> },
       { path: "/account", element: <AccountPage /> },
     ],

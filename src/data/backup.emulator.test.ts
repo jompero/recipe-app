@@ -90,7 +90,10 @@ async function fillDatabase() {
     await admin
       .firestore()
       .doc("menu_days/2026-11-04")
-      .set({ entries: [{ recipeId: "pasta", slot: "dinner" }] });
+      .set({
+        entries: [{ id: "a1", recipeId: "pasta" }],
+        updatedAt: new Date("2026-11-04T08:00:00.000Z"),
+      });
   });
 }
 
@@ -115,7 +118,10 @@ describe("backup data module", () => {
     expect(file.recipes["pasta"]?.["createdAt"]).toMatch(/^\d{4}-\d\d-\d\dT.*Z$/);
     expect(file.recipeImages).toEqual({ pasta: { data: "data:image/jpeg;base64,F" } });
     expect(file.menuDays).toEqual({
-      "2026-11-04": { entries: [{ recipeId: "pasta", slot: "dinner" }] },
+      "2026-11-04": {
+        entries: [{ id: "a1", recipeId: "pasta" }],
+        updatedAt: "2026-11-04T08:00:00.000Z",
+      },
     });
     expect(Date.parse(file.exportedAt)).not.toBeNaN();
   });

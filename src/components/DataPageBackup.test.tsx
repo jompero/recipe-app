@@ -37,7 +37,7 @@ const exportFile: ExportFile = {
     },
   },
   recipeImages: { pasta: { data: "data:image/jpeg;base64,AAAA" } },
-  menuDays: { "2026-11-04": { entries: [] } },
+  menuDays: { "2026-11-04": { entries: [], updatedAt: "2026-11-03T20:00:00.000Z" } },
 };
 
 let downloads: { name: string; blob: Blob }[];

@@ -56,7 +56,20 @@ service cloud.firestore {
       allow create, update: if isMember() && isValidRecipeImage(request.resource.data);
       allow delete: if isMember();
     }
-    match /menu_days/{date}    { allow read, write: if isMember(); }
+    // A Plan day (US-5.1, ADR-0006). Rules can't check each entry in the list; src/data/menu.ts
+    // does. Days are never deleted: removing the last entry leaves an empty list.
+    function isValidMenuDay(day) {
+      return day.keys().hasOnly(['entries', 'updatedAt'])
+        && day.entries is list && day.entries.size() <= 20
+        && day.updatedAt is timestamp;
+    }
+
+    match /menu_days/{date} {
+      allow read: if isMember();
+      allow create, update: if isMember()
+        && date.matches('^[0-9]{4}-[0-9]{2}-[0-9]{2}$')
+        && isValidMenuDay(request.resource.data);
+    }
 
     // Signed-in users may read their own entry (so the app can tell members from non-members).
     // Nobody can write here from the app: members are added by hand in the Firebase console.

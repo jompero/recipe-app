@@ -12,7 +12,12 @@ const validFile = {
     },
   },
   recipeImages: { pasta: { data: "data:image/jpeg;base64,AAAA" } },
-  menuDays: { "2026-11-04": { entries: [{ recipeId: "pasta" }] } },
+  menuDays: {
+    "2026-11-04": {
+      entries: [{ id: "a1", recipeId: "pasta" }],
+      updatedAt: "2026-11-04T08:00:00.000Z",
+    },
+  },
 };
 
 function withChange(change: Record<string, unknown>): string {
@@ -51,6 +56,11 @@ describe("parseExportFile", () => {
       "a recipe date that isn't a date",
       withChange({ recipes: { pasta: { ...validFile.recipes.pasta, createdAt: "yesterday" } } }),
       "The export file is damaged: recipes/pasta has an invalid createdAt.",
+    ],
+    [
+      "a Plan day without its updatedAt (US-5.1)",
+      withChange({ menuDays: { "2026-11-04": { entries: [] } } }),
+      "The export file is damaged: menuDays/2026-11-04 has an invalid updatedAt.",
     ],
   ])("rejects %s", (_, text, message) => {
     expect(() => parseExportFile(text)).toThrow(message);

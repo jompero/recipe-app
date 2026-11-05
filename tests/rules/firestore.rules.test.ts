@@ -8,7 +8,15 @@ import {
   type RulesTestContext,
   type RulesTestEnvironment,
 } from "@firebase/rules-unit-testing";
-import { doc, serverTimestamp, setDoc, Timestamp, updateDoc } from "firebase/firestore";
+import {
+  arrayRemove,
+  arrayUnion,
+  doc,
+  serverTimestamp,
+  setDoc,
+  Timestamp,
+  updateDoc,
+} from "firebase/firestore";
 import { readFileSync } from "node:fs";
 import path from "node:path";
 import { afterAll, beforeAll, beforeEach, describe, test } from "vitest";
@@ -70,6 +78,17 @@ function as(who: Who): RulesTestContext {
   }
 }
 
+/** A Plan day with a recipe and a note (US-5.1). */
+function validMenuDay(): Record<string, unknown> {
+  return {
+    entries: [
+      { id: "a1", recipeId: "r1" },
+      { id: "b2", note: "Leftovers" },
+    ],
+    updatedAt: Timestamp.now(),
+  };
+}
+
 /** A recipe document with every field the rules require (US-2.4). */
 function validRecipe(): Record<string, unknown> {
   return {
@@ -92,25 +111,32 @@ function validRecipe(): Record<string, unknown> {
 }
 
 // Recipes are archived, never deleted (Epic 2/3). A recipe's image is deleted when its photo is
-// removed (US-4.1). Menu days may be deleted.
+// removed (US-4.1). Plan days are never deleted either (US-5.1).
 const SAMPLE_DOCS = {
-  recipes: { existing: "recipes/r1", data: validRecipe(), memberCanDelete: false },
+  recipes: {
+    existing: "recipes/r1",
+    fresh: "recipes/new",
+    data: validRecipe(),
+    memberCanDelete: false,
+  },
   recipe_images: {
     existing: "recipe_images/r1",
+    fresh: "recipe_images/new",
     data: { data: "data:image/jpeg;base64,BBBB" },
     memberCanDelete: true,
   },
   menu_days: {
     existing: "menu_days/2026-11-03",
-    data: { entries: [{ recipeId: "r1" }] },
-    memberCanDelete: true,
+    fresh: "menu_days/2026-11-04",
+    data: validMenuDay(),
+    memberCanDelete: false,
   },
 } as const;
 
 const NOT_ALLOWED: Who[] = ["signed out", "non-member", "unverified member"];
 
 describe.each(Object.entries(SAMPLE_DOCS))("%s", (collection, sample) => {
-  const { existing, data, memberCanDelete } = sample;
+  const { existing, fresh, data, memberCanDelete } = sample;
   describe.each(NOT_ALLOWED)("%s", (who) => {
     test("can't get a document", async () => {
       await assertFails(as(who).firestore().doc(existing).get());
@@ -119,7 +145,7 @@ describe.each(Object.entries(SAMPLE_DOCS))("%s", (collection, sample) => {
       await assertFails(as(who).firestore().collection(collection).get());
     });
     test("can't create a document", async () => {
-      await assertFails(as(who).firestore().doc(`${collection}/new`).set(data));
+      await assertFails(as(who).firestore().doc(fresh).set(data));
     });
     test("can't update a document", async () => {
       await assertFails(as(who).firestore().doc(existing).set(data));
@@ -137,7 +163,7 @@ describe.each(Object.entries(SAMPLE_DOCS))("%s", (collection, sample) => {
       await assertSucceeds(as("member").firestore().collection(collection).get());
     });
     test("can create a document", async () => {
-      await assertSucceeds(as("member").firestore().doc(`${collection}/new`).set(data));
+      await assertSucceeds(as("member").firestore().doc(fresh).set(data));
     });
     test("can update a document", async () => {
       await assertSucceeds(as("member").firestore().doc(existing).set(data));
@@ -219,6 +245,59 @@ describe("recipe image shape (US-2.4)", () => {
   ])("rejects %s", async (_, data) => {
     await assertFails(write(data));
   });
+});
+
+describe("menu day shape (US-5.1)", () => {
+  const day = (id = "2026-11-04") => doc(as("member").firestore(), `menu_days/${id}`);
+  const write = (data: Record<string, unknown>, id?: string) => setDoc(day(id), data);
+
+  test("adding to a new day with arrayUnion and a server timestamp is valid", async () => {
+    await assertSucceeds(
+      setDoc(
+        day(),
+        { entries: arrayUnion({ id: "a1", recipeId: "r1" }), updatedAt: serverTimestamp() },
+        { merge: true },
+      ),
+    );
+  });
+
+  test("removing the last entry leaves a valid empty day", async () => {
+    const entry = { id: "a1", recipeId: "r1" };
+    await assertSucceeds(write({ entries: [entry], updatedAt: Timestamp.now() }));
+    await assertSucceeds(
+      updateDoc(day(), { entries: arrayRemove(entry), updatedAt: serverTimestamp() }),
+    );
+  });
+
+  test("a day with 20 entries is allowed", async () => {
+    const entries = Array.from({ length: 20 }, (_, i) => ({ id: String(i), note: "x" }));
+    await assertSucceeds(write({ ...validMenuDay(), entries }));
+  });
+
+  test.each([
+    [
+      "more than 20 entries",
+      { entries: Array.from({ length: 21 }, (_, i) => ({ id: String(i) })) },
+    ],
+    ["entries that aren't a list", { entries: { id: "a1" } }],
+    ["an updatedAt that isn't a timestamp", { updatedAt: "2026-11-04" }],
+    ["an unknown field", { slot: "dinner" }],
+  ])("rejects %s", async (_, change) => {
+    await assertFails(write({ ...validMenuDay(), ...change }));
+  });
+
+  test.each(["entries", "updatedAt"])("rejects a day without %s", async (field) => {
+    const data = validMenuDay();
+    delete data[field];
+    await assertFails(write(data));
+  });
+
+  test.each(["new", "2026-11-4", "2026-11-04x", "20261104"])(
+    "rejects a day whose ID %j isn't a date",
+    async (id) => {
+      await assertFails(write(validMenuDay(), id));
+    },
+  );
 });
 
 describe("allowed_users", () => {
