@@ -11,6 +11,10 @@ firebase-debug.log
 firestore-debug.log
 ui-debug.log
 
+# Playwright (US-5.5)
+test-results/
+playwright-report/
+
 # Claude Code local overrides
 .claude/settings.local.json
 .agents
