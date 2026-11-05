@@ -1,3 +1,4 @@
+import { payloadToDraft } from "../import/jsonLd";
 import { RECIPE_PAYLOAD_KEYS, type RecipePayload } from "../import/recipePayload";
 import { bookmarkletHref, encodePayload, extractRecipe } from "./bookmarklet";
 import arrayHtml from "./fixtures/array.html?raw";
@@ -6,6 +7,7 @@ import graphHtml from "./fixtures/graph.html?raw";
 import noRecipeHtml from "./fixtures/no-recipe.html?raw";
 import plainObjectHtml from "./fixtures/plain-object.html?raw";
 import typeArrayHtml from "./fixtures/type-array.html?raw";
+import valdemarsroHtml from "./fixtures/valdemarsro.html?raw";
 
 const PAGE_URL = "https://example.com/recipe/";
 const APP_URL = "http://localhost:5173/recipe-app/";
@@ -123,6 +125,123 @@ describe("extractRecipe", () => {
   });
 });
 
+describe("extractRecipe: the microdata fallback (issue 08)", () => {
+  const VALDEMARSRO_URL = "https://www.valdemarsro.dk/poelsegryde/";
+  const valdemarsro = () => extractRecipe(parse(valdemarsroHtml), VALDEMARSRO_URL);
+  /** The description's two paragraphs, one per line (the print-only logo before them is dropped). */
+  const INTRO = [
+    "Nem opskrift på pølsegryde smækfyldt med god smag og grøntsager.",
+    "Hverdagsmad og stjernelækkert!",
+  ].join("\n");
+
+  it("reads Valdemarsro's microdata Recipe when its ld+json has none", () => {
+    expect(valdemarsro()).toEqual({
+      v: 1,
+      url: VALDEMARSRO_URL,
+      recipe: {
+        name: "Pølsegryde",
+        description: INTRO,
+        image: "https://www.valdemarsro.dk/wp-content/2023/08/poelsegryde.jpg",
+        cookTime: "PT30M",
+        totalTime: "PT30M",
+        recipeYield: "4",
+        recipeIngredient: [
+          "6 wienerpølser, skåret i skiver",
+          "30 g chorizo, i små tern",
+          "1½ dl piskefløde",
+          "400 g pastaskruer",
+          "[Til servering]",
+          "30 g parmesan",
+          "1 håndfuld frisk basilikum, finthakket",
+        ],
+        recipeInstructions: [
+          "Steg pølser og chorizo ved middelhøj varme, i en gryde med olie under omrøring, til pølserne har fået en flot stegeskorpe.",
+          "Skrue lidt ned for varmen og tilsæt løg og hvidløg, sauter til løgene er bløde.",
+          "Smag pølsegryden til med parmesan samt salt og peber.",
+          "Server med parmesan og et drys finthakket basilikum",
+        ],
+        author: { "@type": "Person", name: "Ann-Christine Hellerup Brandt" },
+        publisher: {
+          "@type": "Organization",
+          name: "Valdemarsro",
+          logo: {
+            "@type": "ImageObject",
+            url: "https://www.valdemarsro.dk/wp-content/themes/valdemarsro16/assets/img/header-logo.png",
+          },
+        },
+      },
+    });
+  });
+
+  it("leaves out the comments, which are scopes of their own", () => {
+    const json = JSON.stringify(valdemarsro());
+    for (const text of ["Louise", "kikærter", "uden at blende", "Besvar"]) {
+      expect(json).not.toContain(text);
+    }
+  });
+
+  it("gives the expected draft through the app's converter", () => {
+    const { draft, photoUrl } = payloadToDraft(valdemarsro()!);
+
+    expect(draft.title).toBe("Pølsegryde");
+    expect(draft.yield).toBe("4");
+    expect(draft.activeTime).toBe("");
+    expect(draft.totalTime).toBe("30 min");
+    // The publisher's name; the hostname is only the fallback when a site names none.
+    expect(draft.source).toBe("Valdemarsro");
+    expect(draft.sourceUrl).toBe(VALDEMARSRO_URL);
+    expect(draft.ingredients[4]).toEqual({ header: "Til servering" });
+    expect(draft.ingredients).toHaveLength(7);
+    expect(draft.instructions).toHaveLength(4);
+    expect(draft.description).toBe(INTRO);
+    expect(photoUrl).toBe("https://www.valdemarsro.dk/wp-content/2023/08/poelsegryde.jpg");
+  });
+
+  it("reads content and datetime attributes, https types, image scopes and repeated steps", () => {
+    const html = `
+      <article itemscope itemtype="https://schema.org/Recipe">
+        <h1 itemprop="name"> Karjalanpiirakat </h1>
+        <meta itemprop="prepTime" content="PT1H">
+        <time itemprop="cookTime" datetime="PT15M">15 minuuttia</time>
+        <span itemprop="author">Aino</span>
+        <div itemprop="image" itemscope itemtype="https://schema.org/ImageObject">
+          <meta itemprop="url" content="https://example.com/piirakat.jpg">
+        </div>
+        <p itemprop="recipeIngredient">2 dl vettä</p>
+        <p itemprop="recipeIngredient">1 tl suolaa</p>
+        <ol>
+          <li itemprop="recipeInstructions">Sekoita taikina.</li>
+          <li itemprop="recipeInstructions">Paista uunissa.</li>
+        </ol>
+        <div itemprop="recipeInstructions"><ul><li>Not a direct child step</li></ul></div>
+        <a itemprop="publisher" href="https://example.com/">Example</a>
+      </article>`;
+
+    expect(extractRecipe(parse(html), PAGE_URL)?.recipe).toEqual({
+      name: "Karjalanpiirakat",
+      prepTime: "PT1H",
+      cookTime: "PT15M",
+      author: "Aino",
+      image: { "@type": "ImageObject", url: "https://example.com/piirakat.jpg" },
+      recipeIngredient: ["2 dl vettä", "1 tl suolaa"],
+      recipeInstructions: ["Sekoita taikina.", "Paista uunissa.", "Not a direct child step"],
+      publisher: "https://example.com/",
+    });
+  });
+
+  it("prefers ld+json when a page has both", () => {
+    const html = `<script type="application/ld+json">{"@type":"Recipe","name":"From ld+json"}</script>
+      <div itemscope itemtype="http://schema.org/Recipe"><h1 itemprop="name">From microdata</h1></div>`;
+
+    expect(extractRecipe(parse(html), PAGE_URL)?.recipe).toEqual({ name: "From ld+json" });
+  });
+
+  it("ignores other microdata types", () => {
+    const html = `<div itemscope itemtype="http://schema.org/Article"><h1 itemprop="name">News</h1></div>`;
+    expect(extractRecipe(parse(html), PAGE_URL)).toBeNull();
+  });
+});
+
 describe("encodePayload", () => {
   it("encodes UTF-8 JSON as base64url without padding, and decodes back (æøå, äö)", () => {
     const payload: RecipePayload = {
@@ -151,7 +270,9 @@ describe("bookmarkletHref", () => {
 
     expect(href.startsWith("javascript:")).toBe(true);
     expect(href).toContain("http://localhost:5173/");
-    expect(href.length).toBeLessThan(5000);
+    // Unminified here (as on the dev server), comments included: about 5.8 KB with the microdata
+    // fallback. The built link is minified, about 2.8 KB (measured 2026-11-05).
+    expect(href.length).toBeLessThan(8000);
   });
 
   it("has no raw newlines, tabs or stray % that a browser would mangle", () => {
@@ -183,6 +304,17 @@ describe("bookmarkletHref", () => {
     expect(win.location.href.startsWith(prefix)).toBe(true);
     expect(decode(win.location.href.slice(prefix.length))).toEqual(
       extractRecipe(parse(graphHtml), PAGE_URL),
+    );
+  });
+
+  it("navigates with the microdata recipe on a Valdemarsro page", () => {
+    const pageUrl = "https://www.valdemarsro.dk/poelsegryde/";
+    const win = runHref(bookmarkletHref(APP_URL), valdemarsroHtml, pageUrl);
+
+    expect(win.alert).not.toHaveBeenCalled();
+    const prefix = `${APP_URL}#/import?d=`;
+    expect(decode(win.location.href.slice(prefix.length))).toEqual(
+      extractRecipe(parse(valdemarsroHtml), pageUrl),
     );
   });
 
