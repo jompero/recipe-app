@@ -45,14 +45,23 @@ Left for later:
 ## Epic 5: Plan (shared meal calendar)
 **Goal:** Plan meals together, with live sync and dice-roll suggestions.
 
-**Specified** (2026-11-05): see [`.scratch/EPIC-5-plan/spec.md`](../.scratch/EPIC-5-plan/spec.md) and its issues (US-5.1 week view and live sync, US-5.2 add/remove/move entries, US-5.3 "Add to plan…" from a recipe page, US-5.4 roller, US-5.5 Playwright). Called "Plan" in the interface. No meal slots, and entries can be notes ([ADR-0006](adr/0006-menu-one-document-per-date.md) amended). The end-to-end question is settled: a minimal Playwright setup (Chromium, phone size) with a two-window live sync test.
+**Done** (2026-11-05): see [`.scratch/EPIC-5-plan/spec.md`](../.scratch/EPIC-5-plan/spec.md) and its issues (US-5.1 week view and live sync, US-5.2 add/remove/move entries, US-5.3 "Add to plan…" from a recipe page, US-5.4 roller, US-5.5 Playwright). Called "Plan" in the interface. No meal slots, and entries can be notes ([ADR-0006](adr/0006-menu-one-document-per-date.md) amended). End-to-end tests are in: Playwright, Chromium at phone size, `npm run e2e`, run in CI.
+
+Different from the spec:
+* Removing a day's last entry leaves `entries: []` instead of deleting the document (a safe delete needs a transaction, and those fail offline). Recorded in ADR-0006.
+* The roller watches the nearby Plan days live instead of reading them once.
+* Writes from the Plan, "Add to plan…" and the roller aren't awaited: offline, Firestore only settles them when the device is back online.
+
+Left for later:
+* **A failed roll save only reaches the browser console**, because the roller has already gone back to the Plan. The batch is all or nothing, so the meals simply don't appear. The likely cause is a day reaching 20 entries. Add a message if it ever happens.
+* Live sync between two real phones is checked in 7.5.
 
 ---
 
 ## Epic 6: Grocery List
 **Goal:** Turn a range of menu dates into one combined shopping list.
 
-* **6.1 Date range selection:** choose the range of dates the list is built from.
+* **6.1 Date range selection:** choose the range of dates the list is built from. The Plan's `menu_days` entries are `{ id, recipeId }` or `{ id, note }`; notes have no ingredients and are skipped. `watchDays` in `src/data/menu.ts` already reads a date range.
 * **6.2 Unit conversion:** convert between units (volume, mass) using the parsed ingredient fields, metric by default. Review the unit spellings in `src/parsing/ingredientLine.ts` first: e.g. "tlk" (seen in the owner's US-3.5 test) isn't recognised yet.
 * **6.3 Ingredient merging:** combine ingredients across recipes (e.g. `1 cup milk` + `250 ml milk`) into a checklist with checkboxes. Lines that couldn't be parsed are listed separately, never dropped.
 

@@ -39,6 +39,7 @@ Open http://localhost:5173/recipe-app/. The `/recipe-app/` path matches the GitH
 | `npm run typecheck` | Type-check everything (`tsc -b`) |
 | `npm test` | Run the tests once (`npm run test:watch` to keep them running). The security rules tests need the emulators running (`npm run emulators`) |
 | `npm run test:ci` | Run the tests inside the emulators, as CI does |
+| `npm run e2e` | Run the end-to-end tests (Playwright, Chromium at phone size) against fresh, empty emulators. Not while `dev:all` runs (same ports) |
 | `npm run lint` | ESLint plus a Prettier formatting check |
 | `npm run format` | Format everything with Prettier |
 | `npm run check` | Typecheck, lint and test (inside the emulators): what CI runs, minus the build |
@@ -47,7 +48,7 @@ A pre-commit hook (Husky + lint-staged) runs ESLint `--fix` and Prettier on the 
 
 ## Pull requests
 
-`main` only changes through pull requests, and CI (typecheck, lint, tests, build) must pass before merging. Dependabot opens grouped dependency updates weekly; they go through CI like any other PR.
+`main` only changes through pull requests, and CI (typecheck, lint, tests, the end-to-end test, build) must pass before merging. Dependabot opens grouped dependency updates weekly; they go through CI like any other PR.
 
 ## Local Firebase (emulator)
 
@@ -69,6 +70,7 @@ npm run dev         # terminal 2
 - **Starting over:** stop the emulators, delete `.emulator-data/`, start again and re-seed. You get the members and, if the base-data file exists, all recipes from it.
 - **Offline cache gotcha:** the app keeps an offline copy of Firestore data in the browser (IndexedDB). After wiping the emulator, the browser keeps showing the old documents until you clear the site data (DevTools → Application → Storage → Clear site data).
 - **Tests with the emulator:** `npm run test:ci` starts the emulators, runs the tests and stops them. This is what CI runs. If your dev emulators are already running, use `npm test` instead (test:ci would hit "port taken"). The security rules tests use their own project (`demo-recipe-app-rules-test`), so they never touch your dev data.
+- **End-to-end tests:** `npm run e2e` starts empty emulators and a Vite server on port 5174, then runs `e2e/` in Chromium at phone size (Pixel 7): two members in two browser windows, checking live sync on the Plan. Stop `dev:all` first (the emulator ports are fixed). The first time, install the browser with `npx playwright install chromium`.
 
 ## Testing on your phone
 
