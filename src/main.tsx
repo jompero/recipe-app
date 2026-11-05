@@ -1,4 +1,5 @@
 import "@mantine/core/styles.css";
+import "@mantine/dates/styles.css";
 import "@fontsource-variable/cormorant";
 import "@fontsource-variable/cormorant/wght-italic.css";
 import "@fontsource-variable/eb-garamond";

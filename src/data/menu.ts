@@ -16,11 +16,9 @@ import {
   writeBatch,
 } from "firebase/firestore";
 import { db } from "../config/firebase";
+import { noteProblem } from "../plan/note.ts";
 
 const COLLECTION = "menu_days";
-
-/** The longest note, in characters (after trimming). */
-export const NOTE_MAX = 80;
 
 /** One item on a Plan day: a recipe or a short note. The ID keeps entries distinct. */
 export type MenuEntry = { id: string; recipeId: string } | { id: string; note: string };
@@ -55,11 +53,9 @@ function newEntryId(): string {
 /** The new entry with its ID, or an error for an empty or too-long note. */
 function withId(entry: NewMenuEntry): MenuEntry {
   if ("recipeId" in entry) return { id: newEntryId(), recipeId: entry.recipeId };
-  const note = entry.note.trim();
-  if (note.length === 0) throw new Error("A note can't be empty.");
-  if (note.length > NOTE_MAX)
-    throw new Error(`A note can be at most ${String(NOTE_MAX)} characters.`);
-  return { id: newEntryId(), note };
+  const problem = noteProblem(entry.note);
+  if (problem) throw new Error(problem);
+  return { id: newEntryId(), note: entry.note.trim() };
 }
 
 const dayRef = (date: string) => doc(db, COLLECTION, date);

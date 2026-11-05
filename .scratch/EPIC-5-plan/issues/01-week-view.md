@@ -1,6 +1,6 @@
 # 01: Plan week view, live sync, data module and rules
 
-Status: in-review
+Status: done
 Story: US-5.1
 Branch: `EPIC-5/US-5.1-week-view`
 Spec: [../spec.md](../spec.md) (Data, Plan page)
@@ -47,3 +47,5 @@ If you need to change anything else, stop and ask.
   - **Rules:** `menu_days` checked as in the spec, delete denied. The shared per-collection rules tests got a `fresh` document path, because `menu_days/new` isn't a valid date.
   - **Beyond Touches (needed):** `src/backup/exportFile.ts` now treats a Plan day's `updatedAt` as a timestamp, so export and restore keep it a timestamp and restored days pass the rules (the base-data export has no menu days, so nothing old breaks). Its tests, `backup.emulator.test.ts` and `DataPageBackup.test.tsx` got new-shape fixtures. The six whole-app tests (`renderApp`) each got one `vi.mock` line for `menu.ts`, because the route tree now imports it.
   - `npm run check` passes (591 tests) and `npm run build` works. Not checked on a phone yet.
+
+**2026-11-05 (owner):** Manual review passed. PR #38 merged.
