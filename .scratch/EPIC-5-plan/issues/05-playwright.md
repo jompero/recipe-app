@@ -24,7 +24,7 @@ If you need to change anything else, stop and ask.
 
 ## Acceptance criteria
 
-- [ ] `npm run e2e` passes locally on Windows (done) and in CI.
+- [x] `npm run e2e` passes locally on Windows and in CI (run 42130493694, 2m38s for the whole check job).
 - [x] The test fails if live sync is broken (checked once, e.g. by swapping `onSnapshot` for a one-off read; don't commit that).
 - [x] The `check` job stays the single required check.
 
