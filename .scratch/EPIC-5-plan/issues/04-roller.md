@@ -1,6 +1,6 @@
 # 04: The roller
 
-Status: in-review
+Status: done
 Story: US-5.4
 Branch: `EPIC-5/US-5.4-roller`
 Spec: [../spec.md](../spec.md) (Roller)
@@ -34,7 +34,7 @@ If you need to change anything else, stop and ask.
 - [x] Unit tests: every picking rule above with a seeded random source; the state round trip, and a corrupt or old stored value is ignored.
 - [x] Emulator test: `saveRoll` adds to several days, including one that already has entries.
 - [x] Component tests: lock and skip survive a roll; Save sends only Rolled and Locked days; Discard clears; leaving and coming back restores the roll; the range limit; reduced motion shows results at once.
-- [ ] By hand (owner): on a phone, the shuffle feels right.
+- [x] By hand (owner): on a phone, the shuffle feels right.
 - [x] `npm run check` passes.
 
 ## Comments
@@ -46,3 +46,5 @@ If you need to change anything else, stop and ask.
   - **Save** sends one `saveRoll` batch (all or nothing), not awaited (offline), clears the stored roll and replaces the roller with the Plan at the range's first week. A failed save only goes to the console, because the page has already left: the Plan then simply doesn't show the meals. Worth a better message if it ever happens (the only likely cause is a day reaching 20 entries).
   - **Shuffle:** 500 ms of titles stepping through the pool every 70 ms, Roll and Save disabled meanwhile; none with `prefers-reduced-motion`.
   - Typecheck, lint and all 646 tests pass, run against the owner's running emulator. The by-hand phone check (does the shuffle feel right) is left for the owner.
+
+**2026-11-05 (owner):** Manual review passed. PR #41 merged.
