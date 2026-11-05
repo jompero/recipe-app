@@ -1,6 +1,6 @@
 # 08: Microdata fallback in the bookmarklet
 
-Status: ready-for-agent
+Status: done
 Story: US-4.4
 Branch: `EPIC-4/US-4.4-microdata-fallback`
 Spec: [../spec.md](../spec.md) (Bookmarklet and import)
@@ -63,3 +63,5 @@ When `findRecipe` finds no `ld+json` Recipe, fall back to microdata:
 - **Size:** the built (minified) link went from about 1.3 KB to 2.8 KB, measured with Rolldown's minifier (3.5 KB percent-encoded). The href test's limit on the unminified link (what the dev server serves, comments included, now 5.8 KB) went from 5000 to 8000, with a comment saying so.
 - **Full page check:** the full downloaded page (not only the fixture), through `payloadToDraft`, gives 20 ingredients plus the header, 5 steps, the 1000 px photo, "30 min" and yield 4, in a 2.5 KB payload.
 - Ran `npx vitest run src/bookmarklet/ src/import/` and the install-section test (115 tests), `npm run typecheck` and `npm run lint`. CI runs the full check. The by-hand check on two Valdemarsro recipes is left for the owner.
+
+**2026-11-05 (owner):** By-hand check passed, with the reinstalled bookmarklet on Valdemarsro recipes. PR #35 merged.

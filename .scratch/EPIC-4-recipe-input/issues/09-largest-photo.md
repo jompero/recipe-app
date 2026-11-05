@@ -20,3 +20,5 @@ Among all image candidates (string, array, `ImageObject`s), prefer the largest:
 Unit tests from the existing fixtures (Pinch of Yum should pick its full image). This changes the converter only.
 
 ## Comments
+
+**2026-11-05 (owner):** Left in the backlog (Epic 4 wrap-up). Pick it up if imported photos come out small in practice. BBC Good Food, the WordPress/WPRM sites and Valdemarsro list the full image first, and pasting a better image always works.

@@ -1,5 +1,7 @@
 # EPIC-4 handoff (2026-11-05)
 
+**Finished 2026-11-05:** 06 and 08 were merged and passed the owner's by-hand checks. At the wrap-up, the owner left 09 in the backlog and Quick Paste as it is (noted in `docs/backlog.md`). Kept for the record.
+
 For the agent that finishes Epic 4. Read `CLAUDE.md`, then [spec.md](spec.md), then this file.
 
 ## How we work now

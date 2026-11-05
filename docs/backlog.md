@@ -30,7 +30,15 @@
 ## Epic 4: Recipe Input
 **Goal:** Adding a recipe should be quick, from any source.
 
-**Specified:** see [`.scratch/EPIC-4-recipe-input/spec.md`](../.scratch/EPIC-4-recipe-input/spec.md): US-4.1 Photo, US-4.2 Quick Paste, US-4.3 Draft import, US-4.4 Bookmarklet, split into 7 issues built in two parallel waves. The bookmarklet targets desktop browsers first; phones are best effort.
+**Done** (2026-11-05): see [`.scratch/EPIC-4-recipe-input/spec.md`](../.scratch/EPIC-4-recipe-input/spec.md) and its issues (US-4.1 Photo, US-4.2 Quick Paste, US-4.3 Draft import, US-4.4 Bookmarklet). The bookmarklet targets desktop browsers first; phones are best effort.
+
+Beyond the spec:
+* A schema.org microdata fallback in the bookmarklet (issue 08), because Valdemarsro has no `ld+json` Recipe.
+* An import opens the form on top of the cookbook, so Cancel and Back ask to discard and stay in the app.
+
+Left for later:
+* **Largest site photo** ([issue 09](../.scratch/EPIC-4-recipe-input/issues/09-largest-photo.md), `needs-triage`): pick it up if imported photos come out small.
+* **Quick Paste fills fields differently than the owner sometimes expects** (issue 05 comments). Left as is. If it gets in the way, collect real samples with the expected result before changing the splitter's rules.
 
 ---
 
