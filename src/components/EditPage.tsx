@@ -13,7 +13,7 @@ import {
   TextInput,
   Title,
 } from "@mantine/core";
-import { useRef, useState } from "react";
+import { useEffect, useRef, useState } from "react";
 import { Link, useBlocker, useLocation, useNavigate, useParams } from "react-router";
 import { tagChips } from "../cookbook/cookbook.ts";
 import { createRecipe, updateRecipe, type StoredRecipe } from "../data/recipes.ts";
@@ -25,10 +25,11 @@ import {
   newRecipeState,
   type RecipeForm,
 } from "../editing/recipeForm.ts";
+import { sameRecipeUrl } from "../editing/recipeUrl.ts";
 import { LABEL_STYLE } from "../theme.ts";
 import { useLiveRecipes } from "./liveRecipes.ts";
 import { PhotoField } from "./PhotoField.tsx";
-import { usePhotoDraft } from "./usePhotoDraft.ts";
+import { usePhotoDraft, type PhotoDraft } from "./usePhotoDraft.ts";
 
 /**
  * The edit form for a recipe (#/recipe/:id/edit), or for a new one (#/recipe/new): blank, or
@@ -48,8 +49,10 @@ export function EditPage() {
         initial={passed ? formFromRecipe(passed.draft) : EMPTY_FORM}
         baseline={EMPTY_FORM}
         recipe={null}
+        recipes={live.recipes}
         tags={tags}
         clearOnSave={passed?.clearOnSave}
+        photoUrl={passed?.photoUrl}
       />
     );
   }
@@ -68,7 +71,14 @@ export function EditPage() {
   // while the live data changes underneath (last save wins).
   const stored = formFromRecipe(recipe);
   return (
-    <EditForm key={recipe.id} initial={stored} baseline={stored} recipe={recipe} tags={tags} />
+    <EditForm
+      key={recipe.id}
+      initial={stored}
+      baseline={stored}
+      recipe={recipe}
+      recipes={live.recipes}
+      tags={tags}
+    />
   );
 }
 
@@ -76,16 +86,22 @@ function EditForm({
   initial,
   baseline,
   recipe,
+  recipes,
   tags,
   clearOnSave,
+  photoUrl,
 }: {
   initial: RecipeForm;
   /** What counts as unchanged: a new recipe filled in from a draft is unsaved from the start. */
   baseline: RecipeForm;
   recipe: StoredRecipe | null;
+  /** Every stored recipe, archived ones included, to spot one from the same address. */
+  recipes: StoredRecipe[];
   tags: string[];
   /** A sessionStorage key to remove once saved (NewRecipeState). */
   clearOnSave?: string;
+  /** A site's photo to try to fetch as the new recipe's photo (NewRecipeState). */
+  photoUrl?: string;
 }) {
   const navigate = useNavigate();
   const location = useLocation();
@@ -95,6 +111,14 @@ function EditForm({
   const [saveError, setSaveError] = useState<string | null>(null);
   const leaving = useRef(false);
   const photo = usePhotoDraft(recipe?.thumbnail ?? null);
+  const photoFetch = useSitePhoto(photoUrl, photo);
+  // Not while saving: Firestore lists a new recipe before the server confirms the write, so it
+  // would show up here as its own duplicate.
+  const duplicate = saving
+    ? undefined
+    : recipes.find(
+        (other) => other.id !== recipe?.id && sameRecipeUrl(other.sourceUrl, form.sourceUrl),
+      );
 
   // Leaving with unsaved changes (Cancel, a link, or phone Back) asks first. Saving clears the way.
   const dirty = JSON.stringify(form) !== JSON.stringify(baseline) || photo.change !== "keep";
@@ -163,11 +187,34 @@ function EditForm({
         error={showErrors ? errors.title : undefined}
       />
       <PhotoField photo={photo} />
+      {photoFetch === "fetching" && (
+        <Text size="sm" c="dimmed" style={LABEL_STYLE}>
+          Fetching the site's photo…
+        </Text>
+      )}
+      {photoFetch === "failed" && photoUrl && (
+        <Alert color="yellow" title="No photo yet">
+          <Text size="sm">
+            Couldn't fetch the photo: copy the image on the site and paste it here
+          </Text>
+          <Anchor href={photoUrl} target="_blank" rel="noopener noreferrer" size="sm">
+            Open the image
+          </Anchor>
+        </Alert>
+      )}
       <Textarea label="Description" autosize minRows={2} {...text("description")} />
       <SimpleGrid cols={2} spacing="sm">
         <TextInput label="Source" {...text("source")} />
         <TextInput label="Source URL" type="url" {...text("sourceUrl")} />
       </SimpleGrid>
+      {duplicate && (
+        <Alert color="blue" title="You already have this recipe">
+          <Anchor component={Link} to={`/recipe/${duplicate.id}`} size="sm">
+            {duplicate.title}
+            {duplicate.archived ? " (archived)" : ""}
+          </Anchor>
+        </Alert>
+      )}
       <SimpleGrid cols={3} spacing="sm">
         <TextInput label="Yield" {...text("yield")} />
         <TextInput label="Active time" {...text("activeTime")} />
@@ -219,6 +266,46 @@ function EditForm({
       />
     </Stack>
   );
+}
+
+/**
+ * Tries to fetch a recipe site's photo into the photo draft once. Most sites don't allow it
+ * (no CORS header) and there is no proxy (CLAUDE.md), so "failed" is the usual outcome: the form
+ * then asks the member to copy and paste the image.
+ */
+function useSitePhoto(
+  photoUrl: string | undefined,
+  photo: PhotoDraft,
+): "idle" | "fetching" | "failed" {
+  const [status, setStatus] = useState<"idle" | "fetching" | "failed">(
+    photoUrl ? "fetching" : "idle",
+  );
+  // The member may pick a photo while this one loads: theirs wins.
+  const untouched = useRef(true);
+  const { change, busy, stage } = photo;
+  useEffect(() => {
+    untouched.current = change === "keep" && !busy;
+  }, [change, busy]);
+
+  useEffect(() => {
+    if (!photoUrl) return;
+    const abort = new AbortController();
+    fetch(photoUrl, { signal: abort.signal })
+      .then(async (response) => {
+        if (!response.ok) throw new Error(`HTTP ${response.status}`);
+        const image = await response.blob();
+        if (!image.type.startsWith("image/")) throw new Error(`Not an image: ${image.type}`);
+        if (abort.signal.aborted) return;
+        setStatus("idle");
+        if (untouched.current) await stage(image);
+      })
+      .catch(() => {
+        if (!abort.signal.aborted) setStatus("failed");
+      });
+    return () => abort.abort();
+  }, [photoUrl, stage]);
+
+  return status;
 }
 
 /** Fixed at the bottom in place of the menu button. */

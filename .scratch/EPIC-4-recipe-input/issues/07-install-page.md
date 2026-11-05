@@ -1,6 +1,6 @@
 # 07: Install page
 
-Status: ready-for-agent
+Status: done
 Story: US-4.4
 Branch: `EPIC-4/US-4.4-install-page`
 Spec: [../spec.md](../spec.md) (Bookmarklet and import: Install page)
@@ -36,3 +36,5 @@ React may block `javascript:` URLs in `href`. Check the current React docs and s
 - `appUrl` is `location.origin + location.pathname`. The code box is a read-only Mantine `Textarea`, and Copy uses Mantine's `CopyButton` (the label changes to "Copied"). The test reads the code back from user-event's fake clipboard.
 - Steps for desktop Chrome/Firefox/Edge, iPhone (Safari) and Android (Chrome), plus the Safari note in the issue's wording.
 - **Hand check (owner) still open:** drag the link to the bookmarks bar in desktop Chrome and run it on a recipe site (with 06), and install it on the phone by following the steps.
+
+**2026-11-05 (owner):** Dragging the link to the bookmarks bar works. Running it on a recipe page ends in an error, as expected until 06 adds the `#/import` route. The end-to-end check waits for 06.

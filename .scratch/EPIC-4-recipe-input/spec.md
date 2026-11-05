@@ -18,6 +18,8 @@ Three new ways to fill the **existing New recipe form**. Each one produces a dra
 
 ## Build order and parallel work
 
+**2026-11-05: back to one issue at a time in the main workspace.** Issues 01–05 and 07 were built in parallel worktrees. The rest (06, then 08) are built one after another in the main checkout, so the emulator rule below no longer limits anything: run `npm run check` as usual, as long as `dev:all` isn't running. Current state and next steps: [handoff.md](handoff.md).
+
 The work is split so that pure logic can be built at the same time in separate git worktrees. Each issue lists the files it **Touches**. An agent stays within them and asks before changing anything else.
 
 | Issue | Story | Wave | Blocked by |
