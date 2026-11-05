@@ -1,6 +1,6 @@
 # EPIC-5: Plan (shared meal calendar)
 
-Status: ready-for-agent
+Status: done
 
 Replaces the Epic 5 placeholder ("Yahtzee-Style" Calendar) in `docs/backlog.md`. Settled in a grilling session on 2026-11-05. Terms (Plan, Plan day, Entry, Note, Roll, Lock, Skip) are defined in `GLOSSARY.md`.
 

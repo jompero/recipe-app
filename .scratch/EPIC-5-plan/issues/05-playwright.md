@@ -1,6 +1,6 @@
 # 05: Playwright and the live sync test
 
-Status: in-review
+Status: done
 Story: US-5.5
 Branch: `EPIC-5/US-5.5-playwright`
 Spec: [../spec.md](../spec.md) (End-to-end tests)
@@ -38,3 +38,5 @@ If you need to change anything else, stop and ask.
   - **CI:** in the `check` job after the unit tests: `npx playwright install --with-deps chromium`, `npm run e2e`, and the HTML report uploaded (`actions/upload-artifact@v7`, latest release checked) on failure.
   - Locally on Windows: passes (8 s for the test, ~18 s in all). Sabotage check: `watchDays` swapped for a one-off `getDocs` → the test fails; reverted, not committed. `npm run check` passes (646 tests).
   - GitHub rejected every push for a while (`fatal error in commit_refs`, even for a branch at `main`); it went through on a later try with no changes.
+
+**2026-11-05 (owner):** PR #42 merged. Epic 5 done.

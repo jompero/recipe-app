@@ -38,10 +38,11 @@ src/
   data/                  The ONLY place that imports firebase/firestore or firebase/auth
     recipes.ts           CRUD, archive, live list of active recipes
     images.ts            Compress, save and load thumbnail and full image (the migration seam)
-    menu.ts              Range queries and live updates on menu_days, arrayUnion writes
+    menu.ts              The Plan: live range of menu_days, add/remove/move entries, save a roll (arrayUnion/arrayRemove, batches)
     backup.ts            Export everything to JSON, restore
   utils/imageCompressor.ts   browser-image-compression: JPEG, ~1024px full / ~320px thumbnail
   parsing/               Ingredient and recipe text parsers (shared by the Pepperplate import and Quick Paste)
+  plan/                  The Plan's pure logic: week dates, note rules, the roller's picking rules
   components/ …          UI only; calls src/data, never Firebase directly
 ```
 
@@ -88,7 +89,7 @@ Live updates: the recipe list and the visible range of the menu use `onSnapshot`
 
 ## Firestore schema
 
-`recipes` and `recipe_images` are final (Epic 2, enforced by `firestore.rules`). `menu_days` is settled in the Epic 5 spec (`.scratch/EPIC-5-plan/spec.md`, ADR-0006 amendment) and gets rules shape validation in its issue 01.
+`recipes` and `recipe_images` are final (Epic 2, enforced by `firestore.rules`). `menu_days` is final too (Epic 5, ADR-0006 amendment, shape checked by `firestore.rules`).
 
 ```jsonc
 // recipes/{id}   id = kebab-case of the Pepperplate file name for imported recipes, auto ID otherwise
