@@ -26,7 +26,7 @@ If you need to change anything else, stop and ask.
 - [x] Component tests: the badge shows; the Scale menu calls `setEntryScale` with the right value.
 - [x] Existing `menu_days` documents with no `scale` read as 1×.
 - [x] `npm run check` passes (typecheck, lint and `npm test` against the running emulator: 761 tests).
-- [ ] By hand (owner): on the Plan, set a recipe to 2× and back to 1×; the badge follows, on another device too.
+- [x] By hand (owner): on the Plan, set a recipe to 2× and back to 1×; the badge follows, on another device too.
 
 ## Comments
 
@@ -35,3 +35,5 @@ If you need to change anything else, stop and ask.
   - **Plan page:** a "2×"/"½×" label after the recipe's title, and a **Scale** section at the bottom of the entry's "⋯" menu. **Different from the issue:** the scale is a `SegmentedControl` (½× / 1× / 2× / 3× in one row, a real radio group) rather than four menu items, because Mantine forces `role="menuitem"` on menu items, so they can't be marked as checked. Picking a scale doesn't close the menu.
   - No rules change: the rules check the `entries` list, not its items (as in Epic 5).
   - `npm run check` itself can't run while the owner's emulators hold the ports, so its three steps were run one by one.
+
+**2026-11-06 (owner):** Checked on the phone over the LAN dev server: the "2×" badge and the Scale row in the entry menu look good.
