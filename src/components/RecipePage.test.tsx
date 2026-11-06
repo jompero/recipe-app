@@ -31,6 +31,7 @@ vi.mock("../data/images.ts", () => ({
   ),
 }));
 vi.mock("../data/backup.ts", () => ({ exportEverything: vi.fn(), restoreEverything: vi.fn() }));
+vi.mock("../data/groceries.ts", () => ({ watchGroceryList: () => () => {} }));
 vi.mock("../data/menu.ts", () => ({ watchDays: () => () => {}, addEntry: fake.addEntry }));
 vi.mock("../data/auth.ts", () => ({
   watchSession: (onChange: (session: Session) => void) => {

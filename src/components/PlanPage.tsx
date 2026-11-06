@@ -35,6 +35,7 @@ import {
   weekFromParam,
   weekLabel,
 } from "../plan/week.ts";
+import { scaleLabel } from "../plan/scale.ts";
 import { LABEL_STYLE } from "../theme.ts";
 import { AddEntrySheet } from "./AddEntrySheet.tsx";
 import { useLiveRecipes } from "./liveRecipes.ts";
@@ -58,7 +59,10 @@ export function PlanPage() {
   const live = usePlanDays(first, toDateKey(days[6]!));
   const recipes = useLiveRecipes();
   const isThisWeek = first === toDateKey(mondayOf(today));
-  usePageMenu("Plan", [{ label: "Roll…", to: `/plan/roll?week=${first}` }]);
+  usePageMenu("Plan", [
+    { label: "Roll…", to: `/plan/roll?week=${first}` },
+    { label: "Grocery list…", to: `/groceries/new?week=${first}` },
+  ]);
 
   /** The day whose "+" sheet is open. */
   const [addingTo, setAddingTo] = useState<string | null>(null);
@@ -253,7 +257,6 @@ function PlanDay({
 const THUMB = 44;
 
 const SCALES: EntryScale[] = [0.5, 1, 2, 3];
-const scaleLabel = (scale: EntryScale) => `${scale === 0.5 ? "½" : scale}×`;
 
 /** An entry, with its "…" menu (Move to…, Remove, and for a recipe its scale). */
 function Entry({
