@@ -62,7 +62,7 @@ Pure functions in a new `src/groceries/` folder, with no Firebase and no React, 
 - **Scale:** `qty` and `qtyMax` are multiplied by the line's `scale` before merging.
 - **Matching names** (the **merge key**), conservative on purpose:
   - lowercase and trim; collapse whitespace;
-  - drop anything in brackets, then anything after the first comma;
+  - drop anything in brackets, then anything after the first comma, and footnote stars ("chicken stock*");
   - drop a leading "of";
   - plural to singular with a few rules: `-ies` → `-y`, `-oes` → `-o` (tomatoes, potatoes), `-ches`/`-shes`/`-sses`/`-xes` → drop `-es`, otherwise one trailing `-s` (not after `-ss`). A short list of words left alone (e.g. "hummus", "couscous", "asparagus", "molasses", "swiss");
   - then a small **synonym table** in code, from merge key to merge key: e.g. "garlic clove" → "garlic", "clove garlic" → "garlic", "fat garlic" → "garlic" (a mistranslated Danish "fed"), "æg" → "egg", "sukker" → "sugar", "smør" → "butter", "hvedemel" → "wheat flour", "maito" → "milk", "sipuli" → "onion", "fløde" → "cream", "kerma" → "cream". Start from the cross-language pairs and near-misses seen in the base data; keep it short.
@@ -80,7 +80,7 @@ Pure functions in a new `src/groceries/` folder, with no Firebase and no React, 
   - **Ranges:** low ends add up and high ends add up ("1–2 cloves" + "3 cloves" = "4–5 cloves"). A line with no `qtyMax` counts its `qty` as both ends.
   - **No amount:** if every source of a name has no amount, the merged line has no amount. If some do, the amount shows "+ some" ("200 g + some").
   - Nothing is ever dropped: every source line ends up in exactly one merged line.
-- **Output:** merged lines `{ key, name, amount (display text), sources: SourceLine[] }`, sorted A–Z by merge key. A function for the by-recipe view groups source lines by recipe (in the order they were added), with hand-added lines in a last group.
+- **Output:** merged lines `{ key, name, amount (display text), sources: SourceLine[] }`, sorted A–Z by the name shown (ignoring case). A function for the by-recipe view groups source lines by recipe (in the order they were added), with hand-added lines in a last group.
 - The functions take the source lines and return plain data; the list page only renders them.
 
 ### Scale on Plan entries (US-6.2)

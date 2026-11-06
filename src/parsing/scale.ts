@@ -22,7 +22,7 @@ function decimal(value: number, places: number, comma: boolean): string {
 }
 
 /** 1.5 → "1½", 0.25 → "¼"; amounts with no friendly fraction get one decimal. */
-function friendly(value: number, comma: boolean): string {
+export function friendly(value: number, comma: boolean): string {
   const whole = Math.floor(value);
   const part = value - whole;
   if (part < CLOSE) return String(whole);
