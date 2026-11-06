@@ -27,7 +27,7 @@ If you need to change anything else, stop and ask.
 ## Acceptance criteria
 
 - [x] Component tests: the default range (the current week and a past week); notes left out; unticking a recipe leaves out its lines; the scale is carried onto the lines; headers skipped; Replace calls `replaceList`; Add calls `addLines` without entries already on the list and reports the skipped count; the 28-day limit.
-- [ ] By hand (owner): build a list from a real week on the phone.
+- [x] By hand (owner): build a list from a real week on the phone.
 - [x] `npm run check` passes (typecheck, lint and `npm test` against the running emulator: 811 tests).
 
 ## Comments
@@ -41,3 +41,5 @@ If you need to change anything else, stop and ask.
     - Agreed with the owner: a **stand-in `#/groceries` page** (`GroceryListPage.tsx`) shows the saved lines as written, by recipe, so the builder can be checked in the app. US-6.5 replaces it.
   - **Beyond Touches:** `useGroceryList` (a hook over `watchGroceryList`, for 05 too); `scaleLabel` moved to `src/plan/scale.ts` (shared with the Plan page); every whole-app test now fakes `src/data/groceries.ts`, as the convention in `renderApp.tsx` asks.
   - Writes aren't awaited (as on the Plan); the page goes to `#/groceries` at once.
+
+**2026-11-06 (owner):** Manual review passed.
