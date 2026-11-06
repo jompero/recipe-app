@@ -35,9 +35,11 @@ If you need to change anything else, stop and ask. Don't touch `.firebaserc` yet
 
 ## Acceptance criteria
 
-- [ ] `deploy.yml` and the PR template exist; `npm run check` passes.
-- [ ] Action versions checked against their releases pages, and noted in the PR.
+- [x] `deploy.yml` and the PR template exist; `npm run check` passes (826 tests).
+- [x] Action versions checked against their releases pages, and noted in the PR.
 - [ ] After merging, the first deploy run on `main` fails at the guard with its message (no variables yet). Record the run link under Comments.
-- [ ] Phase 2 of `project-setup.md` agrees with the spec, step for step.
+- [x] Phase 2 of `project-setup.md` agrees with the spec, step for step.
 
 ## Comments
+
+**2026-11-06 (agent):** Built. Latest releases via the GitHub API: checkout v7.0.1, setup-node v7.1.0, configure-pages v6.0.0, upload-pages-artifact v5.0.0, deploy-pages v5.0.1. The guard script was run locally: all four values empty → four errors, exit 1; a `demo-` ID with `VITE_USE_EMULATOR=true` → two errors, exit 1; a valid config → exit 0. The PR template uses the `/pr` skill's headings plus the rules checkbox. Phase 1 of `project-setup.md` still shows the original, older CI listing; left alone (out of scope). Left open: the first deploy run on `main` failing at the guard.

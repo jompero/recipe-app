@@ -22,7 +22,8 @@
     "check": "npm run typecheck && npm run lint && npm run test:ci",
     "prepare": "husky",
     "test:ci": "firebase emulators:exec --only auth,firestore \"npm test\"",
-    "e2e": "firebase emulators:exec --only auth,firestore \"playwright test\""
+    "e2e": "firebase emulators:exec --only auth,firestore \"playwright test\"",
+    "deploy:rules": "firebase deploy --only firestore:rules --project prod"
   },
   "dependencies": {
     "@fontsource-variable/cormorant": "^5.3.0",

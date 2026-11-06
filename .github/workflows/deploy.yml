@@ -1,0 +1,74 @@
+name: Deploy to GitHub Pages
+
+# Builds dist/ against the live Firebase project and deploys it with GitHub's official Pages
+# actions (ADR-0004). main is protected and its CI check has already passed, so CI isn't re-run.
+on:
+  push:
+    branches: [main]
+  workflow_dispatch:
+
+permissions:
+  contents: read
+  pages: write
+  id-token: write
+
+# One deploy at a time; never cancel one halfway.
+concurrency:
+  group: pages
+  cancel-in-progress: false
+
+jobs:
+  build:
+    runs-on: ubuntu-latest
+    env:
+      # The Firebase web config is public (it ships in the bundle), so these are Actions
+      # variables, not secrets.
+      VITE_FIREBASE_API_KEY: ${{ vars.FIREBASE_API_KEY }}
+      VITE_FIREBASE_AUTH_DOMAIN: ${{ vars.FIREBASE_AUTH_DOMAIN }}
+      VITE_FIREBASE_PROJECT_ID: ${{ vars.FIREBASE_PROJECT_ID }}
+      VITE_FIREBASE_APP_ID: ${{ vars.FIREBASE_APP_ID }}
+      VITE_USE_EMULATOR: "false"
+    steps:
+      - uses: actions/checkout@v7
+      - uses: actions/setup-node@v7
+        with:
+          node-version-file: .nvmrc
+          cache: npm
+      # Vite builds happily with a missing config, and the live site would then talk to nothing
+      # (or to the emulator project). Stop here instead.
+      - name: Check the Firebase config
+        run: |
+          fail=0
+          for name in VITE_FIREBASE_API_KEY VITE_FIREBASE_AUTH_DOMAIN VITE_FIREBASE_PROJECT_ID VITE_FIREBASE_APP_ID; do
+            if [ -z "${!name}" ]; then
+              echo "::error::${name#VITE_} is empty. Set it under Settings > Secrets and variables > Actions > Variables."
+              fail=1
+            fi
+          done
+          case "$VITE_FIREBASE_PROJECT_ID" in
+            demo-*)
+              echo "::error::FIREBASE_PROJECT_ID is '$VITE_FIREBASE_PROJECT_ID'. A demo- project only exists in the emulator."
+              fail=1
+              ;;
+          esac
+          if [ "$VITE_USE_EMULATOR" = "true" ]; then
+            echo "::error::VITE_USE_EMULATOR is true. The live site must not connect to the emulator."
+            fail=1
+          fi
+          exit $fail
+      - run: npm ci
+      - run: npm run build
+      - uses: actions/configure-pages@v6
+      - uses: actions/upload-pages-artifact@v5
+        with:
+          path: dist
+
+  deploy:
+    needs: build
+    runs-on: ubuntu-latest
+    environment:
+      name: github-pages
+      url: ${{ steps.deployment.outputs.page_url }}
+    steps:
+      - id: deployment
+        uses: actions/deploy-pages@v5
