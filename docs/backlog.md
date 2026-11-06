@@ -61,7 +61,19 @@ Left for later:
 ## Epic 6: Grocery List
 **Goal:** Turn a range of Plan days into one combined, shared shopping list.
 
-**Specified** (2026-11-06): see [`.scratch/EPIC-6-grocery-list/spec.md`](../.scratch/EPIC-6-grocery-list/spec.md) and its issues (US-6.1 parser fixes and merge logic, US-6.2 scale on Plan entries, US-6.3 data module and rules, US-6.4 builder, US-6.5 list page). There is one saved, shared list ([ADR-0008](adr/0008-grocery-list-one-shared-document.md)), and Plan entries gain a `scale` ([ADR-0006](adr/0006-menu-one-document-per-date.md) amended).
+**Done** (2026-11-06): see [`.scratch/EPIC-6-grocery-list/spec.md`](../.scratch/EPIC-6-grocery-list/spec.md) and its issues (US-6.1 parser fixes and merge logic, US-6.2 scale on Plan entries, US-6.3 data module and rules, US-6.4 builder, US-6.5 list page). There is one saved, shared list ([ADR-0008](adr/0008-grocery-list-one-shared-document.md)), merged in the browser, and Plan entries gain a `scale` ([ADR-0006](adr/0006-menu-one-document-per-date.md) amended). A second Playwright test checks ticks and added items between two phones.
+
+Different from the spec:
+* The merged list is sorted by the name shown, not the merge key ("flour" was listed under W).
+* A synonym can say which unit a name implies, so "1 garlic clove" counts as a clove. Leftover teaspoons round to the nearest ¼.
+* The Plan entry's scale is a segmented control in the "⋯" menu (Mantine forces menu items to be plain `menuitem`s).
+* `tick` and `untick` take a list of ids (a merged line ticks all its sources in one write). `ticked` may be missing until the first tick.
+* The builder's range uses the roller's From/To date fields, not the popup calendar. "N meals are already on it" is shown before choosing Replace or Add.
+
+Left for later:
+* **Missed merges** the conservative rules leave as separate lines ("parmesan" / "shredded parmesan cheese", "Onions" / "chopped onion", the different peppers). Grow the synonym table in `src/groceries/mergeKey.ts` as they come up.
+* A pantry list and shop sections, once the list has been used for a few weeks (spec, Further Notes).
+* The e2e sign-in helper retries the Auth emulator's "add account" click (PR #48), after it flaked in CI on PRs #46 and #47.
 
 ---
 

@@ -38,11 +38,13 @@ src/
   data/                  The ONLY place that imports firebase/firestore or firebase/auth
     recipes.ts           CRUD, archive, live list of active recipes
     images.ts            Compress, save and load thumbnail and full image (the migration seam)
-    menu.ts              The Plan: live range of menu_days, add/remove/move entries, save a roll (arrayUnion/arrayRemove, batches)
+    menu.ts              The Plan: live range of menu_days, add/remove/move entries, set a scale, save a roll (arrayUnion/arrayRemove, batches)
+    groceries.ts         The grocery list: live grocery_lists/current, replace/add lines, tick, add by hand, remove, clear
     backup.ts            Export everything to JSON, restore
   utils/imageCompressor.ts   browser-image-compression: JPEG, ~1024px full / ~320px thumbnail
   parsing/               Ingredient and recipe text parsers (shared by the Pepperplate import and Quick Paste)
   plan/                  The Plan's pure logic: week dates, note rules, the roller's picking rules
+  groceries/             The grocery list's pure logic: merge keys, unit conversion, merged and by-recipe views, the builder's lines
   components/ …          UI only; calls src/data, never Firebase directly
 ```
 
@@ -70,6 +72,7 @@ flowchart TD
         F[(recipes<br/>incl. thumbnail)]
         I[(recipe_images<br/>full photo)]
         M[(menu_days)]
+        L[(grocery_lists)]
     end
 
     C -->|batched write| G
@@ -77,19 +80,20 @@ flowchart TD
     G --> I
     C -->|setDoc / arrayUnion| G
     G --> M
+    G --> L
 
     class A,B,P,C client;
-    class F,I,M firebase;
+    class F,I,M,L firebase;
     class G secure;
 ```
 
-Live updates: the recipe list and the visible range of the menu use `onSnapshot`, so a change on one device appears on the others within about a second. Firestore's offline copy shows cached data and queues writes while the device is offline.
+Live updates: the recipe list, the visible range of the menu and the grocery list use `onSnapshot`, so a change on one device appears on the others within about a second. Firestore's offline copy shows cached data and queues writes while the device is offline.
 
 ---
 
 ## Firestore schema
 
-`recipes` and `recipe_images` are final (Epic 2, enforced by `firestore.rules`). `menu_days` is final too (Epic 5, ADR-0006 amendment, shape checked by `firestore.rules`).
+`recipes` and `recipe_images` are final (Epic 2, enforced by `firestore.rules`). `menu_days` is final too (Epic 5, ADR-0006 amendments, shape checked by `firestore.rules`), and so is `grocery_lists` (Epic 6, ADR-0008).
 
 ```jsonc
 // recipes/{id}   id = kebab-case of the Pepperplate file name for imported recipes, auto ID otherwise
@@ -119,8 +123,19 @@ Live updates: the recipe list and the visible range of the menu use `onSnapshot`
 {
   "entries": [                               // at most 20; order added; [] once the last is removed
     { "id": "k3f9x2", "recipeId": "abc123" },  // id: random, made in the browser
+    { "id": "m7c1aa", "recipeId": "def456", "scale": 2 },  // scale 0.5, 2 or 3; none = 1×
     { "id": "p81qza", "note": "Leftovers" }    // note: 1–80 characters
   ],
+  "updatedAt": "<timestamp>"
+}
+
+// grocery_lists/current   (the only document; merged in the browser, ADR-0008)
+{
+  "lines": [                                 // at most 600; source lines, merged when shown
+    { "id": "a8k2pq", "raw": "1 cup milk", "scale": 2, "recipeId": "pancakes", "title": "Pancakes", "entryId": "k3f9x2" },
+    { "id": "z0m4tt", "raw": "toilet paper", "scale": 1 }   // added by hand
+  ],
+  "ticked": ["a8k2pq"],                      // at most 600; line ids; missing until the first tick
   "updatedAt": "<timestamp>"
 }
 
@@ -130,7 +145,7 @@ Live updates: the recipe list and the visible range of the menu use `onSnapshot`
 
 Rules of thumb:
 - If two people edit the same recipe at once, the last save wins.
-- Menu entries are added with `arrayUnion`.
+- Menu entries, grocery lines and ticks are added with `arrayUnion` and removed with `arrayRemove`.
 - Use `serverTimestamp()`, not ISO strings written by the browser.
 
 ---

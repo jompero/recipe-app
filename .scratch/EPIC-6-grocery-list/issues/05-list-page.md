@@ -1,6 +1,6 @@
 # 05: The list page and the tick sync test
 
-Status: ready-for-human
+Status: done
 Story: US-6.5
 Branch: `EPIC-6/US-6.5-list-page`
 Spec: [../spec.md](../spec.md) (List page, Testing Decisions)
@@ -31,9 +31,9 @@ If you need to change anything else, stop and ask.
 ## Acceptance criteria
 
 - [x] Component tests: the empty state; both views and the switch; a partly ticked line; ticking a merged line ticks all its sources; expanding to the sources; removing a line; removing a recipe; adding an item by hand; clearing with a confirmation.
-- [ ] End to end: two contexts on `#/groceries` after building a list from a seeded Plan day. A tick in one shows in the other; an item added in the second appears in the first.
+- [x] End to end: two contexts on `#/groceries` after building a list from a seeded Plan day. A tick in one shows in the other; an item added in the second appears in the first.
 - [x] By hand (owner): shop from it on a phone while another device watches, and note any wrong or missed merges in the comments.
-- [ ] `npm run check` and `npm run e2e` pass.
+- [x] `npm run check` and `npm run e2e` pass (e2e in CI on PR #50: both tests passed first try).
 
 ## Comments
 
@@ -48,3 +48,5 @@ If you need to change anything else, stop and ask.
   - Typecheck, lint and `npm test` pass (826 tests, against the owner's emulator). **The e2e test hasn't run yet:** it needs the emulator ports the owner's `dev:all` holds, so it runs in CI on the PR.
 
 **2026-11-06 (owner):** Manual review passed.
+
+**2026-11-06 (owner):** PR #50 merged. Its CI ran the new e2e test for the first time: passed (5.2 s), and the Plan test passed without a retry.
