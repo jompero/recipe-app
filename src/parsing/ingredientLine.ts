@@ -3,7 +3,8 @@
 import type { Ingredient } from "./types.ts";
 
 /**
- * Unit spellings found in the Pepperplate export (English, Danish, Finnish), mapped to one
+ * Unit spellings found in the Pepperplate export (English, Danish, Finnish), plus a few Nordic ones
+ * for pasted recipes (kpl, stk, tlk, pkt), mapped to one
  * canonical spelling. Matched lowercase and without a trailing dot.
  */
 const UNIT_SPELLINGS: Record<string, string[]> = {
@@ -19,15 +20,16 @@ const UNIT_SPELLINGS: Record<string, string[]> = {
   lb: ["lb", "lbs", "pound", "pounds"],
   clove: ["clove", "cloves"],
   slice: ["slice", "slices"],
-  can: ["can", "cans"],
+  can: ["can", "cans", "tlk"],
   handful: ["handful", "handfuls"],
   pinch: ["pinch", "pinches"],
   bunch: ["bunch", "bunches"],
   sprig: ["sprig", "sprigs"],
   stalk: ["stalk", "stalks"],
   head: ["head", "heads"],
-  piece: ["piece", "pieces"],
+  piece: ["piece", "pieces", "kpl", "stk"],
   bag: ["bag", "bags"],
+  packet: ["packet", "packets", "pack", "packs", "pkt"],
 };
 
 const UNITS = new Map(
@@ -93,7 +95,8 @@ export function parseIngredientLine(raw: string): Ingredient {
   if (amountMax !== undefined) result.qtyMax = amountValue(amountMax);
   if (unit !== undefined) {
     result.unit = unit;
-    result.item = afterFirstWord;
+    // "2 cloves of garlic": the "of" belongs to neither the unit nor the item.
+    result.item = afterFirstWord.replace(/^of\s+/i, "");
   } else {
     // Stray punctuation between amount and item ("20 , 9 inch rice paper") isn't part of the item.
     result.item = rest.replace(/^[,;:\-–\s]+/, "");

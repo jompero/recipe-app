@@ -1,6 +1,6 @@
 # 01: Parser fixes, and the merge and convert logic
 
-Status: ready-for-agent
+Status: ready-for-human
 Story: US-6.1
 Branch: `EPIC-6/US-6.1-merge-logic`
 Spec: [../spec.md](../spec.md) (Parser fixes, Merge and convert logic)
@@ -28,7 +28,22 @@ Build it **test-first** (the `tdd` skill). Pure functions only: no Firebase, no 
 
 ## Acceptance criteria
 
-- [ ] Unit tests for every rule in the spec's Testing Decisions (01), and the existing parser tests still pass.
-- [ ] A test over a large fixture from the base data: every source line lands in exactly one merged line, and there are fewer merged lines than source lines.
+- [x] Unit tests for every rule in the spec's Testing Decisions (01), and the existing parser tests still pass.
+- [x] A test over a large fixture from the base data: every source line lands in exactly one merged line, and there are fewer merged lines than source lines.
 - [ ] A comment in this issue listing the merged lines for one real week (the owner picks the recipes) and any obvious missed merges, so the synonym table can be judged.
-- [ ] `npm run typecheck`, `npm run lint` and the unit tests pass (no emulator needed).
+- [x] `npm run typecheck`, `npm run lint` and the unit tests pass (no emulator needed).
+
+## Comments
+
+- 2026-11-06 (agent): Built on `EPIC-6/US-6.1-merge-logic`, test-first, through the four seams agreed with the owner: `parseIngredientLine`, `mergeKey`, `mergeLines` and `groupByRecipe`.
+  - **Parser:** "of" after a unit is dropped ("2 Cloves of Garlic" → clove, "Garlic"); new units `kpl`/`stk` (piece), `tlk` (can), `pkt`/`pack`/`packet` (packet).
+  - **`src/groceries/`:** `types.ts` (`SourceLine`, `MergedLine`), `mergeKey.ts` (`cleanName` for the name shown, `mergeKey` for matching, the plural rules and the synonym table), `units.ts` (kinds, conversion, display), `mergeLines.ts`, `groupByRecipe.ts`.
+  - `friendly` in `src/parsing/scale.ts` is now exported (fractions for tsp and counts).
+  - **Fixture:** `src/groceries/fixtures/baseDataLines.json` holds only the 2,188 raw ingredient lines from the base data, one array per recipe (no titles or other fields), because `.scratch/base-data/` is gitignored and CI can't read it.
+  - **Different from the spec,** found by previewing a merged list from real recipes:
+    - Sorted A–Z by the **name shown**, not the merge key: "flour" (key "wheat flour") was listed under W. Spec updated.
+    - **Footnote stars** are dropped from names and keys ("chicken stock*"). Spec updated.
+    - "all purpose flour" (no hyphen) added to the synonyms.
+  - Ranges whose ends fall in different spoon units show both in full ("2 tsp – 1 tbsp + 1 tsp"). A range's unit for mass and volume is chosen by its high end ("0.8–1 kg").
+  - Typecheck, lint and the unit tests pass (565 in the app project). No emulator needed.
+  - **Left for the owner:** pick one real week of recipes for the merged-list check (last acceptance criterion). A preview from 7 arbitrary recipes (75 lines → 61 merged) looked right; missed merges seen there were all expected by the conservative rules ("pepper" / "black pepper" / "freshly grounded pepper", "finely chopped onion" / "small white onion").

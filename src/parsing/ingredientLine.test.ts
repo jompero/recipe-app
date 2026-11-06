@@ -100,4 +100,27 @@ describe("parseIngredientLine", () => {
   it("keeps the item after a range", () => {
     expect(parseIngredientLine("4 to 6 small acorn squash").item).toBe("small acorn squash");
   });
+
+  it.each([
+    ["2 Cloves of Garlic", { qty: 2, unit: "clove", item: "Garlic" }],
+    ["1 cup of milk", { qty: 1, unit: "cup", item: "milk" }],
+    ["1 pinch Of salt", { qty: 1, unit: "pinch", item: "salt" }],
+  ])("drops the 'of' after a unit: %s", (raw, expected) => {
+    expect(parseIngredientLine(raw)).toEqual({ raw, ...expected });
+  });
+
+  it("keeps 'of' when there is no unit before it", () => {
+    expect(parseIngredientLine("2 of the eggs").item).toBe("of the eggs");
+  });
+
+  it.each([
+    ["3 kpl munaa", "piece", "munaa"],
+    ["2 stk. æg", "piece", "æg"],
+    ["1 tlk tomaattimurskaa", "can", "tomaattimurskaa"],
+    ["1 pkt gær", "packet", "gær"],
+    ["2 packets yeast", "packet", "yeast"],
+    ["1 pack tofu", "packet", "tofu"],
+  ])("knows the unit in %s", (raw, unit, item) => {
+    expect(parseIngredientLine(raw)).toMatchObject({ unit, item });
+  });
 });
