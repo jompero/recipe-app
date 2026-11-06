@@ -30,9 +30,16 @@ export async function signedInPage(browser: Browser, email: string, path: string
   const popupOpened = page.waitForEvent("popup");
   await page.getByRole("button", { name: "Sign in with Google" }).click();
   const popup = await popupOpened;
+  await popup.waitForLoadState();
   // The emulator's page lists accounts it already knows; a new one is added with this button.
-  await popup.locator("#add-account-button").click();
-  await popup.locator("#email-input").fill(email);
+  // Once it lists an account, a click that lands before its script is ready does nothing and
+  // the form stays hidden (seen in CI on the second window), so click again until it shows.
+  const emailInput = popup.locator("#email-input");
+  await expect(async () => {
+    if (!(await emailInput.isVisible())) await popup.locator("#add-account-button").click();
+    await expect(emailInput).toBeVisible({ timeout: 1000 });
+  }).toPass({ timeout: 15_000 });
+  await emailInput.fill(email);
   await popup.locator("#display-name-input").fill(email.split("@")[0] ?? email);
   await popup.locator("#sign-in").click();
 
