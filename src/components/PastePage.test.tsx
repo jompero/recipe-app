@@ -27,6 +27,7 @@ vi.mock("../data/recipes.ts", () => ({
 }));
 vi.mock("../data/images.ts", () => ({ loadFullImage: vi.fn(() => Promise.resolve(null)) }));
 vi.mock("../data/backup.ts", () => ({ exportEverything: vi.fn(), restoreEverything: vi.fn() }));
+vi.mock("../data/groceries.ts", () => ({ watchGroceryList: () => () => {} }));
 vi.mock("../data/menu.ts", () => ({ watchDays: () => () => {} }));
 vi.mock("../data/auth.ts", () => ({
   watchSession: (onChange: (session: Session) => void) => {

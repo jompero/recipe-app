@@ -4,6 +4,8 @@ import { AccountPage } from "./components/AccountPage.tsx";
 import { CookbookPage } from "./components/CookbookPage.tsx";
 import { DataPage } from "./components/DataPage.tsx";
 import { EditPage } from "./components/EditPage.tsx";
+import { GroceryBuilderPage } from "./components/GroceryBuilderPage.tsx";
+import { GroceryListPage } from "./components/GroceryListPage.tsx";
 import { ImportPage } from "./components/ImportPage.tsx";
 import { PastePage } from "./components/PastePage.tsx";
 import { PlanPage } from "./components/PlanPage.tsx";
@@ -26,6 +28,8 @@ export const routes: RouteObject[] = [
       { path: "/recipe/:id/edit", element: <EditPage /> },
       { path: "/plan", element: <PlanPage /> },
       { path: "/plan/roll", element: <RollPage /> },
+      { path: "/groceries", element: <GroceryListPage /> },
+      { path: "/groceries/new", element: <GroceryBuilderPage /> },
       { path: "/data", element: <DataPage /> },
       { path: "/account", element: <AccountPage /> },
     ],
