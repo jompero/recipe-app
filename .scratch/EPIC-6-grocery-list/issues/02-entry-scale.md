@@ -1,6 +1,6 @@
 # 02: Scale on Plan entries
 
-Status: ready-for-human
+Status: done
 Story: US-6.2
 Branch: `EPIC-6/US-6.2-entry-scale`
 Spec: [../spec.md](../spec.md) (Scale on Plan entries)
@@ -37,3 +37,5 @@ If you need to change anything else, stop and ask.
   - `npm run check` itself can't run while the owner's emulators hold the ports, so its three steps were run one by one.
 
 **2026-11-06 (owner):** Checked on the phone over the LAN dev server: the "2×" badge and the Scale row in the entry menu look good.
+
+**2026-11-06 (owner):** PR #46 merged (its first CI run hit the flaky e2e sign-in; the re-run passed).
