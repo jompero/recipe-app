@@ -70,7 +70,7 @@ npm run dev         # terminal 2
 - **Starting over:** stop the emulators, delete `.emulator-data/`, start again and re-seed. You get the members and, if the base-data file exists, all recipes from it.
 - **Offline cache gotcha:** the app keeps an offline copy of Firestore data in the browser (IndexedDB). After wiping the emulator, the browser keeps showing the old documents until you clear the site data (DevTools → Application → Storage → Clear site data).
 - **Tests with the emulator:** `npm run test:ci` starts the emulators, runs the tests and stops them. This is what CI runs. If your dev emulators are already running, use `npm test` instead (test:ci would hit "port taken"). The security rules tests use their own project (`demo-recipe-app-rules-test`), so they never touch your dev data.
-- **End-to-end tests:** `npm run e2e` starts empty emulators and a Vite server on port 5174, then runs `e2e/` in Chromium at phone size (Pixel 7): two members in two browser windows, checking live sync on the Plan. Stop `dev:all` first (the emulator ports are fixed). The first time, install the browser with `npx playwright install chromium`.
+- **End-to-end tests:** `npm run e2e` starts empty emulators and a Vite server on port 5174, then runs `e2e/` in Chromium at phone size (Pixel 7): two members in two browser windows, checking live sync on the Plan and the grocery list. Stop `dev:all` first (the emulator ports are fixed). The first time, install the browser with `npx playwright install chromium`.
 
 ## Testing on your phone
 

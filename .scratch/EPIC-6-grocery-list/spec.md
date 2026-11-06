@@ -1,6 +1,6 @@
 # EPIC-6: Grocery List
 
-Status: ready-for-agent
+Status: done
 
 Replaces the Epic 6 placeholder in `docs/backlog.md`. Settled in a grilling session on 2026-11-06. Terms (Grocery list, Source line, Merged line, Scale) are defined in `GLOSSARY.md`; the storage decision is [ADR-0008](../../docs/adr/0008-grocery-list-one-shared-document.md), and the Plan entry's new `scale` is an amendment to [ADR-0006](../../docs/adr/0006-menu-one-document-per-date.md).
 
