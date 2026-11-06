@@ -1,6 +1,6 @@
 # 03: Grocery list data module, rules and backup
 
-Status: ready-for-agent
+Status: done
 Story: US-6.3
 Branch: `EPIC-6/US-6.3-grocery-data`
 Spec: [../spec.md](../spec.md) (Grocery list data)
@@ -37,3 +37,5 @@ If you need to change anything else, stop and ask.
   - **Rules:** `grocery_lists/{listId}`, only `current`; `lines` (≤ 600) and `updatedAt` required, `ticked` (≤ 600) optional, because `addLines` on a missing list creates it with `arrayUnion` and no ticks yet. No delete.
   - **Backup** needed no change: the export lists its collections, and a test now checks the grocery list stays out.
   - The line-id helper is a copy of the one in `menu.ts` (six random bytes), to stay inside this issue's files.
+
+**2026-11-06 (owner):** PR #47 merged.
