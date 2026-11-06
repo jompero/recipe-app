@@ -1,6 +1,6 @@
 # 01: Parser fixes, and the merge and convert logic
 
-Status: ready-for-human
+Status: done
 Story: US-6.1
 Branch: `EPIC-6/US-6.1-merge-logic`
 Spec: [../spec.md](../spec.md) (Parser fixes, Merge and convert logic)
@@ -56,3 +56,5 @@ Build it **test-first** (the `tdd` skill). Pure functions only: no Firebase, no 
     - **"1 garlic clove" was a bare count** ("garlic · 4 cloves + 1"). A synonym can now give the unit a name implies (`impliedUnit`), so it counts as 1 clove ("garlic · 5 cloves").
     - **Salt-and-pepper spellings** stayed four lines; the synonym table now maps them to one ("salt and pepper").
   - Misses left as the conservative rules intend: "fat finely chopped garlic" (prep word in the middle), "parmesan" vs "shredded parmesan cheese", "Onions" vs "chopped onion", the different peppers.
+
+**2026-11-06 (owner):** Real-week check passed. PR #45 merged.
