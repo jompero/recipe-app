@@ -16,6 +16,7 @@ const fake = vi.hoisted(() => ({
   addEntry: vi.fn<(date: string, entry: NewMenuEntry) => Promise<unknown>>(),
   removeEntry: vi.fn<(date: string, entry: MenuEntry) => Promise<void>>(),
   moveEntry: vi.fn<(from: string, to: string, entry: MenuEntry) => Promise<void>>(),
+  setEntryScale: vi.fn<(date: string, entry: MenuEntry, scale: number) => Promise<void>>(),
   /** Delivers days to whoever watches the range. */
   push(range: string, days: PlanDays) {
     fake.listeners.get(range)?.(days);
@@ -40,6 +41,7 @@ vi.mock("../data/menu.ts", () => ({
   addEntry: fake.addEntry,
   removeEntry: fake.removeEntry,
   moveEntry: fake.moveEntry,
+  setEntryScale: fake.setEntryScale,
 }));
 vi.mock("../data/recipes.ts", () => ({
   watchRecipes: (onChange: (recipes: StoredRecipe[]) => void) => {
@@ -71,6 +73,7 @@ beforeEach(() => {
   fake.addEntry.mockReset().mockResolvedValue({ id: "new" });
   fake.removeEntry.mockReset().mockResolvedValue();
   fake.moveEntry.mockReset().mockResolvedValue();
+  fake.setEntryScale.mockReset().mockResolvedValue();
   fake.recipes = [
     storedRecipe("Spinach Pie", { thumbnail: "data:image/jpeg;base64,PIE" }),
     storedRecipe("Chicken Soup"),
@@ -302,6 +305,45 @@ describe("adding, removing and moving (US-5.2)", () => {
     await userEvent.click(screen.getByRole("menuitem", { name: "Remove" }));
 
     expect(fake.removeEntry).toHaveBeenCalledWith("2026-11-06", gone);
+  });
+
+  test("a recipe planned at another scale shows it", () => {
+    renderApp("/plan");
+    act(() =>
+      fake.push(THIS_WEEK, {
+        "2026-11-05": [
+          { id: "b", recipeId: "spinach-pie", scale: 2 },
+          { id: "e", recipeId: "chicken-soup", scale: 0.5 },
+          { id: "f", recipeId: "old-stew" },
+        ],
+      }),
+    );
+
+    const thursday = within(day("Thu 5 Nov"));
+    expect(thursday.getByRole("link", { name: /Spinach Pie/ })).toHaveTextContent("2×");
+    expect(thursday.getByRole("link", { name: /Chicken Soup/ })).toHaveTextContent("½×");
+    expect(thursday.getByRole("link", { name: /Old Stew/ })).not.toHaveTextContent("×");
+  });
+
+  test("sets a recipe's scale from its menu, with the current one checked", async () => {
+    renderApp("/plan");
+    const pie = { id: "b", recipeId: "spinach-pie", scale: 2 as const };
+    act(() => fake.push(THIS_WEEK, { "2026-11-05": [pie] }));
+
+    await userEvent.click(screen.getByRole("button", { name: "Options for Spinach Pie" }));
+    expect(screen.getByRole("radio", { name: "2×", checked: true })).toBeInTheDocument();
+    expect(screen.getByRole("radio", { name: "1×", checked: false })).toBeInTheDocument();
+    await userEvent.click(screen.getByRole("radio", { name: "½×" }));
+
+    expect(fake.setEntryScale).toHaveBeenCalledWith("2026-11-05", pie, 0.5);
+  });
+
+  test("a note has no scale", async () => {
+    renderApp("/plan");
+    act(() => fake.push(THIS_WEEK, { "2026-11-05": [{ id: "c", note: "Salad" }] }));
+
+    await userEvent.click(screen.getByRole("button", { name: "Options for Salad" }));
+    expect(screen.queryByRole("radiogroup", { name: "Scale" })).not.toBeInTheDocument();
   });
 
   test("moves an entry to the day picked in the calendar", async () => {

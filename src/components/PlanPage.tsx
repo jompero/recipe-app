@@ -6,6 +6,7 @@ import {
   Group,
   Image,
   Menu,
+  SegmentedControl,
   Skeleton,
   Stack,
   Text,
@@ -14,7 +15,15 @@ import {
 } from "@mantine/core";
 import { useState } from "react";
 import { Link, useNavigate, useSearchParams } from "react-router";
-import { addEntry, moveEntry, removeEntry, type MenuEntry } from "../data/menu.ts";
+import {
+  addEntry,
+  moveEntry,
+  removeEntry,
+  setEntryScale,
+  type EntryScale,
+  type MenuEntry,
+  type RecipeEntry,
+} from "../data/menu.ts";
 import type { StoredRecipe } from "../data/recipes.ts";
 import {
   addDays,
@@ -35,7 +44,8 @@ import { usePlanDays } from "./usePlanDays.ts";
 
 /**
  * The Plan (US-5.1, US-5.2): one week, Monday to Sunday, kept live, with the week in the URL.
- * Members add recipes and notes to a day, and remove or move entries.
+ * Members add recipes and notes to a day, and remove or move entries, and set a recipe's scale
+ * for the grocery list (US-6.2).
  */
 export function PlanPage() {
   const [params] = useSearchParams();
@@ -132,6 +142,7 @@ export function PlanPage() {
               onAdd={() => setAddingTo(key)}
               onRemove={(entry) => save(removeEntry(key, entry))}
               onMove={(entry) => setMoving({ date: key, entry })}
+              onScale={(entry, scale) => save(setEntryScale(key, entry, scale))}
             />
           );
         })}
@@ -171,6 +182,7 @@ function PlanDay({
   onAdd,
   onRemove,
   onMove,
+  onScale,
 }: {
   label: string;
   isToday: boolean;
@@ -182,6 +194,7 @@ function PlanDay({
   onAdd: () => void;
   onRemove: (entry: MenuEntry) => void;
   onMove: (entry: MenuEntry) => void;
+  onScale: (entry: RecipeEntry, scale: EntryScale) => void;
 }) {
   return (
     <Box
@@ -227,6 +240,7 @@ function PlanDay({
                 recipes={recipes}
                 onRemove={() => onRemove(entry)}
                 onMove={() => onMove(entry)}
+                onScale={(scale) => "recipeId" in entry && onScale(entry, scale)}
               />
             </li>
           ))}
@@ -238,17 +252,22 @@ function PlanDay({
 
 const THUMB = 44;
 
-/** An entry, with its "…" menu (Remove, Move to…). */
+const SCALES: EntryScale[] = [0.5, 1, 2, 3];
+const scaleLabel = (scale: EntryScale) => `${scale === 0.5 ? "½" : scale}×`;
+
+/** An entry, with its "…" menu (Move to…, Remove, and for a recipe its scale). */
 function Entry({
   entry,
   recipes,
   onRemove,
   onMove,
+  onScale,
 }: {
   entry: MenuEntry;
   recipes: StoredRecipe[] | null;
   onRemove: () => void;
   onMove: () => void;
+  onScale: (scale: EntryScale) => void;
 }) {
   const recipe =
     "recipeId" in entry && recipes
@@ -271,6 +290,24 @@ function Entry({
           <Menu.Item color="red" onClick={onRemove}>
             Remove
           </Menu.Item>
+          {"recipeId" in entry && (
+            <>
+              <Menu.Divider />
+              <Menu.Label id={`scale-${entry.id}`}>Scale</Menu.Label>
+              {/* Mantine forces role="menuitem" on menu items, so the scale is a radio group. */}
+              <Box px="xs" pb={6}>
+                <SegmentedControl
+                  role="radiogroup"
+                  aria-labelledby={`scale-${entry.id}`}
+                  size="xs"
+                  fullWidth
+                  data={SCALES.map((scale) => ({ value: String(scale), label: scaleLabel(scale) }))}
+                  value={String(entry.scale ?? 1)}
+                  onChange={(value) => onScale(Number(value) as EntryScale)}
+                />
+              </Box>
+            </>
+          )}
         </Menu.Dropdown>
       </Menu>
     </Group>
@@ -310,9 +347,16 @@ function EntryContent({
           <Box bg="gray.1" w={THUMB} h={THUMB} style={{ flex: "none" }} />
         )}
         <Stack gap={0}>
-          <Text ff="heading" fz={17} lh={1.25}>
-            {recipe.title}
-          </Text>
+          <Group gap={6} wrap="nowrap" align="baseline">
+            <Text ff="heading" fz={17} lh={1.25}>
+              {recipe.title}
+            </Text>
+            {entry.scale && (
+              <Text c="linen.6" style={LABEL_STYLE}>
+                {scaleLabel(entry.scale)}
+              </Text>
+            )}
+          </Group>
           {recipe.archived && (
             <Text c="dimmed" style={LABEL_STYLE}>
               Archived

@@ -20,8 +20,16 @@ import { noteProblem } from "../plan/note.ts";
 
 const COLLECTION = "menu_days";
 
-/** One item on a Plan day: a recipe or a short note. The ID keeps entries distinct. */
-export type MenuEntry = { id: string; recipeId: string } | { id: string; note: string };
+/** How many times a planned recipe counts on the grocery list (US-6.2). 1× is stored as no field. */
+export type EntryScale = 0.5 | 1 | 2 | 3;
+const STORED_SCALES: readonly unknown[] = [0.5, 2, 3];
+
+/**
+ * One item on a Plan day: a recipe (with its scale, if not 1×) or a short note. The ID keeps
+ * entries distinct.
+ */
+export type MenuEntry = RecipeEntry | { id: string; note: string };
+export type RecipeEntry = { id: string; recipeId: string; scale?: Exclude<EntryScale, 1> };
 
 /** An entry before it's added: the ID is made when it's saved. */
 export type NewMenuEntry = { recipeId: string } | { note: string };
@@ -32,9 +40,11 @@ export type PlanDays = Record<string, MenuEntry[]>;
 function isEntry(value: unknown): value is MenuEntry {
   if (typeof value !== "object" || value === null) return false;
   const entry = value as Record<string, unknown>;
+  if (typeof entry["id"] !== "string") return false;
+  if (typeof entry["note"] === "string") return !("scale" in entry);
   return (
-    typeof entry["id"] === "string" &&
-    (typeof entry["recipeId"] === "string" || typeof entry["note"] === "string")
+    typeof entry["recipeId"] === "string" &&
+    (!("scale" in entry) || STORED_SCALES.includes(entry["scale"]))
   );
 }
 
@@ -116,6 +126,23 @@ export async function moveEntry(from: string, to: string, entry: MenuEntry): Pro
     { entries: arrayUnion(entry), updatedAt: serverTimestamp() },
     { merge: true },
   );
+  await batch.commit();
+}
+
+/**
+ * Sets a recipe entry’s scale (US-6.2), keeping its ID. Entries are objects in an array, so this
+ * removes the old one and adds the new one in one batch; the entry moves to the end of its day.
+ * Rewriting the whole array instead would let the last writer undo another member’s change.
+ */
+export async function setEntryScale(
+  date: string,
+  entry: RecipeEntry,
+  scale: EntryScale,
+): Promise<void> {
+  const scaled = { id: entry.id, recipeId: entry.recipeId, ...(scale === 1 ? {} : { scale }) };
+  const batch = writeBatch(db);
+  batch.update(dayRef(date), { entries: arrayRemove(entry), updatedAt: serverTimestamp() });
+  batch.update(dayRef(date), { entries: arrayUnion(scaled), updatedAt: serverTimestamp() });
   await batch.commit();
 }
 

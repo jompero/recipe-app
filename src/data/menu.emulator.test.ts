@@ -27,9 +27,11 @@ import {
   moveEntry,
   removeEntry,
   saveRoll,
+  setEntryScale,
   watchDays,
   type MenuEntry,
   type PlanDays,
+  type RecipeEntry,
 } from "./menu";
 
 const { PROJECT_ID, MEMBER, HOST, PORT, TOKEN } = vi.hoisted(() => {
@@ -113,6 +115,12 @@ function nextDays(first: string, last: string, check: (days: PlanDays) => boolea
       reject,
     );
   });
+}
+
+/** The entry as a recipe entry; fails the test if it is a note. */
+function recipe(entry: MenuEntry | undefined): RecipeEntry {
+  if (!entry || !("recipeId" in entry)) throw new Error("expected a recipe entry");
+  return entry;
 }
 
 const withoutIds = (entries: MenuEntry[] | undefined) =>
@@ -228,6 +236,68 @@ describe("menu data module", () => {
   ])("an %s note is refused before anything is written", async (_, note) => {
     await expect(addEntry("2026-11-04", { note })).rejects.toThrow();
     expect(await readDays("2026-11-04", "2026-11-04")).toEqual({});
+  });
+
+  test("setting a scale keeps the entry's ID and the day's other entries", async () => {
+    const pasta = await addEntry("2026-11-04", { recipeId: "pasta" });
+    const note = await addEntry("2026-11-04", { note: "Guests" });
+
+    await setEntryScale("2026-11-04", recipe(pasta), 2);
+
+    const days = await readDays("2026-11-04", "2026-11-04");
+    // Entries are objects in an array: the scaled one is removed and added again, at the end.
+    expect(days["2026-11-04"]).toEqual([note, { ...pasta, scale: 2 }]);
+  });
+
+  test("setting 1× removes the scale field", async () => {
+    const pasta = await addEntry("2026-11-04", { recipeId: "pasta" });
+    await setEntryScale("2026-11-04", recipe(pasta), 0.5);
+    const [halved] = (await readDays("2026-11-04", "2026-11-04"))["2026-11-04"] ?? [];
+
+    await setEntryScale("2026-11-04", recipe(halved), 1);
+
+    expect((await readDays("2026-11-04", "2026-11-04"))["2026-11-04"]).toEqual([pasta]);
+  });
+
+  test("moving an entry keeps its scale", async () => {
+    const pasta = await addEntry("2026-11-04", { recipeId: "pasta" });
+    await setEntryScale("2026-11-04", recipe(pasta), 3);
+    const [tripled] = (await readDays("2026-11-04", "2026-11-04"))["2026-11-04"] ?? [];
+
+    await moveEntry("2026-11-04", "2026-11-05", recipe(tripled));
+
+    const days = await readDays("2026-11-04", "2026-11-05");
+    expect(days["2026-11-04"]).toEqual([]);
+    expect(days["2026-11-05"]).toEqual([{ ...pasta, scale: 3 }]);
+  });
+
+  test("a scale is read back, and an entry with a bad scale is skipped", async () => {
+    await env.withSecurityRulesDisabled(async (admin) => {
+      await admin
+        .firestore()
+        .doc("menu_days/2026-11-04")
+        .set({
+          entries: [
+            { id: "a", recipeId: "pasta", scale: 2 },
+            { id: "b", recipeId: "soup", scale: 7 },
+            { id: "c", recipeId: "stew", scale: "2" },
+            { id: "d", note: "Guests", scale: 2 },
+            { id: "e", recipeId: "curry" },
+          ],
+        });
+    });
+
+    const days = await nextDays(
+      "2026-11-04",
+      "2026-11-04",
+      (d) => d["2026-11-04"]?.[0]?.id === "a",
+    );
+    expect(days).toEqual({
+      "2026-11-04": [
+        { id: "a", recipeId: "pasta", scale: 2 },
+        { id: "e", recipeId: "curry" },
+      ],
+    });
   });
 
   test("saving a roll adds to several days in one batch, after any entries already there", async () => {
