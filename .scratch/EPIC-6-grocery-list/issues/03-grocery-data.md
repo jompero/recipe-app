@@ -24,7 +24,16 @@ If you need to change anything else, stop and ask.
 
 ## Acceptance criteria
 
-- [ ] Emulator tests: replace; add; two clients ticking different lines at once both survive; untick; add by hand; remove a recipe's lines and their ticks; clear; the watcher sees another client's tick.
-- [ ] Rules tests: members may read and write a valid `current`; another document id, unknown keys, more than 600 lines, a missing or non-timestamp `updatedAt`, and delete are denied; non-members are denied.
-- [ ] An export doesn't include the grocery list.
-- [ ] `npm run check` passes.
+- [x] Emulator tests: replace; add; two clients ticking different lines at once both survive; untick; add by hand; remove a recipe's lines and their ticks; clear; the watcher sees another client's tick.
+- [x] Rules tests: members may read and write a valid `current`; another document id, unknown keys, more than 600 lines, a missing or non-timestamp `updatedAt`, and delete are denied; non-members are denied.
+- [x] An export doesn't include the grocery list.
+- [x] `npm run check` passes (typecheck, lint and `npm test` against the running emulator: 788 tests).
+
+## Comments
+
+- 2026-11-06 (agent): Built on `EPIC-6/US-6.3-grocery-data`, test-first through the three seams agreed with the owner (`groceries.ts` on the emulator, the rules tests, `exportEverything`).
+  - **`src/data/groceries.ts`:** `watchGroceryList` (lines, ticks and `updatedAt` as a `Date`; a missing list is empty; malformed lines and ticks are skipped), `replaceList`, `addLines`, `addHandLine` (`HAND_LINE_MAX` 80), `tick`, `untick`, `removeLines`, `clearList`. `NewSourceLine` is a source line without its id.
+  - **Different from the issue:** `tick` and `untick` take a **list of ids**, so ticking a merged line ticks all its source lines in one write.
+  - **Rules:** `grocery_lists/{listId}`, only `current`; `lines` (≤ 600) and `updatedAt` required, `ticked` (≤ 600) optional, because `addLines` on a missing list creates it with `arrayUnion` and no ticks yet. No delete.
+  - **Backup** needed no change: the export lists its collections, and a test now checks the grocery list stays out.
+  - The line-id helper is a copy of the one in `menu.ts` (six random bytes), to stay inside this issue's files.

@@ -71,6 +71,23 @@ service cloud.firestore {
         && isValidMenuDay(request.resource.data);
     }
 
+    // The one shared grocery list (US-6.3, ADR-0008). Rules can't check each line;
+    // src/data/groceries.ts does. `ticked` may be missing until the first tick (adding lines to
+    // a missing list creates it with arrayUnion). Cleared, never deleted.
+    function isValidGroceryList(groceries) {
+      return groceries.keys().hasOnly(['lines', 'ticked', 'updatedAt'])
+        && groceries.lines is list && groceries.lines.size() <= 600
+        && (!('ticked' in groceries) || (groceries.ticked is list && groceries.ticked.size() <= 600))
+        && groceries.updatedAt is timestamp;
+    }
+
+    match /grocery_lists/{listId} {
+      allow read: if isMember();
+      allow create, update: if isMember()
+        && listId == 'current'
+        && isValidGroceryList(request.resource.data);
+    }
+
     // Signed-in users may read their own entry (so the app can tell members from non-members).
     // Nobody can write here from the app: members are added by hand in the Firebase console.
     match /allowed_users/{email} {
