@@ -45,7 +45,10 @@ function tierFor(kind: "mass" | "volume", largest: number): Tier {
 /** Below 1 dl, millilitres as tablespoons and teaspoons: [["1", "tbsp"], ["1", "tsp"]]. */
 function spoons(ml: number): [string, string][] {
   let tbsp = Math.floor(ml / 15 + 0.01);
-  let tsp = friendly((ml - tbsp * 15) / 5, false);
+  // The leftover teaspoons to the nearest quarter, so a converted cup never shows "0.8 tsp";
+  // only an amount under ¼ tsp (⅛ tsp cayenne) keeps its own fraction.
+  const left = (ml - tbsp * 15) / 5;
+  let tsp = friendly(left < 0.25 ? left : Math.round(left * 4) / 4, false);
   // A remainder that rounds to 3 tsp is another tablespoon.
   if (tsp === "3") {
     tbsp += 1;

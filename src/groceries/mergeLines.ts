@@ -1,7 +1,7 @@
 // Merging the grocery list's source lines into one line per thing to buy (US-6.1). Pure: the list
 // page calls this on every snapshot, so a parser or synonym fix applies to the list at once.
 import { parseIngredientLine } from "../parsing/ingredientLine.ts";
-import { cleanName, mergeKey } from "./mergeKey.ts";
+import { cleanName, impliedUnit, mergeKey } from "./mergeKey.ts";
 import { formatTotal, type Kind, kindOf } from "./units.ts";
 import type { MergedLine, SourceLine } from "./types.ts";
 
@@ -15,7 +15,8 @@ interface Parsed {
 
 function parse(source: SourceLine): Parsed {
   const { qty, qtyMax, unit, item = "" } = parseIngredientLine(source.raw);
-  return { source, name: cleanName(item), qty, qtyMax, unit };
+  const counted = unit ?? (qty === undefined ? undefined : impliedUnit(item));
+  return { source, name: cleanName(item), qty, qtyMax, unit: counted };
 }
 
 function merge(key: string, group: Parsed[]): MergedLine {

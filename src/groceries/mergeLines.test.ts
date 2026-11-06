@@ -42,6 +42,9 @@ describe("mergeLines", () => {
     [["1 tsp cumin", "2 tsp cumin"], "1 tbsp"],
     [["½ tsp salt"], "½ tsp"],
     [["1½ tsp paprika"], "1½ tsp"],
+    [["1/3 cup crumbled feta"], "5 tbsp + ¾ tsp"],
+    [["⅛ tsp cayenne"], "⅛ tsp"],
+    [["1/4 cup shredded parmesan"], "3 tbsp + 2¾ tsp"],
   ])("volume converts to tbsp/tsp, dl or l: %j", (raws, amount) => {
     expect(mergeLines(lines(...raws))[0]?.amount).toBe(amount);
   });
@@ -127,6 +130,12 @@ describe("mergeLines", () => {
       "Apples: ",
       "flour: 1 dl",
       "Sugar: 1 dl",
+    ]);
+  });
+
+  test("a name that says clove counts as cloves", () => {
+    expect(rows(lines("2 cloves garlic", "1 garlic clove, chopped", "1 clove garlic"))).toEqual([
+      "garlic: 4 cloves",
     ]);
   });
 

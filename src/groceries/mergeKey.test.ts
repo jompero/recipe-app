@@ -53,6 +53,11 @@ describe("mergeKey", () => {
     ["sipuli", "onion"],
     ["fløde", "cream"],
     ["kerma", "cream"],
+    ["Salt and pepper", "salt and pepper"],
+    ["salt and freshly ground pepper", "salt and pepper"],
+    ["salt and fresh ground pepper", "salt and pepper"],
+    ["Salt and freshly grounded pepper", "salt and pepper"],
+    ["salt & pepper", "salt and pepper"],
   ])("maps the synonym %j to %j", (item, key) => {
     expect(mergeKey(item)).toBe(key);
   });
