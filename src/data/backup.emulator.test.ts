@@ -126,6 +126,27 @@ describe("backup data module", () => {
     expect(Date.parse(file.exportedAt)).not.toBeNaN();
   });
 
+  test("the grocery list is not exported (ADR-0008)", async () => {
+    await fillDatabase();
+    await env.withSecurityRulesDisabled(async (admin) => {
+      await admin
+        .firestore()
+        .doc("grocery_lists/current")
+        .set({
+          lines: [{ id: "l1", raw: "1 dl milk", scale: 1 }],
+          ticked: [],
+          updatedAt: new Date(),
+        });
+    });
+
+    const file = await exportEverything();
+
+    expect(Object.keys(file).sort()).toEqual(
+      ["exportedAt", "format", "menuDays", "recipeImages", "recipes", "version"].sort(),
+    );
+    expect(JSON.stringify(file)).not.toContain("1 dl milk");
+  });
+
   test("restoring an export into an empty database gives back the same documents, dates included", async () => {
     await fillDatabase();
     const exported = await exportEverything();

@@ -300,6 +300,94 @@ describe("menu day shape (US-5.1)", () => {
   );
 });
 
+/** The grocery list with a recipe line, a hand-added line and a tick (US-6.3, ADR-0008). */
+function validGroceryList(): Record<string, unknown> {
+  return {
+    lines: [
+      { id: "l1", raw: "1 dl milk", scale: 2, recipeId: "r1", title: "Pasta", entryId: "a1" },
+      { id: "l2", raw: "toilet paper", scale: 1 },
+    ],
+    ticked: ["l1"],
+    updatedAt: Timestamp.now(),
+  };
+}
+
+// One shared list, grocery_lists/current. It's cleared, never deleted.
+describe("grocery_lists (US-6.3)", () => {
+  const list = (who: Who, id = "current") => doc(as(who).firestore(), `grocery_lists/${id}`);
+  const seed = () =>
+    env.withSecurityRulesDisabled(async (admin) => {
+      await admin.firestore().doc("grocery_lists/current").set(validGroceryList());
+    });
+
+  describe.each(NOT_ALLOWED)("%s", (who) => {
+    test("can't read the list", async () => {
+      await seed();
+      await assertFails(as(who).firestore().doc("grocery_lists/current").get());
+    });
+    test("can't write the list", async () => {
+      await assertFails(setDoc(list(who), validGroceryList()));
+    });
+  });
+
+  test("a member can create, read and update the list", async () => {
+    await assertSucceeds(setDoc(list("member"), validGroceryList()));
+    await assertSucceeds(as("member").firestore().doc("grocery_lists/current").get());
+    await assertSucceeds(
+      updateDoc(list("member"), { ticked: arrayUnion("l2"), updatedAt: serverTimestamp() }),
+    );
+  });
+
+  test("adding lines with arrayUnion creates a missing list", async () => {
+    await assertSucceeds(
+      setDoc(
+        list("member"),
+        { lines: arrayUnion({ id: "l1", raw: "salt", scale: 1 }), updatedAt: serverTimestamp() },
+        { merge: true },
+      ),
+    );
+  });
+
+  test("clearing leaves a valid empty list", async () => {
+    await seed();
+    await assertSucceeds(
+      setDoc(list("member"), { lines: [], ticked: [], updatedAt: serverTimestamp() }),
+    );
+  });
+
+  test("a member can't delete the list", async () => {
+    await seed();
+    await assertFails(as("member").firestore().doc("grocery_lists/current").delete());
+  });
+
+  test("no list other than current", async () => {
+    await assertFails(setDoc(list("member", "old"), validGroceryList()));
+  });
+
+  test("600 lines and 600 ticks are allowed", async () => {
+    const lines = Array.from({ length: 600 }, (_, i) => ({ id: `l${i}`, raw: "x", scale: 1 }));
+    const ticked = lines.map((line) => line.id);
+    await assertSucceeds(setDoc(list("member"), { ...validGroceryList(), lines, ticked }));
+  });
+
+  test.each([
+    ["more than 600 lines", { lines: Array.from({ length: 601 }, (_, i) => ({ id: `l${i}` })) }],
+    ["more than 600 ticks", { ticked: Array.from({ length: 601 }, (_, i) => `l${i}`) }],
+    ["lines that aren't a list", { lines: { id: "l1" } }],
+    ["ticks that aren't a list", { ticked: "l1" }],
+    ["an updatedAt that isn't a timestamp", { updatedAt: "2026-11-06" }],
+    ["an unknown field", { name: "Weekly shop" }],
+  ])("rejects %s", async (_, change) => {
+    await assertFails(setDoc(list("member"), { ...validGroceryList(), ...change }));
+  });
+
+  test.each(["lines", "updatedAt"])("rejects a list without %s", async (field) => {
+    const data = validGroceryList();
+    delete data[field];
+    await assertFails(setDoc(list("member"), data));
+  });
+});
+
 describe("allowed_users", () => {
   test("a member can read their own entry", async () => {
     await assertSucceeds(as("member").firestore().doc(`allowed_users/${MEMBER}`).get());
