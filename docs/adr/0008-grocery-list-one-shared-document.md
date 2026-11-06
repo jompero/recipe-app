@@ -4,6 +4,6 @@ The grocery list is stored as a single document, `grocery_lists/current`, holdin
 
 ## Consequences
 
-- The rules allow only the document ID `current`, check the keys, and cap both lists at 600 items. Each line's shape is checked by `src/data/groceries.ts`, as with recipe ingredients.
+- The rules allow only the document ID `current`, check the keys, and cap both lists at 600 items. `ticked` may be missing until the first tick, because adding lines to a missing list creates it with `arrayUnion`. Each line's shape is checked by `src/data/groceries.ts`, as with recipe ingredients.
 - The grocery list is left out of export and restore: it is short-lived, and a restore shouldn't bring back an old list.
 - A recipe's title is copied onto its lines when the list is built, so a renamed or archived recipe still reads correctly on the list.
