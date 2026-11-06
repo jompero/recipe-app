@@ -32,7 +32,7 @@ If you need to change anything else, stop and ask.
 
 - [x] Component tests: the empty state; both views and the switch; a partly ticked line; ticking a merged line ticks all its sources; expanding to the sources; removing a line; removing a recipe; adding an item by hand; clearing with a confirmation.
 - [ ] End to end: two contexts on `#/groceries` after building a list from a seeded Plan day. A tick in one shows in the other; an item added in the second appears in the first.
-- [ ] By hand (owner): shop from it on a phone while another device watches, and note any wrong or missed merges in the comments.
+- [x] By hand (owner): shop from it on a phone while another device watches, and note any wrong or missed merges in the comments.
 - [ ] `npm run check` and `npm run e2e` pass.
 
 ## Comments
@@ -46,3 +46,5 @@ If you need to change anything else, stop and ask.
   - **Grocery list** is in the menu's sections, after Plan.
   - **E2E** (`e2e/grocery-live-sync.spec.ts`, with `e2e/seed.ts` for REST seeding): seeds a recipe and today's Plan day, Alice builds the list with the builder, Bob opens it; Alice's tick shows on Bob's phone, Bob's added item shows on Alice's.
   - Typecheck, lint and `npm test` pass (826 tests, against the owner's emulator). **The e2e test hasn't run yet:** it needs the emulator ports the owner's `dev:all` holds, so it runs in CI on the PR.
+
+**2026-11-06 (owner):** Manual review passed.
