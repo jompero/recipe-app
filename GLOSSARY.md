@@ -25,3 +25,22 @@ _Avoid_: Shuffle, randomise
 
 **Locked**, **Skipped**:
 A day in a roll that keeps its recipe when the rest are rolled again (Locked), or gets no recipe at all (Skipped). A day that is neither is Rolled.
+
+**Scale**:
+How many times a planned recipe's amounts are counted: ½×, 1×, 2× or 3×. Set on a recipe entry in the Plan and used by the grocery list. The recipe page has its own scale buttons, which aren't saved.
+
+## Shopping
+
+**Grocery list**:
+The one shared shopping list, built from a range of Plan days and saved as a snapshot. Stored as `grocery_lists/current`.
+_Avoid_: Shopping list (in code), cart
+
+**Source line**:
+One ingredient line on the grocery list as it came from a recipe (with that entry's scale), or an item added by hand. Ticks belong to source lines.
+_Avoid_: Item
+
+**Merged line**:
+The source lines that share a merge key, shown as one line with one combined amount. It is ticked when all its source lines are ticked, and partly ticked when only some are.
+
+**Merge key**:
+An ingredient name cleaned up for matching: lowercase, without brackets, comma tail or a leading "of", in the singular, then mapped through the synonym table. Prep words such as "chopped" stay, so "chopped tomatoes" and "tomatoes" are different keys.

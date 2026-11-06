@@ -59,11 +59,9 @@ Left for later:
 ---
 
 ## Epic 6: Grocery List
-**Goal:** Turn a range of menu dates into one combined shopping list.
+**Goal:** Turn a range of Plan days into one combined, shared shopping list.
 
-* **6.1 Date range selection:** choose the range of dates the list is built from. The Plan's `menu_days` entries are `{ id, recipeId }` or `{ id, note }`; notes have no ingredients and are skipped. `watchDays` in `src/data/menu.ts` already reads a date range.
-* **6.2 Unit conversion:** convert between units (volume, mass) using the parsed ingredient fields, metric by default. Review the unit spellings in `src/parsing/ingredientLine.ts` first: e.g. "tlk" (seen in the owner's US-3.5 test) isn't recognised yet.
-* **6.3 Ingredient merging:** combine ingredients across recipes (e.g. `1 cup milk` + `250 ml milk`) into a checklist with checkboxes. Lines that couldn't be parsed are listed separately, never dropped.
+**Specified** (2026-11-06): see [`.scratch/EPIC-6-grocery-list/spec.md`](../.scratch/EPIC-6-grocery-list/spec.md) and its issues (US-6.1 parser fixes and merge logic, US-6.2 scale on Plan entries, US-6.3 data module and rules, US-6.4 builder, US-6.5 list page). There is one saved, shared list ([ADR-0008](adr/0008-grocery-list-one-shared-document.md)), and Plan entries gain a `scale` ([ADR-0006](adr/0006-menu-one-document-per-date.md) amended).
 
 ---
 
