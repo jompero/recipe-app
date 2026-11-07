@@ -15,6 +15,7 @@ import { useState, type ChangeEvent } from "react";
 import { existingRecipeIds } from "../data/recipes.ts";
 import { ExportSection, RestoreSection } from "./BackupSections.tsx";
 import { BookmarkletSection } from "./BookmarkletSection.tsx";
+import { InstallSection } from "./InstallSection.tsx";
 import {
   buildImportPreview,
   type ImportPreview,
@@ -282,6 +283,7 @@ export function DataPage() {
   return (
     <Stack gap="lg">
       <Title order={2}>Data</Title>
+      <InstallSection />
       <PepperplateImport />
       <ExportSection />
       <RestoreSection />
