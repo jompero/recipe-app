@@ -44,3 +44,13 @@ The source lines that share a merge key, shown as one line with one combined amo
 
 **Merge key**:
 An ingredient name cleaned up for matching: lowercase, without brackets, comma tail or a leading "of", in the singular, then mapped through the synonym table. Prep words such as "chopped" stay, so "chopped tomatoes" and "tomatoes" are different keys.
+
+## The app on a phone
+
+**Installed app**:
+The app added to a phone's home screen and opened from there, full screen. It keeps its own sign-in and offline copy, separate from the same site in Safari.
+_Avoid_: PWA (in the interface), home-screen app, web app
+
+**Update banner**:
+The strip at the top that says a new version is ready, with a Reload button. The new version waits until it is tapped, or until the next fresh launch.
+_Avoid_: Update prompt, refresh toast

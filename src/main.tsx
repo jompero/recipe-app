@@ -12,6 +12,7 @@ import { createRoot } from "react-dom/client";
 import { createHashRouter } from "react-router";
 import { RouterProvider } from "react-router/dom";
 import { routes } from "./routes.tsx";
+import { UpdateBanner } from "./components/UpdateBanner.tsx";
 import { theme } from "./theme.ts";
 
 const root = document.getElementById("root");
@@ -25,6 +26,7 @@ const router = createHashRouter(routes);
 createRoot(root).render(
   <StrictMode>
     <MantineProvider theme={theme}>
+      <UpdateBanner />
       <RouterProvider router={router} />
     </MantineProvider>
   </StrictMode>,
