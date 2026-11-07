@@ -1,8 +1,47 @@
 import react from "@vitejs/plugin-react";
+import { VitePWA } from "vite-plugin-pwa";
 import { defineConfig } from "vitest/config";
 
+/** The app's page background (Mantine's light body), also the page's theme-color (index.html). */
+const PAGE_COLOUR = "#ffffff";
+
 export default defineConfig({
-  plugins: [react()],
+  plugins: [
+    react(),
+    // Installable app (EPIC-9, ADR-0009). The service worker precaches only this build's own files
+    // and has no runtime caching, so Firestore, Firebase Auth and Google requests go straight to
+    // the network: Firestore's own offline copy is the data cache. Paths stay relative (the
+    // plugin keeps base "./"), so the github.io fallback installs too. Off in dev, so the dev
+    // server and e2e run without a service worker.
+    VitePWA({
+      registerType: "prompt",
+      injectRegister: false,
+      manifest: {
+        name: "Family Recipes",
+        short_name: "Recipes",
+        description: "The family cookbook, meal plan and grocery list.",
+        start_url: "./",
+        scope: "./",
+        display: "standalone",
+        theme_color: PAGE_COLOUR,
+        background_color: PAGE_COLOUR,
+        icons: [
+          { src: "icon-192.png", sizes: "192x192", type: "image/png" },
+          { src: "icon-512.png", sizes: "512x512", type: "image/png" },
+          // Drawn inside the safe zone (docs/project/app-icon.md); iOS ignores maskable.
+          { src: "icon-512.png", sizes: "512x512", type: "image/png", purpose: "maskable" },
+        ],
+      },
+      workbox: {
+        globPatterns: ["**/*.{js,css,html,woff2,svg,png}"],
+        // The bundled fonts ship every script; the recipes only need Latin. A font left out here
+        // still loads online when needed (the browser asks only for the scripts on the page).
+        globIgnores: ["**/*-{cyrillic,cyrillic-ext,greek,greek-ext,vietnamese}-*.woff2"],
+        navigateFallback: "index.html",
+        cleanupOutdatedCaches: true,
+      },
+    }),
+  ],
   // Relative, so one build works at jompero.github.io/recipe-app/ and recipes.danijompero.com/
   // alike: hash routing means only index.html is ever served (ADR-0004, amended in EPIC-8).
   base: "./",
