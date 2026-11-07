@@ -156,3 +156,13 @@ test("a failed restore shows the error", async () => {
     await screen.findByText("Restore failed: Missing or insufficient permissions."),
   ).toBeInTheDocument();
 });
+
+test("while the phone says it's offline, Restore is disabled with a note; Export still works", async () => {
+  vi.spyOn(navigator, "onLine", "get").mockReturnValue(false);
+  await pickRestoreFile(JSON.stringify(exportFile));
+
+  expect(await screen.findByRole("button", { name: "Restore" })).toBeDisabled();
+  expect(screen.getByText("Needs a connection")).toBeInTheDocument();
+  expect(screen.getByRole("button", { name: "Export everything" })).toBeEnabled();
+  vi.restoreAllMocks();
+});

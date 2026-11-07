@@ -54,3 +54,7 @@ _Avoid_: PWA (in the interface), home-screen app, web app
 **Update banner**:
 The strip at the top that says a new version is ready, with a Reload button. The new version waits until it is tapped, or until the next fresh launch.
 _Avoid_: Update prompt, refresh toast
+
+**Offline strip**:
+The slim line along the bottom edge, under the menu button, saying the app is working from its offline copy and changes will sync later. It goes away by itself.
+_Avoid_: Offline banner, connection warning

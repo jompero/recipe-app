@@ -188,6 +188,18 @@ describe("the site's photo", () => {
     expect(fake.compressImage).not.toHaveBeenCalled();
   });
 
+  test("while the phone says it's offline, the fallback says it needs a connection", async () => {
+    vi.spyOn(navigator, "onLine", "get").mockReturnValue(false);
+    renderApp(`/import?d=${GOOD_D}`);
+
+    expect(
+      await screen.findByText(
+        "Needs a connection to fetch the site's photo. Paste one here, or add it later.",
+      ),
+    ).toBeInTheDocument();
+    vi.restoreAllMocks();
+  });
+
   test("an error response or something that isn't an image shows the fallback too", async () => {
     fetchMock.mockResolvedValueOnce({ ok: false, status: 404 } as Response);
     const first = renderApp(`/import?d=${GOOD_D}`);

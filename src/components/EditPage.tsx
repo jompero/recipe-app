@@ -29,6 +29,7 @@ import { sameRecipeUrl } from "../editing/recipeUrl.ts";
 import { LABEL_STYLE } from "../theme.ts";
 import { useLiveRecipes } from "./liveRecipes.ts";
 import { PhotoField } from "./PhotoField.tsx";
+import { usePhoneOffline } from "./useOffline.ts";
 import { usePhotoDraft, type PhotoDraft } from "./usePhotoDraft.ts";
 
 /**
@@ -112,6 +113,7 @@ function EditForm({
   const leaving = useRef(false);
   const photo = usePhotoDraft(recipe?.thumbnail ?? null);
   const photoFetch = useSitePhoto(photoUrl, photo);
+  const offline = usePhoneOffline();
   // Not while saving: Firestore lists a new recipe before the server confirms the write, so it
   // would show up here as its own duplicate.
   const duplicate = saving
@@ -195,7 +197,9 @@ function EditForm({
       {photoFetch === "failed" && photoUrl && (
         <Alert color="yellow" title="No photo yet">
           <Text size="sm">
-            Couldn't fetch the photo: copy the image on the site and paste it here
+            {offline
+              ? "Needs a connection to fetch the site's photo. Paste one here, or add it later."
+              : "Couldn't fetch the photo: copy the image on the site and paste it here"}
           </Text>
           <Anchor href={photoUrl} target="_blank" rel="noopener noreferrer" size="sm">
             Open the image
@@ -324,7 +328,8 @@ function SaveCancelBar({
   return (
     <Box
       pos="fixed"
-      bottom={0}
+      // Above the offline strip while it shows (MemberShell sets --offline-strip).
+      bottom="var(--offline-strip, 0px)"
       left={0}
       right={0}
       p="sm"
