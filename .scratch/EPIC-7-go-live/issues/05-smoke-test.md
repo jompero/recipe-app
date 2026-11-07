@@ -23,3 +23,5 @@ The owner adds the members, then checks the live site on two iPhones with one of
 - [ ] For each failure: a new issue in this folder (`NN-<slug>.md`, `Status: ready-for-agent`, `Story: US-7.5`) with what happened, on which phone, and a screenshot if possible. Link them here. 06 waits for them.
 
 ## Comments
+
+**2026-11-07 (owner, in progress):** iPhone 15 Pro Max (MU773QN/A). Findings so far, added to `docs/backlog.md` under Epic 7 as left for later (no code changes in this epic): inputs zoom in on focus and stay zoomed (not the cookbook search); iPad and desktop layout; the roller's Roll button is at the bottom; opening on the menu is janky, open on the cookbook instead.
