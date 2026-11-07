@@ -1,6 +1,6 @@
 # EPIC-7: Go-live
 
-Status: ready
+Status: done
 
 Replaces the Epic 7 placeholder in `docs/backlog.md`. Settled in a grilling session on 2026-11-06. The go-live checklist is Phase 2 of `docs/project/project-setup.md`; issue 01 corrects it against current docs before anyone follows it. Related decisions: [ADR-0003](../../docs/adr/0003-google-sign-in-popup.md) (popup sign-in), [ADR-0004](../../docs/adr/0004-official-pages-actions-hashrouter.md) (official Pages actions), [ADR-0007](../../docs/adr/0007-local-first-until-go-live.md) (local-first until now).
 

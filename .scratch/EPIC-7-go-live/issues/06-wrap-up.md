@@ -1,6 +1,6 @@
 # 06: Wrap-up docs
 
-Status: ready-for-agent
+Status: done
 Story: US-7.6
 Branch: `EPIC-7/wrap-up`
 Spec: [../spec.md](../spec.md) (Further Notes, Backups)
@@ -28,8 +28,10 @@ If you need to change anything else, stop and ask.
 
 ## Acceptance criteria
 
-- [ ] The docs above agree with what was actually done (project ID, any console steps that differed, the smoke test result).
-- [ ] No member email addresses anywhere in the repo.
-- [ ] `npm run check` passes.
+- [x] The docs above agree with what was actually done (project ID, any console steps that differed, the smoke test result).
+- [x] No member email addresses anywhere in the repo.
+- [x] `npm run check` passes.
 
 ## Comments
+
+**2026-11-07 (agent):** Written on `EPIC-7/go-live-notes` together with the done notes for 02–05. CLAUDE.md: Status, the emulator rule (was "Local-first") and the deploy rule. ADR-0007: a go-live note. README: the live link, a "The live site" section (deploys, rules, members, backups) and `deploy:rules` in the scripts table. Blueprint: the API key referrers and the Development row. Backlog: Epic 7 done, Different from the spec, Android left for later. No member addresses anywhere (searched for @gmail).
