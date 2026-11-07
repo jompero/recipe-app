@@ -89,3 +89,14 @@ Left for later:
 
 * **8.1 Manifest and service worker:** e.g. `vite-plugin-pwa`, icons, add to home screen.
 * **8.2 Offline experience:** builds on the Firestore offline copy that's on from Epic 1. Offline state shown in the interface.
+
+---
+
+## Later: Custom domain
+**Goal:** Serve the app at `recipes.danijompero.com` instead of `jompero.github.io/recipe-app/`. Decided during Epic 7 (2026-11-07), kept out of it so go-live wasn't held up.
+
+* DNS at one.com: `CNAME recipes → jompero.github.io`.
+* GitHub: verify `danijompero.com` for the account (Settings → Pages), set the custom domain on this repo, enforce HTTPS once the certificate is issued. No `CNAME` file is needed with the Actions deploy.
+* Vite `base` `/recipe-app/` → `/`; amend ADR-0004 (base equals the repo name).
+* Firebase: add the authorized domain. API key: referrer `https://recipes.danijompero.com/*` in place of `https://jompero.github.io/*` (keep the `firebaseapp.com` one).
+* Do it before Epic 8: an installed PWA belongs to its origin, so moving later means reinstalling on every phone, and the offline copy (IndexedDB) is per origin too, so it starts empty at the new address.
