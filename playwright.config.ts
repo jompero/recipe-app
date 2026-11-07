@@ -4,7 +4,7 @@
 import { defineConfig, devices } from "@playwright/test";
 
 const PORT = 5174; // not the dev server's 5173, so a running `npm run dev` doesn't get in the way
-const BASE_URL = `http://localhost:${String(PORT)}/recipe-app/`;
+const BASE_URL = `http://localhost:${String(PORT)}/`;
 const CI = Boolean(process.env["CI"]);
 
 export default defineConfig({

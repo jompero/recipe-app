@@ -1,6 +1,6 @@
 # 01: Relative base, dev at `/`, ADR-0004 amendment
 
-Status: ready-for-agent
+Status: in-progress
 Story: US-8.1
 Branch: `EPIC-8/US-8.1-relative-base`
 Spec: [../spec.md](../spec.md) (The base path)
@@ -24,9 +24,11 @@ If you need to change anything else, stop and ask. Don't touch the "Live:" URL i
 
 ## Acceptance criteria
 
-- [ ] `npm run check` and `npm run e2e` pass.
-- [ ] `npm run build`: `dist/index.html` references `./assets/...`, not `/recipe-app/` or `/assets/`. Fonts and other assets in the built CSS resolve (no absolute `/recipe-app/` paths left in `dist/`).
-- [ ] `npm run preview` loads with styles and fonts, and a deep link (`#/plan`) works on refresh.
+- [x] `npm run check` and `npm run e2e` pass.
+- [x] `npm run build`: `dist/index.html` references `./assets/...`, not `/recipe-app/` or `/assets/`. Fonts and other assets in the built CSS resolve (no absolute `/recipe-app/` paths left in `dist/`).
+- [x] `npm run preview` loads with styles and fonts, and a deep link (`#/plan`) works on refresh.
 - [ ] After merging: the deploy run is green, and `https://jompero.github.io/recipe-app/` still loads with styles, fonts and sign-in. Record the run link under Comments.
 
 ## Comments
+
+**2026-11-07 (agent):** Built. `npm run check` passes (826 tests), and `npm run e2e` passes (2) with the dev server at `/`, so `base: "./"` works in dev. `dist/index.html` references `./assets/...`, the CSS loads fonts as `url(./…woff2)`, and `dist/` has no absolute `/recipe-app/` or `/assets/` paths. Instead of `npm run preview`, a static server served `dist/` both under `/recipe-app/` (as github.io does) and at `/` (as the custom domain will): the page, JS, CSS and a font all return 200 in both. Deep links are hash routes, so only `index.html` is ever requested. Left open: the deploy check after merging.

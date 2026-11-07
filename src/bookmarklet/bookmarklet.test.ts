@@ -10,7 +10,7 @@ import typeArrayHtml from "./fixtures/type-array.html?raw";
 import valdemarsroHtml from "./fixtures/valdemarsro.html?raw";
 
 const PAGE_URL = "https://example.com/recipe/";
-const APP_URL = "http://localhost:5173/recipe-app/";
+const APP_URL = "http://localhost:5173/";
 const NO_RECIPE_ALERT =
   "No recipe found on this page. Copy the recipe text and use Paste recipe in the app.";
 
