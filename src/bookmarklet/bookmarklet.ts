@@ -193,7 +193,7 @@ const PROGRAM = `(${runBookmarklet.toString()})(window,${APP_URL_PLACEHOLDER},${
 
 /**
  * The `javascript:` link for the install page (issue 07). `appUrl` is the app's origin plus path,
- * e.g. `http://localhost:5173/recipe-app/`; the program opens `appUrl + "#/import?d=…"`.
+ * e.g. `https://recipes.danijompero.com/`; the program opens `appUrl + "#/import?d=…"`.
  *
  * Browsers percent-decode a `javascript:` URL before running it and drop raw newlines and tabs
  * (which would let a `//` comment swallow the rest), so `%`, newlines and tabs are percent-encoded.

@@ -3,8 +3,9 @@ import { defineConfig } from "vitest/config";
 
 export default defineConfig({
   plugins: [react()],
-  // Must equal the GitHub repo name, or every asset 404s on GitHub Pages (ADR-0004).
-  base: "/recipe-app/",
+  // Relative, so one build works at jompero.github.io/recipe-app/ and recipes.danijompero.com/
+  // alike: hash routing means only index.html is ever served (ADR-0004, amended in EPIC-8).
+  base: "./",
   server: {
     watch: {
       // Large local data, never imported by the app. Watching it is wasted work, and on Windows a

@@ -25,7 +25,7 @@ npm install
 npm run dev
 ```
 
-Open http://localhost:5173/recipe-app/. The `/recipe-app/` path matches the GitHub Pages URL, and routes live after `#` (for example `/recipe-app/#/recipes/123`).
+Open http://localhost:5173/. Routes live after `#` (for example `/#/recipes/123`).
 
 ## Scripts
 
@@ -90,7 +90,7 @@ npm run dev         # terminal 2
    New-NetFirewallRule -DisplayName "recipe-app dev" -Direction Inbound -Protocol TCP -LocalPort 5173,9099,8080 -Profile Private -Action Allow
    ```
 2. Make sure your Wi-Fi network is set to **Private** in Windows settings.
-3. Run `npm run dev:all` (or `npm run emulators` and `npm run dev -- --host` separately), then open the "Network" address Vite prints (`http://<pc-ip>:5173/recipe-app/`) on your phone. The app connects to the emulator on the same host it was loaded from.
+3. Run `npm run dev:all` (or `npm run emulators` and `npm run dev -- --host` separately), then open the "Network" address Vite prints (`http://<pc-ip>:5173/`) on your phone. The app connects to the emulator on the same host it was loaded from.
 
 ## Backups of the seed data
 
