@@ -1,0 +1,12 @@
+/*
+ * iOS zooms in on a focused text field whose text is smaller than 16px, and stays zoomed. On touch
+ * screens, every Mantine input (TextInput, Textarea, TagsInput, ...) gets at least 16px; larger
+ * sizes, like the 17px search, keep theirs. Desktop keeps the smaller Book size. Zoom stays allowed
+ * in the viewport tag (blocking it would break pinch-zoom).
+ * The doubled class outranks Mantine's own rule whatever order the stylesheets load in.
+ */
+@media (pointer: coarse) {
+  .input.input {
+    font-size: max(16px, var(--input-fz, 16px));
+  }
+}

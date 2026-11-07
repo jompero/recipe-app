@@ -1,4 +1,5 @@
-import { Button, createTheme, Title, type MantineColorsTuple } from "@mantine/core";
+import { Button, createTheme, Input, Title, type MantineColorsTuple } from "@mantine/core";
+import classes from "./theme.module.css";
 
 // The Nordic cookbook look chosen in the US-3.1 prototype (variant A, "Book"). See the Epic 3
 // spec's "Look" section. Fonts are bundled (imported in main.tsx), never loaded from a CDN.
@@ -41,6 +42,8 @@ export const theme = createTheme({
   fontSizes: { md: "17px" },
   headings: { fontFamily: TITLE_FONT, fontWeight: "500" },
   components: {
+    // Text fields: at least 16px on touch screens, so iOS doesn't zoom in (theme.module.css).
+    Input: Input.extend({ classNames: { input: classes.input } }),
     // Titles: centred, letter-spaced, uppercase italic display serif.
     Title: Title.extend({
       styles: {

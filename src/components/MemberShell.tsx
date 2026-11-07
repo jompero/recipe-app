@@ -1,5 +1,5 @@
 import { ActionIcon, AppShell, Divider, Modal, Stack, Text, UnstyledButton } from "@mantine/core";
-import { useEffect, useRef, useState, type ReactNode } from "react";
+import { useState, type ReactNode } from "react";
 import { matchPath, useLocation, useNavigate } from "react-router";
 import { LABEL_STYLE } from "../theme.ts";
 import { NO_PAGE_MENU, PageMenuContext, type PageMenu } from "./pageMenu.ts";
@@ -41,14 +41,6 @@ export function MemberShell({ children }: { children: ReactNode }) {
   const location = useLocation();
   const menu = useMenu();
   const [page, setPage] = useState<PageMenu>(NO_PAGE_MENU);
-
-  // The menu is the front page: a fresh start at the bare cookbook opens it, once per app load.
-  const started = useRef(false);
-  useEffect(() => {
-    if (started.current) return;
-    started.current = true;
-    if (location.pathname === "/" && location.search === "") menu.show();
-  });
 
   return (
     <AppShell padding="md">

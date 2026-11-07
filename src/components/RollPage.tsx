@@ -213,6 +213,27 @@ export function RollPage() {
           No recipes have these tags.
         </Text>
       )}
+      {/* Above the days and sticky, so Roll is in reach however long the range is. Not at the
+          bottom: the menu button sits there. */}
+      <Group
+        role="group"
+        aria-label="Roll actions"
+        justify="center"
+        gap="sm"
+        py="xs"
+        bg="var(--mantine-color-body)"
+        style={{ position: "sticky", top: 0, zIndex: 2 }}
+      >
+        <Button variant="outline" onClick={rollAgain} disabled={planned === null || shuffling}>
+          Roll
+        </Button>
+        <Button onClick={save} disabled={additions.length === 0 || shuffling}>
+          Save
+        </Button>
+        <Button variant="subtle" onClick={finish}>
+          Discard
+        </Button>
+      </Group>
       <Stack gap={0}>
         {roll.rows.map((row, index) => (
           <RollDay
@@ -230,17 +251,6 @@ export function RollPage() {
           />
         ))}
       </Stack>
-      <Group justify="center" gap="sm">
-        <Button variant="outline" onClick={rollAgain} disabled={planned === null || shuffling}>
-          Roll
-        </Button>
-        <Button onClick={save} disabled={additions.length === 0 || shuffling}>
-          Save
-        </Button>
-        <Button variant="subtle" onClick={finish}>
-          Discard
-        </Button>
-      </Group>
     </Stack>
   );
 }
