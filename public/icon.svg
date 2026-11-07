@@ -1,0 +1,39 @@
+<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 512 512" width="512" height="512">
+  <title>Family Recipes</title>
+  <defs>
+    <radialGradient id="bg" cx="50%" cy="40%" r="75%">
+      <stop offset="0" stop-color="#25382f"/>
+      <stop offset="0.6" stop-color="#18251f"/>
+      <stop offset="1" stop-color="#0f1714"/>
+    </radialGradient>
+  </defs>
+  <rect width="512" height="512" fill="url(#bg)"/>
+  
+    <defs>
+      <linearGradient id="iron" x1="0" x2="1">
+        <stop offset="0" stop-color="#4e5853"/><stop offset="0.1" stop-color="#29302c"/>
+        <stop offset="0.42" stop-color="#0e1210"/><stop offset="0.86" stop-color="#070a09"/>
+        <stop offset="1" stop-color="#2c3530"/>
+      </linearGradient>
+      <linearGradient id="sheen" x1="0" y1="0" x2="0" y2="1">
+        <stop offset="0" stop-color="#9aa8a0" stop-opacity="0.22"/><stop offset="0.25" stop-color="#9aa8a0" stop-opacity="0"/>
+      </linearGradient>
+      <linearGradient id="lid" x1="0" x2="1">
+        <stop offset="0" stop-color="#3a433e"/><stop offset="0.5" stop-color="#1a201d"/><stop offset="1" stop-color="#101412"/>
+      </linearGradient>
+    </defs>
+    <ellipse cx="256" cy="390" rx="140" ry="11" fill="#040706" opacity="0.6"/>
+    <path d="M129 278 L100.9 182.7 M383 278 L410.2 164.5" fill="none" stroke="#5f6b65" stroke-width="9" stroke-linecap="round"/>
+    <path d="M126 250 C126 332 136 382 206 384 H306 C376 382 386 332 386 250 Z" fill="url(#iron)"/>
+    <path d="M126 250 C126 332 136 382 206 384 H306 C376 382 386 332 386 250 Z" fill="url(#sheen)"/>
+    <path d="M126 250 C126 332 136 382 206 384 H306 C376 382 386 332 386 250 Z" fill="none" stroke="#38423d" stroke-width="2"/>
+    <path d="M129 262 C129 332 140 378 204 381" fill="none" stroke="#8d9b93" stroke-width="2.5" stroke-linecap="round" opacity="0.55"/>
+    <!-- lid: flat at the edges, a tight dome in the middle, a raised ring knob -->
+    <path d="M118 250 H394" stroke="#66736c" stroke-width="6" stroke-linecap="round"/>
+    <path d="M142 248 H200 C214 248 220 232 256 232 C292 232 298 248 312 248 H370 Z" fill="url(#lid)" stroke="#55615b" stroke-width="2"/>
+    
+    <!-- oak handle, low over the lid; ends stop just past the arms -->
+    <path d="M94 202 C140 186 196 176 256 184 C316 192 364 192 418 178" fill="none" stroke="#c39a6b" stroke-width="20" stroke-linecap="round"/>
+    <path d="M108 196 C156 182 200 174 256 180" fill="none" stroke="#dcbd96" stroke-width="3" stroke-linecap="round" opacity="0.7"/>
+  
+</svg>
