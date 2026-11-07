@@ -97,19 +97,16 @@ Found in the smoke test on the live site (2026-11-07), left for later. No code c
 
 ---
 
-## Epic 8: Installable Phone App (PWA)
-**Goal:** Install the app on the home screen, with a smooth offline experience in the kitchen.
+## Epic 8: Custom Domain
+**Goal:** Serve the app at `recipes.danijompero.com` instead of `jompero.github.io/recipe-app/`. Decided during Epic 7 (2026-11-07), kept out of it so go-live wasn't held up. Done before the PWA: an installed app belongs to its origin, so moving later would mean reinstalling on every phone.
 
-* **8.1 Manifest and service worker:** e.g. `vite-plugin-pwa`, icons, add to home screen.
-* **8.2 Offline experience:** builds on the Firestore offline copy that's on from Epic 1. Offline state shown in the interface.
+Specified in `.scratch/EPIC-8-custom-domain/spec.md` (grilled 2026-11-07). In short: a relative Vite `base` (`./`) ships first, so one build works at both addresses and the switch has no downtime. Then the account verifies `danijompero.com`, Firebase and the API key allow the new address, the domain is set in this repo's Pages settings with a `CNAME` at one.com, the owner runs a smoke test, and the github.io origin is removed.
 
 ---
 
-## Later: Custom domain
-**Goal:** Serve the app at `recipes.danijompero.com` instead of `jompero.github.io/recipe-app/`. Decided during Epic 7 (2026-11-07), kept out of it so go-live wasn't held up.
+## Epic 9: Installable Phone App (PWA)
+**Goal:** Install the app on the home screen, with a smooth offline experience in the kitchen.
 
-* DNS at one.com: `CNAME recipes → jompero.github.io`.
-* GitHub: verify `danijompero.com` for the account (Settings → Pages), set the custom domain on this repo, enforce HTTPS once the certificate is issued. No `CNAME` file is needed with the Actions deploy.
-* Vite `base` `/recipe-app/` → `/`; amend ADR-0004 (base equals the repo name).
-* Firebase: add the authorized domain. API key: referrer `https://recipes.danijompero.com/*` in place of `https://jompero.github.io/*` (keep the `firebaseapp.com` one).
-* Do it before Epic 8: an installed PWA belongs to its origin, so moving later means reinstalling on every phone, and the offline copy (IndexedDB) is per origin too, so it starts empty at the new address.
+* **9.1 Manifest and service worker:** e.g. `vite-plugin-pwa`, icons, add to home screen.
+* **9.2 Offline experience:** builds on the Firestore offline copy that's on from Epic 1. Offline state shown in the interface.
+* **Relative base:** since Epic 8 the Vite `base` is `./` (ADR-0004 amended). Check the manifest's `scope` and `start_url` with it.
