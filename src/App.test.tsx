@@ -92,8 +92,15 @@ describe("member shell: the bottom button and the menu overlay", () => {
     fakeAuth.session = { status: "member", user: ada };
   });
 
-  test("a fresh start at the cookbook opens on the menu, with Cookbook, Data and Account", async () => {
+  test("a fresh start opens on the cookbook with the menu closed", () => {
     renderApp("/");
+    expect(screen.getByRole("heading", { name: "Cookbook" })).toBeInTheDocument();
+    expect(screen.queryByRole("dialog", { name: "Menu" })).not.toBeInTheDocument();
+  });
+
+  test("the bottom button opens the menu, with Cookbook, Data and Account", async () => {
+    renderApp("/");
+    await userEvent.click(screen.getByRole("button", { name: "Menu" }));
     const menu = await screen.findByRole("dialog", { name: "Menu" });
     for (const section of ["Cookbook", "Data", "Account"]) {
       expect(within(menu).getByRole("button", { name: section })).toBeInTheDocument();
@@ -115,6 +122,7 @@ describe("member shell: the bottom button and the menu overlay", () => {
 
   test("choosing a section goes there and closes the menu; Back then returns to the page below", async () => {
     const { back } = renderApp("/");
+    await userEvent.click(screen.getByRole("button", { name: "Menu" }));
     const menu = await screen.findByRole("dialog", { name: "Menu" });
     await userEvent.click(within(menu).getByRole("button", { name: "Data" }));
     expect(screen.queryByRole("dialog", { name: "Menu" })).not.toBeInTheDocument();
@@ -125,8 +133,9 @@ describe("member shell: the bottom button and the menu overlay", () => {
     expect(screen.getByRole("heading", { name: "Cookbook" })).toBeInTheDocument();
   });
 
-  test("choosing Cookbook from the start menu just closes it", async () => {
+  test("choosing the page you're on just closes the menu", async () => {
     renderApp("/");
+    await userEvent.click(screen.getByRole("button", { name: "Menu" }));
     const menu = await screen.findByRole("dialog", { name: "Menu" });
     await userEvent.click(within(menu).getByRole("button", { name: "Cookbook" }));
     expect(screen.queryByRole("dialog", { name: "Menu" })).not.toBeInTheDocument();
@@ -135,6 +144,7 @@ describe("member shell: the bottom button and the menu overlay", () => {
 
   test("the menu lists the current page's actions first; choosing one goes there", async () => {
     const { router } = renderApp("/");
+    await userEvent.click(screen.getByRole("button", { name: "Menu" }));
     const menu = await screen.findByRole("dialog", { name: "Menu" });
     expect(within(menu).getByRole("button", { name: "New recipe" })).toBeInTheDocument();
     await userEvent.click(within(menu).getByRole("button", { name: "Show archived" }));

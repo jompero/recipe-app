@@ -114,6 +114,17 @@ test("opens on the week and rolls once by itself, without repeats or recently pl
   expect(within(day("Wed 4 Nov")).getByText("Planned: Leftovers · Soup")).toBeInTheDocument();
 });
 
+test("Roll, Save and Discard come before the days, in a bar that sticks to the top", () => {
+  openRoller();
+  const actions = screen.getByRole("group", { name: "Roll actions" });
+  expect(within(actions).getByRole("button", { name: "Roll" })).toBeInTheDocument();
+  expect(within(actions).getByRole("button", { name: "Save" })).toBeInTheDocument();
+  expect(within(actions).getByRole("button", { name: "Discard" })).toBeInTheDocument();
+  const firstDay = day("Mon 2 Nov");
+  expect(actions.compareDocumentPosition(firstDay) & Node.DOCUMENT_POSITION_FOLLOWING).toBeTruthy();
+  expect(actions).toHaveStyle({ position: "sticky", top: "0px" });
+});
+
 test("waits for the nearby Plan days before rolling", () => {
   renderApp("/plan/roll?week=2026-11-02");
 
