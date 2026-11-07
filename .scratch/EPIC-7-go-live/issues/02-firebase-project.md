@@ -9,12 +9,12 @@ The owner does this in the Firebase console and a terminal. Follow Phase 2 of `d
 
 ## Steps
 
-- [ ] Firebase console → Add project. Name it `family-recipes`. Write down the **project ID** it gives (it may have a suffix). Google Analytics: off. Stay on the Spark plan.
-- [ ] Firestore → Create database: **Standard** edition, location **`europe-west2` (London)**, **Production mode**.
-- [ ] Authentication → Get started → Sign-in method → **Google** → Enable. Pick your support email.
-- [ ] Authentication → Settings → Authorized domains → Add `jompero.github.io` (domain only, no path). Don't add localhost.
-- [ ] Project settings → Your apps → Add app → **Web**. Nickname `recipe-app`; don't set up Hosting. Copy `apiKey`, `authDomain`, `projectId` and `appId` somewhere for 03 (they aren't secret).
-- [ ] Tell the agent the project ID. The agent commits the `prod` alias in `.firebaserc` (`default` stays `demo-recipe-app`), on a small branch `EPIC-7/US-7.2-prod-alias`.
+- [x] Firebase console → Add project. Name it `family-recipes`. Write down the **project ID** it gives (it may have a suffix). Google Analytics: off. Stay on the Spark plan.
+- [x] Firestore → Create database: **Standard** edition, location **`europe-west2` (London)**, **Production mode**.
+- [x] Authentication → Get started → Sign-in method → **Google** → Enable. Pick your support email.
+- [x] Authentication → Settings → Authorized domains → Add `jompero.github.io` (domain only, no path). Don't add localhost.
+- [x] Project settings → Your apps → Add app → **Web**. Nickname `recipe-app`; don't set up Hosting. Copy `apiKey`, `authDomain`, `projectId` and `appId` somewhere for 03 (they aren't secret).
+- [x] Tell the agent the project ID. The agent commits the `prod` alias in `.firebaserc` (`default` stays `demo-recipe-app`), on a small branch `EPIC-7/US-7.2-prod-alias`.
 - [ ] In a terminal: `npx firebase login` (once), then `npm run deploy:rules`.
 - [ ] Firestore → Data → Start collection `allowed_users`. Add a document whose **ID is your Gmail address in lowercase**, with no fields (the console may need one dummy field; any is fine, the rules only check the ID exists).
 
@@ -25,3 +25,5 @@ The owner does this in the Firebase console and a terminal. Follow Phase 2 of `d
 - [ ] `allowed_users/<your-gmail>` exists.
 
 ## Comments
+
+**2026-11-06:** Project ID is `family-recipes-64bda` (Firebase added a suffix). Steps 1–5 done by the owner; the agent added the `prod` alias to `.firebaserc`.

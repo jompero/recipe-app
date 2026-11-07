@@ -1,5 +1,6 @@
 {
   "projects": {
-    "default": "demo-recipe-app"
+    "default": "demo-recipe-app",
+    "prod": "family-recipes-64bda"
   }
 }
