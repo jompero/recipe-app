@@ -2,7 +2,9 @@
 
 A shared recipe app and meal planner for a small group. It's a static React + TypeScript + Vite site, with Firebase Auth and Firestore as the only backend. Architecture and decisions: [`docs/project/blueprint.md`](docs/project/blueprint.md) and [`docs/adr/`](docs/adr/).
 
-Until go-live (Epic 7), everything runs locally against the Firebase Emulator. No Firebase account is needed.
+**Live:** https://jompero.github.io/recipe-app/ (Firebase project `family-recipes-64bda`, members only). Every merge to `main` deploys it.
+
+Development still runs only against the local Firebase Emulator: no Firebase account is needed to work on the app, and the dev server never talks to the live project.
 
 ## Prerequisites
 
@@ -43,12 +45,21 @@ Open http://localhost:5173/recipe-app/. The `/recipe-app/` path matches the GitH
 | `npm run lint` | ESLint plus a Prettier formatting check |
 | `npm run format` | Format everything with Prettier |
 | `npm run check` | Typecheck, lint and test (inside the emulators): what CI runs, minus the build |
+| `npm run deploy:rules` | Deploy `firestore.rules` to the live project (the `prod` alias) |
 
 A pre-commit hook (Husky + lint-staged) runs ESLint `--fix` and Prettier on the files you commit. ESLint also enforces the data boundary: only `src/data` and `src/config` may import Firebase.
 
 ## Pull requests
 
 `main` only changes through pull requests, and CI (typecheck, lint, tests, the end-to-end test, build) must pass before merging. Dependabot opens grouped dependency updates weekly; they go through CI like any other PR.
+
+## The live site
+
+- **Deploys:** `.github/workflows/deploy.yml` builds and deploys on every push to `main` (or Actions → "Deploy to GitHub Pages" → Run workflow). The Firebase config comes from the repo's Actions **variables** (`FIREBASE_API_KEY`, `FIREBASE_AUTH_DOMAIN`, `FIREBASE_PROJECT_ID`, `FIREBASE_APP_ID`); the run stops if one is missing or points at a `demo-` project.
+- **Rules:** not deployed by the workflow. After merging a change to `firestore.rules`, run `npm run deploy:rules` (once: `npx firebase login`). It targets the `prod` alias in `.firebaserc`.
+- **Members:** in the Firebase console, Firestore → `allowed_users`, one document per member named with their Gmail address in lowercase. Never put the addresses in the repo.
+- **Backups:** the Spark plan has no scheduled backups. Now and then, on the live site, open **Data** → **Export everything** and keep the file outside the repo (e.g. a cloud drive). **Restore** on the Data page puts it back.
+- **Setup from scratch:** Phase 2 of [`docs/project/project-setup.md`](docs/project/project-setup.md).
 
 ## Local Firebase (emulator)
 

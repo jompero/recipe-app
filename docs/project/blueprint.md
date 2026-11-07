@@ -19,7 +19,7 @@ The decisions behind this design are in [`docs/adr/`](../adr/). This document wa
 | Data | Cloud Firestore in `europe-west2` (London) | Offline copy on the device via `persistentLocalCache`. The region is permanent. |
 | Images | Base64 JPEG stored in Firestore | No Firebase Storage ([ADR-0001](../adr/0001-images-in-firestore-not-storage.md)) |
 | Security | Firestore Security Rules + an `allowed_users` collection | [ADR-0002](../adr/0002-allowlist-collection.md) |
-| Development | Firebase Emulator Suite (`demo-recipe-app`) | Local-first until the Go-live epic ([ADR-0007](../adr/0007-local-first-until-go-live.md)) |
+| Development | Firebase Emulator Suite (`demo-recipe-app`) | Always; the live project (`family-recipes-64bda`) is only reached by the deployed site and `npm run deploy:rules` ([ADR-0007](../adr/0007-local-first-until-go-live.md)) |
 
 ### Things that are *not* true (corrections to the original draft)
 
@@ -167,8 +167,8 @@ If a quota runs out, the app stops until the daily reset. Nothing gets billed, b
 
 - Everyone signs in with Google. The rules require `request.auth.token.email_verified == true` **and** a document at `allowed_users/{email}`.
 - Each collection gets its own explicit rule. There's no `{document=**}` catch-all, so members can't add themselves or others to `allowed_users`.
-- The API key is restricted (in Google Cloud Console) to `<user>.github.io` and `localhost`.
-- Rules are tested automatically against the emulator in CI.
+- The API key is restricted (in Google Cloud Console) to the referrers `https://jompero.github.io/*` and `https://family-recipes-64bda.firebaseapp.com/*` (the sign-in popup's handler page), and to the APIs Firebase set on it. No `localhost`: development uses the emulator.
+- Rules are tested automatically against the emulator in CI, and deployed to the live project by hand (`npm run deploy:rules`).
 
 The rules text is in [project-setup.md](project-setup.md).
 

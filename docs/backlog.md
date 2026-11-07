@@ -80,7 +80,20 @@ Left for later:
 ## Epic 7: Go-live
 **Goal:** Ship to real Firebase and GitHub Pages.
 
-**Specified** (2026-11-06): see [`.scratch/EPIC-7-go-live/spec.md`](../.scratch/EPIC-7-go-live/spec.md) and its issues (US-7.1 deploy workflow and checklist fixes, US-7.2 Firebase project, US-7.3 Pages deploy and API key, US-7.4 moving the data, US-7.5 members and the iPhone smoke test, US-7.6 wrap-up). Project `family-recipes` in `europe-west2`; rules deployed by hand; local development stays on the emulator. Only iPhones are tested (nobody in the group has Android).
+**Done** (2026-11-07): live at https://jompero.github.io/recipe-app/. See [`.scratch/EPIC-7-go-live/spec.md`](../.scratch/EPIC-7-go-live/spec.md) and its issues (US-7.1 deploy workflow and checklist fixes, US-7.2 Firebase project, US-7.3 Pages deploy and API key, US-7.4 moving the data, US-7.5 members and the iPhone smoke test, US-7.6 wrap-up). Project `family-recipes-64bda` in `europe-west2`; rules deployed by hand (`npm run deploy:rules`); local development stays on the emulator. Every smoke test step passed on an iPhone 15 Pro Max and an iPhone 14 (iOS 26.6.2).
+
+Different from the spec:
+* The project ID has a suffix: `family-recipes-64bda`.
+* The site first redirected to a dead custom domain (`www.josejompero.com`) set on the account's user site `jompero.github.io`; a user site's domain applies to every project site in the account. Removed in GitHub. Moving to `recipes.danijompero.com` is below (Later: Custom domain).
+
+Left for later:
+* **Android is untested:** nobody in the group has one. Check sign-in, photos and Wake Lock if anyone ever uses one.
+
+Found in the smoke test on the live site (2026-11-07), left for later. No code changes in Epic 7:
+* **Inputs zoom in and stay zoomed** on iOS (Safari and Chrome) when tapped; the owner has to pinch out after typing. The cookbook search doesn't. Likely cause: iOS zooms on focus when an input's text is smaller than 16px, and most inputs use a smaller Mantine size than the search (`src/theme.ts` sets `md` to 17px). Fix by giving inputs at least 16px on touch screens, not by blocking zoom in the viewport tag.
+* **Layout on iPad and desktop** needs a look; the app was designed for phones first.
+* **The roller's Roll button is at the bottom** (`#/plan/roll`), so rolling again means scrolling down each time. Keep it in reach (top, or sticky).
+* **Opening on the menu feels janky.** The app opens with the menu overlay on a fresh start (`src/components/MemberShell.tsx`). Go back to the original plan: open on the cookbook.
 
 ---
 
@@ -89,3 +102,14 @@ Left for later:
 
 * **8.1 Manifest and service worker:** e.g. `vite-plugin-pwa`, icons, add to home screen.
 * **8.2 Offline experience:** builds on the Firestore offline copy that's on from Epic 1. Offline state shown in the interface.
+
+---
+
+## Later: Custom domain
+**Goal:** Serve the app at `recipes.danijompero.com` instead of `jompero.github.io/recipe-app/`. Decided during Epic 7 (2026-11-07), kept out of it so go-live wasn't held up.
+
+* DNS at one.com: `CNAME recipes → jompero.github.io`.
+* GitHub: verify `danijompero.com` for the account (Settings → Pages), set the custom domain on this repo, enforce HTTPS once the certificate is issued. No `CNAME` file is needed with the Actions deploy.
+* Vite `base` `/recipe-app/` → `/`; amend ADR-0004 (base equals the repo name).
+* Firebase: add the authorized domain. API key: referrer `https://recipes.danijompero.com/*` in place of `https://jompero.github.io/*` (keep the `firebaseapp.com` one).
+* Do it before Epic 8: an installed PWA belongs to its origin, so moving later means reinstalling on every phone, and the offline copy (IndexedDB) is per origin too, so it starts empty at the new address.
