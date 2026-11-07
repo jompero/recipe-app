@@ -2,7 +2,9 @@ import { ActionIcon, AppShell, Divider, Modal, Stack, Text, UnstyledButton } fro
 import { useState, type ReactNode } from "react";
 import { matchPath, useLocation, useNavigate } from "react-router";
 import { LABEL_STYLE } from "../theme.ts";
+import { OFFLINE_STRIP_HEIGHT, OfflineStrip } from "./OfflineStrip.tsx";
 import { NO_PAGE_MENU, PageMenuContext, type PageMenu } from "./pageMenu.ts";
+import { useOfflineStrip } from "./useOffline.ts";
 
 const SECTIONS = [
   { label: "Cookbook", path: "/" },
@@ -41,9 +43,15 @@ export function MemberShell({ children }: { children: ReactNode }) {
   const location = useLocation();
   const menu = useMenu();
   const [page, setPage] = useState<PageMenu>(NO_PAGE_MENU);
+  const offline = useOfflineStrip();
 
   return (
-    <AppShell padding="md">
+    // --offline-strip: how far the bottom controls (this menu button, the edit form's bar) move up
+    // while the offline strip shows under them.
+    <AppShell
+      padding="md"
+      style={{ "--offline-strip": `${String(offline ? OFFLINE_STRIP_HEIGHT : 0)}px` }}
+    >
       {/* Bottom padding keeps the last lines of a page clear of the menu button. */}
       <AppShell.Main pb={100}>
         <PageMenuContext.Provider value={setPage}>{children}</PageMenuContext.Provider>
@@ -57,13 +65,14 @@ export function MemberShell({ children }: { children: ReactNode }) {
           radius="xl"
           variant="default"
           pos="fixed"
-          bottom={18}
+          bottom="calc(18px + var(--offline-strip, 0px))"
           left="50%"
           style={{ transform: "translateX(-50%)", zIndex: 100 }}
         >
           <MenuGlyph />
         </ActionIcon>
       )}
+      {offline && <OfflineStrip />}
       <Modal
         opened={menu.open}
         onClose={menu.close}

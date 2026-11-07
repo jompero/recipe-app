@@ -36,3 +36,11 @@ class ResizeObserver {
   disconnect() {}
 }
 window.ResizeObserver = ResizeObserver;
+
+// The member shell's offline strip listens to Firestore on every page; tests get a fake they can
+// drive (src/test-utils/fakeConnection.ts) instead of loading Firebase.
+vi.mock("./src/data/connection.ts", () => import("./src/test-utils/fakeConnection.ts"));
+beforeEach(async () => {
+  const { resetConnection } = await import("./src/test-utils/fakeConnection.ts");
+  resetConnection();
+});

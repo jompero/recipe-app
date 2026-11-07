@@ -2,6 +2,8 @@
 import { Alert, Button, Center, Container, Loader, Stack, Text, Title } from "@mantine/core";
 import { useState, type ReactNode } from "react";
 import { signIn, signOut, type SessionUser } from "../data/auth.ts";
+import { NeedsConnection } from "./NeedsConnection.tsx";
+import { usePhoneOffline } from "./useOffline.ts";
 
 function Page({ children }: { children: ReactNode }) {
   return (
@@ -22,6 +24,8 @@ export function LoadingScreen() {
 export function SignInScreen() {
   const [error, setError] = useState<string | null>(null);
   const [busy, setBusy] = useState(false);
+
+  const offline = usePhoneOffline();
 
   async function handleSignIn() {
     setError(null);
@@ -44,9 +48,10 @@ export function SignInScreen() {
           {error}
         </Alert>
       )}
-      <Button size="md" loading={busy} onClick={() => void handleSignIn()}>
+      <Button size="md" loading={busy} disabled={offline} onClick={() => void handleSignIn()}>
         Sign in with Google
       </Button>
+      {offline && <NeedsConnection />}
     </Page>
   );
 }

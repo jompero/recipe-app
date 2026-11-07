@@ -176,3 +176,12 @@ test("a failed save shows the error and lets you try again", async () => {
   ).toBeInTheDocument();
   expect(screen.getByRole("button", { name: "Import 2 recipes" })).toBeInTheDocument();
 });
+
+test("while the phone says it's offline, the import is disabled with a note", async () => {
+  vi.spyOn(navigator, "onLine", "get").mockReturnValue(false);
+  await pickFolders();
+
+  expect(await screen.findByRole("button", { name: "Import 2 recipes" })).toBeDisabled();
+  expect(screen.getAllByText("Needs a connection").length).toBeGreaterThan(0);
+  vi.restoreAllMocks();
+});

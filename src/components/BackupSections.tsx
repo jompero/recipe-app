@@ -3,6 +3,8 @@ import { Alert, Button, Group, Modal, Progress, Stack, Text, Title } from "@mant
 import { useState, type ChangeEvent } from "react";
 import { parseExportFile, type ExportFile } from "../backup/exportFile.ts";
 import { exportEverything, restoreEverything } from "../data/backup.ts";
+import { NeedsConnection } from "./NeedsConnection.tsx";
+import { usePhoneOffline } from "./useOffline.ts";
 
 function plural(count: number, one: string, many: string): string {
   return `${count} ${count === 1 ? one : many}`;
@@ -80,6 +82,7 @@ type RestoreState =
   | { step: "failed"; file: ExportFile; message: string };
 
 export function RestoreSection() {
+  const offline = usePhoneOffline();
   const [state, setState] = useState<RestoreState>({ step: "idle" });
 
   const pick = async (event: ChangeEvent<HTMLInputElement>) => {
@@ -135,9 +138,14 @@ export function RestoreSection() {
             This file holds {describeContents(file)}, exported on {file.exportedAt.slice(0, 10)}.
           </Text>
           <Group>
-            <Button color="orange" onClick={() => setState({ step: "confirming", file })}>
+            <Button
+              color="orange"
+              disabled={offline}
+              onClick={() => setState({ step: "confirming", file })}
+            >
               Restore
             </Button>
+            {offline && <NeedsConnection />}
           </Group>
         </Stack>
       )}
@@ -172,7 +180,11 @@ export function RestoreSection() {
             >
               Cancel
             </Button>
-            <Button color="orange" onClick={() => file !== null && void runRestore(file)}>
+            <Button
+              color="orange"
+              disabled={offline}
+              onClick={() => file !== null && void runRestore(file)}
+            >
               Restore
             </Button>
           </Group>

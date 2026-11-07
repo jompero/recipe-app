@@ -1,4 +1,4 @@
-import { within } from "@testing-library/react";
+import { act, within } from "@testing-library/react";
 import userEvent from "@testing-library/user-event";
 import type { Mock } from "vitest";
 import type { Session } from "./data/auth.ts";
@@ -70,6 +70,15 @@ test("signed out: shows the reason when sign-in fails", async () => {
   expect(await screen.findByText("Your browser blocked the sign-in window.")).toBeInTheDocument();
 });
 
+test("signed out and the phone says it's offline: sign-in is disabled with a note", () => {
+  fakeAuth.session = { status: "signed-out" };
+  vi.spyOn(navigator, "onLine", "get").mockReturnValue(false);
+  renderApp();
+  expect(screen.getByRole("button", { name: "Sign in with Google" })).toBeDisabled();
+  expect(screen.getByText("Needs a connection")).toBeInTheDocument();
+  vi.restoreAllMocks();
+});
+
 test("non-member: says they're not on the list, shows their email, and can sign out", async () => {
   fakeAuth.session = { status: "non-member", user: ada };
   renderApp();
@@ -105,6 +114,26 @@ describe("member shell: the bottom button and the menu overlay", () => {
     for (const section of ["Cookbook", "Data", "Account"]) {
       expect(within(menu).getByRole("button", { name: section })).toBeInTheDocument();
     }
+  });
+
+  test("the offline strip shows on member pages while offline and goes away by itself", () => {
+    renderApp("/");
+    expect(screen.queryByRole("status", { name: "Offline" })).not.toBeInTheDocument();
+
+    const online = vi.spyOn(navigator, "onLine", "get").mockReturnValue(false);
+    act(() => {
+      window.dispatchEvent(new Event("offline"));
+    });
+    expect(screen.getByRole("status", { name: "Offline" })).toHaveTextContent(
+      "Offline: changes will sync when you're back online",
+    );
+
+    online.mockReturnValue(true);
+    act(() => {
+      window.dispatchEvent(new Event("online"));
+    });
+    expect(screen.queryByRole("status", { name: "Offline" })).not.toBeInTheDocument();
+    online.mockRestore();
   });
 
   test("a deep link opens without the menu; the bottom button opens it and Back closes it", async () => {

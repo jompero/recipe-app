@@ -23,7 +23,9 @@ import {
 } from "../import/pepperplateImport.ts";
 import { runImport, type ImportProgress, type ImportResult } from "../import/runImport.ts";
 import type { IngredientLine } from "../parsing/types.ts";
+import { NeedsConnection } from "./NeedsConnection.tsx";
 import { usePageMenu } from "./pageMenu.ts";
+import { usePhoneOffline } from "./useOffline.ts";
 
 function plural(count: number, one: string, many: string): string {
   return `${count} ${count === 1 ? one : many}`;
@@ -108,6 +110,7 @@ type ImportState =
   | { step: "failed"; message: string };
 
 function PepperplateImport() {
+  const offline = usePhoneOffline();
   const [recipeFiles, setRecipeFiles] = useState<File[]>([]);
   const [photoFiles, setPhotoFiles] = useState<File[]>([]);
   const [preview, setPreview] = useState<ImportPreview | null>(null);
@@ -223,12 +226,15 @@ function PepperplateImport() {
               />
             </Stack>
           ) : (
-            <Button
-              onClick={() => void askToConfirm(preview)}
-              disabled={preview.totals.recipes === 0}
-            >
-              Import {plural(preview.totals.recipes, "recipe", "recipes")}
-            </Button>
+            <Group>
+              <Button
+                onClick={() => void askToConfirm(preview)}
+                disabled={preview.totals.recipes === 0 || offline}
+              >
+                Import {plural(preview.totals.recipes, "recipe", "recipes")}
+              </Button>
+              {offline && <NeedsConnection />}
+            </Group>
           )}
 
           {state.step === "done" && (

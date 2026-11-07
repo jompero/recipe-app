@@ -173,15 +173,20 @@ function useAddToPlan(recipe: StoredRecipe) {
   return { action, ui };
 }
 
-/** The recipe's thumbnail at once, then its full photo once loaded (ADR-0001). */
+/**
+ * The recipe's thumbnail at once, then its full photo once loaded (ADR-0001). Offline, a photo
+ * never opened on this phone isn't in the offline copy: the thumbnail stays.
+ */
 function usePhoto(recipe: StoredRecipe): string | null {
   const [full, setFull] = useState<{ id: string; url: string } | null>(null);
   useEffect(() => {
     if (!recipe.hasImage) return;
     let current = true;
-    void loadFullImage(recipe.id).then((url) => {
-      if (current && url) setFull({ id: recipe.id, url });
-    });
+    loadFullImage(recipe.id)
+      .then((url) => {
+        if (current && url) setFull({ id: recipe.id, url });
+      })
+      .catch(() => {});
     return () => {
       current = false;
     };
