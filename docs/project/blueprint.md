@@ -167,7 +167,7 @@ If a quota runs out, the app stops until the daily reset. Nothing gets billed, b
 
 - Everyone signs in with Google. The rules require `request.auth.token.email_verified == true` **and** a document at `allowed_users/{email}`.
 - Each collection gets its own explicit rule. There's no `{document=**}` catch-all, so members can't add themselves or others to `allowed_users`.
-- The API key is restricted (in Google Cloud Console) to the referrers `https://jompero.github.io/*` and `https://family-recipes-64bda.firebaseapp.com/*` (the sign-in popup's handler page), and to the APIs Firebase set on it. No `localhost`: development uses the emulator.
+- The API key is restricted (in Google Cloud Console) to the referrers `https://recipes.danijompero.com/*` (the site's custom domain, EPIC-8) and `https://family-recipes-64bda.firebaseapp.com/*` (the sign-in popup's handler page), and to the APIs Firebase set on it. No `localhost`: development uses the emulator.
 - Rules are tested automatically against the emulator in CI, and deployed to the live project by hand (`npm run deploy:rules`).
 
 The rules text is in [project-setup.md](project-setup.md).

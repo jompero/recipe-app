@@ -1,6 +1,6 @@
 # EPIC-8: Custom Domain
 
-Status: ready
+Status: done
 
 Replaces "Later: Custom domain" in `docs/backlog.md`. Settled in a grilling session on 2026-11-07. The PWA, which was Epic 8, is now Epic 9. Related decisions: [ADR-0003](../../docs/adr/0003-google-sign-in-popup.md) (popup sign-in), [ADR-0004](../../docs/adr/0004-official-pages-actions-hashrouter.md) (official Pages actions, hash routing; amended by this epic).
 

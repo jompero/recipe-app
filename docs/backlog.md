@@ -100,6 +100,8 @@ Found in the smoke test on the live site (2026-11-07), left for later. No code c
 ## Epic 8: Custom Domain
 **Goal:** Serve the app at `recipes.danijompero.com` instead of `jompero.github.io/recipe-app/`. Decided during Epic 7 (2026-11-07), kept out of it so go-live wasn't held up. Done before the PWA: an installed app belongs to its origin, so moving later would mean reinstalling on every phone.
 
+**Done** (2026-11-07): live at https://recipes.danijompero.com/; `jompero.github.io/recipe-app/` 301-redirects there. See [`.scratch/EPIC-8-custom-domain/spec.md`](../.scratch/EPIC-8-custom-domain/spec.md) and its issues (US-8.1 relative base, US-8.2 domain verification, US-8.3 Firebase and API key, US-8.4 the switch, US-8.5 smoke test and removing the old origin, US-8.6 docs). The only smoke test failure was the screen sleeping on a recipe: Low Power Mode refuses wake locks on iOS, so it's not a bug.
+
 Specified in `.scratch/EPIC-8-custom-domain/spec.md` (grilled 2026-11-07). In short: a relative Vite `base` (`./`) ships first, so one build works at both addresses and the switch has no downtime. Then the account verifies `danijompero.com`, Firebase and the API key allow the new address, the domain is set in this repo's Pages settings with a `CNAME` at one.com, the owner runs a smoke test, and the github.io origin is removed.
 
 ---

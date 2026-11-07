@@ -2,7 +2,7 @@
 
 A shared recipe app and meal planner for a small group. It's a static React + TypeScript + Vite site, with Firebase Auth and Firestore as the only backend. Architecture and decisions: [`docs/project/blueprint.md`](docs/project/blueprint.md) and [`docs/adr/`](docs/adr/).
 
-**Live:** https://jompero.github.io/recipe-app/ (Firebase project `family-recipes-64bda`, members only). Every merge to `main` deploys it.
+**Live:** https://recipes.danijompero.com/ (Firebase project `family-recipes-64bda`, members only). Every merge to `main` deploys it.
 
 Development still runs only against the local Firebase Emulator: no Firebase account is needed to work on the app, and the dev server never talks to the live project.
 
@@ -59,6 +59,8 @@ A pre-commit hook (Husky + lint-staged) runs ESLint `--fix` and Prettier on the 
 - **Rules:** not deployed by the workflow. After merging a change to `firestore.rules`, run `npm run deploy:rules` (once: `npx firebase login`). It targets the `prod` alias in `.firebaserc`.
 - **Members:** in the Firebase console, Firestore → `allowed_users`, one document per member named with their Gmail address in lowercase. Never put the addresses in the repo.
 - **Backups:** the Spark plan has no scheduled backups. Now and then, on the live site, open **Data** → **Export everything** and keep the file outside the repo (e.g. a cloud drive). **Restore** on the Data page puts it back.
+- **Address:** `recipes.danijompero.com` is the custom domain in this repo's Settings → Pages, with a `CNAME` record `recipes` → `jompero.github.io` at one.com (DNS for `danijompero.com`). `jompero.github.io/recipe-app/` 301-redirects there. The TXT record `_github-pages-challenge-jompero` at one.com verifies the domain for the GitHub account, which stops anyone else claiming it: **never delete it**. Firebase authorized domains and the API key referrers allow only the custom domain (plus the key's `family-recipes-64bda.firebaseapp.com/*`, which the sign-in popup needs).
+- **If the domain dies** (lapsed, DNS broken): in Settings → Pages, **Remove** the custom domain. github.io then serves the app again; the build's relative `base` works there. Add `jompero.github.io` back to Firebase (Authentication → Settings → Authorized domains) and `https://jompero.github.io/*` back to the API key's referrers. Browsers may have cached the old 301, so members may need to open the github.io address in a private tab or clear the site's data.
 - **Setup from scratch:** Phase 2 of [`docs/project/project-setup.md`](docs/project/project-setup.md).
 
 ## Local Firebase (emulator)
