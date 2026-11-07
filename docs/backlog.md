@@ -109,6 +109,11 @@ Specified in `.scratch/EPIC-8-custom-domain/spec.md` (grilled 2026-11-07). In sh
 ## Epic 9: Installable Phone App (PWA)
 **Goal:** Install the app on the home screen, with a smooth offline experience in the kitchen.
 
-* **9.1 Manifest and service worker:** e.g. `vite-plugin-pwa`, icons, add to home screen.
-* **9.2 Offline experience:** builds on the Firestore offline copy that's on from Epic 1. Offline state shown in the interface.
-* **Relative base:** since Epic 8 the Vite `base` is `./` (ADR-0004 amended). Check the manifest's `scope` and `start_url` with it.
+Specified in `.scratch/EPIC-9-installable-app/spec.md` (grilled 2026-11-07). In short:
+* The owner first checks that Google sign-in works in a home-screen app on an iPhone. If it doesn't, a fallback issue amends ADR-0003.
+* `vite-plugin-pwa` precaches only the app's own files, never Firebase traffic (ADR-0009). Manifest and service worker paths stay relative, so the github.io fallback still installs.
+* The cast-iron pot icon, plus a simple new favicon.
+* A quiet "Update ready" banner, an offline strip driven by Firestore's offline signal, and "Needs a connection" on the network-only features.
+* An install note on the Data page.
+* Three phone fixes from the Epic 7 smoke test: input zoom, opening on the cookbook, and the Roll button.
+* A smoke test on two iPhones.
