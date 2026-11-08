@@ -5,7 +5,6 @@ import {
   Chip,
   Group,
   Image,
-  SimpleGrid,
   Skeleton,
   Stack,
   Text,
@@ -27,6 +26,7 @@ import { setArchived, type StoredRecipe } from "../data/recipes.ts";
 import { LABEL_STYLE } from "../theme.ts";
 import { useLiveRecipes } from "./liveRecipes.ts";
 import { usePageMenu } from "./pageMenu.ts";
+import classes from "./CookbookPage.module.css";
 import { QuietToggle } from "./QuietToggle.tsx";
 
 /** The cookbook: every recipe as a photo card (or a list), with search, tags and sort. */
@@ -88,14 +88,7 @@ export function CookbookPage() {
           },
         }}
       />
-      <Group
-        role="group"
-        aria-label="Tags"
-        gap={6}
-        wrap="nowrap"
-        style={{ overflowX: "auto" }}
-        pb={4}
-      >
+      <Box role="group" aria-label="Tags" className={classes.tags}>
         {chips.map((tag) => (
           <Chip
             key={tag}
@@ -110,7 +103,7 @@ export function CookbookPage() {
             {tag}
           </Chip>
         ))}
-      </Group>
+      </Box>
       <Group justify="space-between">
         <QuietToggle
           label="Sort"
@@ -141,11 +134,11 @@ export function CookbookPage() {
           {live.message}
         </Alert>
       ) : live.status === "loading" ? (
-        <SimpleGrid cols={2} spacing="sm" verticalSpacing="xl" aria-label="Loading recipes">
+        <Box className={classes.grid} aria-label="Loading recipes">
           {Array.from({ length: 6 }, (_, i) => (
             <Skeleton key={i} style={{ aspectRatio: "4 / 5" }} />
           ))}
-        </SimpleGrid>
+        </Box>
       ) : live.status === "ready" && shown.length === 0 ? (
         <Stack align="center" gap="sm" py="xl">
           <Text fs="italic" c="dimmed">
@@ -158,11 +151,11 @@ export function CookbookPage() {
       ) : state.view === "list" ? (
         <RecipeList recipes={shown} sort={state.sort} onUnarchive={onUnarchive} />
       ) : (
-        <SimpleGrid cols={2} spacing="sm" verticalSpacing="xl">
+        <Box className={classes.grid}>
           {shown.map((recipe) => (
             <RecipeCard key={recipe.id} recipe={recipe} onUnarchive={onUnarchive} />
           ))}
-        </SimpleGrid>
+        </Box>
       )}
     </Stack>
   );
@@ -229,11 +222,18 @@ function RecipeList({
   onUnarchive: Unarchive;
 }) {
   return (
-    <Box component="ul" aria-label="Recipes" p={0} m={0} style={{ listStyle: "none" }}>
+    <Box
+      component="ul"
+      aria-label="Recipes"
+      p={0}
+      m={0}
+      className={classes.list}
+      style={{ listStyle: "none" }}
+    >
       {letterGroups(recipes, sort).map(({ letter, recipes: group }) => (
         <Fragment key={letter ?? "all"}>
           {letter && (
-            <li>
+            <li className={classes.letter}>
               <Text component="h3" ff="heading" fs="italic" fz={28} c="linen.6" mt="lg" mb={4}>
                 {letter}
               </Text>
