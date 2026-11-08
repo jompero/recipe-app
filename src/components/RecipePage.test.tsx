@@ -4,6 +4,7 @@ import type { Session } from "../data/auth.ts";
 import type { NewMenuEntry } from "../data/menu.ts";
 import type { StoredRecipe } from "../data/recipes.ts";
 import { storedRecipe } from "../test-utils/recipeFixture.ts";
+import { setWideScreen } from "../test-utils/media.ts";
 import { renderApp, screen } from "../test-utils/renderApp.tsx";
 
 // Fake the data seam: a member, the live recipe list, and full images the test releases.
@@ -324,4 +325,48 @@ describe("Add to plan… (US-5.3)", () => {
     expect(await screen.findByText("Couldn't add to the plan")).toBeInTheDocument();
     expect(screen.getByText("Missing or insufficient permissions.")).toBeInTheDocument();
   });
+});
+
+describe("on a wide screen (US-10.6)", () => {
+  beforeEach(() => setWideScreen());
+
+  const layoutOf = () =>
+    screen
+      .getByRole("list", { name: "Ingredients" })
+      .closest("[data-layout]")
+      ?.getAttribute("data-layout");
+
+  test("a recipe with a photo is a spread: the photo beside ingredients and method", () => {
+    renderApp(`/recipe/${soup.id}`);
+    expect(layoutOf()).toBe("spread");
+    expect(screen.getByRole("heading", { name: "Chicken Soup" })).toBeInTheDocument();
+    expect(screen.getByRole("list", { name: "Method" })).toBeInTheDocument();
+    // The ingredients stay in view while the method scrolls.
+    expect(screen.getByRole("list", { name: "Ingredients" }).parentElement).toHaveStyle({
+      position: "sticky",
+    });
+  });
+
+  test("a recipe without a photo puts the title above the two columns", () => {
+    fake.recipes = [{ ...soup, thumbnail: null, hasImage: false }];
+    renderApp(`/recipe/${soup.id}`);
+    expect(layoutOf()).toBe("columns");
+    expect(screen.queryByRole("presentation")).not.toBeInTheDocument();
+  });
+
+  test("ticking and scaling work the same", async () => {
+    renderApp(`/recipe/${soup.id}`);
+    const line = screen.getByRole("button", { name: "1 kg chicken thighs" });
+    await userEvent.click(line);
+    expect(line).toHaveAttribute("aria-pressed", "true");
+    await userEvent.click(screen.getByRole("radio", { name: "2×" }));
+    expect(screen.getByRole("button", { name: "2 kg chicken thighs" })).toBeInTheDocument();
+  });
+});
+
+test("a phone keeps one column", () => {
+  renderApp(`/recipe/${soup.id}`);
+  expect(
+    screen.getByRole("list", { name: "Ingredients" }).closest("[data-layout]"),
+  ).toHaveAttribute("data-layout", "column");
 });
