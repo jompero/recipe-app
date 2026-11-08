@@ -43,6 +43,11 @@ export async function signedInPage(browser: Browser, email: string, path: string
   await popup.locator("#display-name-input").fill(email.split("@")[0] ?? email);
   await popup.locator("#sign-in").click();
 
-  await expect(page.getByRole("button", { name: "Menu" })).toBeVisible();
+  // Signed in: the member shell shows, as the bottom button (phone) or the top bar (wide).
+  await expect(
+    page
+      .getByRole("button", { name: "Menu" })
+      .or(page.getByRole("navigation", { name: "Sections" })),
+  ).toBeVisible();
   return page;
 }

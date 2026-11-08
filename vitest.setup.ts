@@ -2,6 +2,7 @@
 // Based on the Mantine Vitest guide (https://mantine.dev/guides/vitest/).
 import "@testing-library/jest-dom/vitest";
 import { vi } from "vitest";
+import { mediaMatches, resetMedia } from "./src/test-utils/media.ts";
 
 const getComputedStyle = window.getComputedStyle.bind(window);
 window.getComputedStyle = (elt) => getComputedStyle(elt);
@@ -11,8 +12,9 @@ window.scrollTo = () => {};
 
 Object.defineProperty(window, "matchMedia", {
   writable: true,
+  // A phone with a mouse, unless a test changes it (src/test-utils/media.ts).
   value: vi.fn().mockImplementation((query: string) => ({
-    matches: false,
+    matches: mediaMatches(query),
     media: query,
     onchange: null,
     addListener: vi.fn(),
@@ -43,4 +45,5 @@ vi.mock("./src/data/connection.ts", () => import("./src/test-utils/fakeConnectio
 beforeEach(async () => {
   const { resetConnection } = await import("./src/test-utils/fakeConnection.ts");
   resetConnection();
+  resetMedia();
 });

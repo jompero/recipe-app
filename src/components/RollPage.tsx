@@ -214,7 +214,7 @@ export function RollPage() {
         </Text>
       )}
       {/* Above the days and sticky, so Roll is in reach however long the range is. Not at the
-          bottom: the menu button sits there. */}
+          bottom: the menu button sits there. Below the top bar on a wide screen. */}
       <Group
         role="group"
         aria-label="Roll actions"
@@ -222,7 +222,7 @@ export function RollPage() {
         gap="sm"
         py="xs"
         bg="var(--mantine-color-body)"
-        style={{ position: "sticky", top: 0, zIndex: 2 }}
+        style={{ position: "sticky", top: "var(--top-bar, 0px)", zIndex: 2 }}
       >
         <Button variant="outline" onClick={rollAgain} disabled={planned === null || shuffling}>
           Roll

@@ -2,6 +2,7 @@ import { act, within } from "@testing-library/react";
 import userEvent from "@testing-library/user-event";
 import type { Mock } from "vitest";
 import type { Session } from "./data/auth.ts";
+import { setWideScreen } from "./test-utils/media.ts";
 import { renderApp, screen } from "./test-utils/renderApp.tsx";
 
 // Fake the data seam: the tests decide which session the app sees.
@@ -210,4 +211,79 @@ describe("member shell: the bottom button and the menu overlay", () => {
       unmount();
     }
   });
+});
+
+describe("member shell on a wide screen: the top bar", () => {
+  beforeEach(() => {
+    fakeAuth.session = { status: "member", user: ada };
+    setWideScreen();
+  });
+
+  const sections = () => screen.getByRole("navigation", { name: "Sections" });
+
+  test("shows the sections instead of the bottom button, with the current one marked", () => {
+    renderApp("/");
+    for (const name of ["Cookbook", "Plan", "Grocery list", "Data", "Account"]) {
+      expect(within(sections()).getByRole("link", { name })).toBeInTheDocument();
+    }
+    expect(within(sections()).getByRole("link", { name: "Cookbook" })).toHaveAttribute(
+      "aria-current",
+      "page",
+    );
+    expect(screen.queryByRole("button", { name: "Menu" })).not.toBeInTheDocument();
+  });
+
+  test("a section link goes there, and Back returns", async () => {
+    const { back } = renderApp("/");
+    await userEvent.click(within(sections()).getByRole("link", { name: "Data" }));
+    expect(screen.getByRole("heading", { name: "Data" })).toBeInTheDocument();
+    expect(within(sections()).getByRole("link", { name: "Data" })).toHaveAttribute(
+      "aria-current",
+      "page",
+    );
+
+    await back();
+    expect(screen.getByRole("heading", { name: "Cookbook" })).toBeInTheDocument();
+  });
+
+  test("the roller counts as part of the Plan", () => {
+    renderApp("/plan/roll");
+    expect(within(sections()).getByRole("link", { name: "Plan" })).toHaveAttribute(
+      "aria-current",
+      "page",
+    );
+  });
+
+  test("shows the page's actions; one that goes somewhere goes there", async () => {
+    const { router } = renderApp("/");
+    const actions = screen.getByRole("group", { name: "Page actions" });
+    expect(within(actions).getByRole("button", { name: "New recipe" })).toBeInTheDocument();
+    await userEvent.click(within(actions).getByRole("button", { name: "Show archived" }));
+    expect(router.state.location.search).toBe("?archived=1");
+  });
+
+  test("an action that does something runs it", async () => {
+    renderApp("/groceries");
+    const actions = screen.getByRole("group", { name: "Page actions" });
+    await userEvent.click(within(actions).getByRole("button", { name: "Clear list" }));
+    expect(await screen.findByRole("dialog", { name: "Clear the list?" })).toBeInTheDocument();
+  });
+
+  test("a page without actions shows only the sections", () => {
+    renderApp("/data");
+    expect(screen.queryByRole("group", { name: "Page actions" })).not.toBeInTheDocument();
+  });
+
+  test("the edit form has neither the top bar nor the bottom button", () => {
+    renderApp("/recipe/new");
+    expect(screen.queryByRole("navigation", { name: "Sections" })).not.toBeInTheDocument();
+    expect(screen.queryByRole("button", { name: "Menu" })).not.toBeInTheDocument();
+  });
+});
+
+test("a phone has no top bar", () => {
+  fakeAuth.session = { status: "member", user: ada };
+  renderApp("/");
+  expect(screen.queryByRole("navigation", { name: "Sections" })).not.toBeInTheDocument();
+  expect(screen.getByRole("button", { name: "Menu" })).toBeInTheDocument();
 });

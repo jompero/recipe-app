@@ -1,18 +1,22 @@
-import { ActionIcon, AppShell, Divider, Modal, Stack, Text, UnstyledButton } from "@mantine/core";
+import {
+  ActionIcon,
+  AppShell,
+  Box,
+  Divider,
+  Modal,
+  Stack,
+  Text,
+  UnstyledButton,
+} from "@mantine/core";
 import { useState, type ReactNode } from "react";
 import { matchPath, useLocation, useNavigate } from "react-router";
 import { LABEL_STYLE } from "../theme.ts";
 import { OFFLINE_STRIP_HEIGHT, OfflineStrip } from "./OfflineStrip.tsx";
 import { NO_PAGE_MENU, PageMenuContext, type PageMenu } from "./pageMenu.ts";
+import { SECTIONS } from "./sections.ts";
+import { CONTENT_MAX_WIDTH, TOP_BAR_HEIGHT, TopBar } from "./TopBar.tsx";
 import { useOfflineStrip } from "./useOffline.ts";
-
-const SECTIONS = [
-  { label: "Cookbook", path: "/" },
-  { label: "Plan", path: "/plan" },
-  { label: "Grocery list", path: "/groceries" },
-  { label: "Data", path: "/data" },
-  { label: "Account", path: "/account" },
-];
+import { useWide } from "./useWide.ts";
 
 function isEditForm(pathname: string): boolean {
   return (
@@ -38,26 +42,42 @@ function useMenu() {
   return { open, show, close, go };
 }
 
-/** Phone-first frame for signed-in members. */
+/**
+ * The frame for signed-in members. Phones get the one bottom button and the menu overlay; wide
+ * screens (iPad landscape, desktop) get the top bar and content capped at CONTENT_MAX_WIDTH.
+ */
 export function MemberShell({ children }: { children: ReactNode }) {
   const location = useLocation();
   const menu = useMenu();
   const [page, setPage] = useState<PageMenu>(NO_PAGE_MENU);
   const offline = useOfflineStrip();
+  const wide = useWide();
+  // The edit form has its own Save / Cancel bar instead of the menu button or the top bar.
+  const editing = isEditForm(location.pathname);
+  const topBar = wide && !editing;
 
   return (
     // --offline-strip: how far the bottom controls (this menu button, the edit form's bar) move up
-    // while the offline strip shows under them.
+    // while the offline strip shows under them. --top-bar: how far sticky things on a page sit
+    // below the top bar.
     <AppShell
       padding="md"
-      style={{ "--offline-strip": `${String(offline ? OFFLINE_STRIP_HEIGHT : 0)}px` }}
+      header={topBar ? { height: TOP_BAR_HEIGHT } : undefined}
+      style={{
+        "--offline-strip": `${String(offline ? OFFLINE_STRIP_HEIGHT : 0)}px`,
+        "--top-bar": `${String(topBar ? TOP_BAR_HEIGHT : 0)}px`,
+      }}
     >
+      {topBar && <TopBar page={page} />}
       {/* Bottom padding keeps the last lines of a page clear of the menu button. */}
-      <AppShell.Main pb={100}>
-        <PageMenuContext.Provider value={setPage}>{children}</PageMenuContext.Provider>
+      <AppShell.Main pb={wide ? 48 : 100}>
+        <PageMenuContext.Provider value={setPage}>
+          <Box maw={wide ? CONTENT_MAX_WIDTH : undefined} mx="auto">
+            {children}
+          </Box>
+        </PageMenuContext.Provider>
       </AppShell.Main>
-      {/* The edit form has its own Save / Cancel bar instead. */}
-      {!isEditForm(location.pathname) && (
+      {!wide && !editing && (
         <ActionIcon
           aria-label="Menu"
           onClick={menu.show}
