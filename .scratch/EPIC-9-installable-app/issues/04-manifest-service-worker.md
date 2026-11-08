@@ -1,6 +1,6 @@
 # 04: Manifest, service worker, update banner, ADR-0009
 
-Status: ready-for-agent
+Status: done
 Story: US-9.4
 Branch: `EPIC-9/US-9.4-pwa`
 Spec: [../spec.md](../spec.md) (Install, Updates)
@@ -30,11 +30,27 @@ Blocked by: 01 (sign-in works in a home-screen app, or its fallback issue is don
 
 ## Acceptance criteria
 
-- [ ] `npm run build` outputs `manifest.webmanifest`, `sw.js` and a precache list. Every path in them and in `dist/index.html` is relative (no leading `/`, no `/recipe-app/`). Nothing from `googleapis.com` or `firebaseapp.com` appears in the service worker.
-- [ ] `npm run preview`: DevTools → Application shows the manifest with its icons, and an active service worker. With "Offline" ticked, a reload still loads the app shell.
-- [ ] Building and previewing a changed build shows the update banner, and Reload switches to the new version.
-- [ ] Component test for the banner, with the register module mocked: shown when a new version waits, Reload calls the update.
-- [ ] `npm run check` and `npm run e2e` pass.
-- [ ] After merging: the deploy run is green, and `https://recipes.danijompero.com/` serves the manifest and `sw.js`. Record the run link under Comments.
+- [x] `npm run build` outputs `manifest.webmanifest`, `sw.js` and a precache list. Every path in them and in `dist/index.html` is relative (no leading `/`, no `/recipe-app/`). Nothing from `googleapis.com` or `firebaseapp.com` appears in the service worker.
+- [x] `npm run preview`: DevTools → Application shows the manifest with its icons, and an active service worker. With "Offline" ticked, a reload still loads the app shell.
+- [x] Building and previewing a changed build shows the update banner, and Reload switches to the new version.
+- [x] Component test for the banner, with the register module mocked: shown when a new version waits, Reload calls the update.
+- [x] `npm run check` and `npm run e2e` pass.
+- [x] After merging: the deploy run is green, and `https://recipes.danijompero.com/` serves the manifest and `sw.js`. Record the run link under Comments.
 
 ## Comments
+
+**2026-11-07 (agent):** Merged in PR #62.
+- **Setup:** `vite-plugin-pwa` 2.0.0 with `workbox-window` 7.4.1, checked on npm (peer range includes Vite 8). `generateSW`, `registerType: prompt`, `injectRegister: false`, and no runtime caching.
+- **Precache:** 23 entries (2.4 MB uncompressed, about 450 KB over the network).
+  - The non-Latin font files are left out with `globIgnores`. Without that it was 2.7 MB.
+  - `sw.js` has no `googleapis` or `firebaseapp` URLs.
+- **Update banner:** at the top, outside the router, so it also shows on the sign-in screens. It checks for an update on `visibilitychange`. In dev and Vitest the plugin's register hook does nothing.
+- **Checked in real Chromium** with two demo-config builds served from the same address:
+  - the service worker is active with scope `/`, and `start_url`/`scope` are `./`
+  - an offline reload loads the app with the Book fonts
+  - deploying build B shows the banner, and Reload switches to it
+  - the same build under `/recipe-app/` has scope `/recipe-app/` and reloads offline
+- Also: ADR-0009, and the GLOSSARY terms Installed app and Update banner.
+- **Merge danger:** reverting doesn't remove an installed service worker from phones. A rollback would need a self-destroying service worker deploy.
+- `vite-plugin-pwa` adds 4 low or moderate `npm audit` findings, all in build-time dependencies.
+- The deploy run was green and the live site serves `manifest.webmanifest` and `sw.js`.

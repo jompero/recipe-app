@@ -1,6 +1,6 @@
 # EPIC-9: Installable Phone App
 
-Status: ready
+Status: done
 
 Replaces "Epic 9: Installable Phone App (PWA)" in `docs/backlog.md`. Settled in a grilling session on 2026-11-07. Related decisions: [ADR-0003](../../docs/adr/0003-google-sign-in-popup.md) (popup sign-in; may be amended, see "Sign-in"), [ADR-0004](../../docs/adr/0004-official-pages-actions-hashrouter.md) (hash routing, relative base), a new ADR-0009 (service-worker caching, written in 04).
 
@@ -13,6 +13,17 @@ Members cook from their iPhones. Today the app is a Safari tab: it has no icon o
 Make the app installable from Safari (Share → Add to Home Screen) with the cast-iron pot icon, so it opens full screen like an app. A service worker keeps the app's own files on the phone, so it opens without a connection. Firestore's offline copy (on since Epic 1) already holds the data. A slim offline strip says when the app is working from that copy. Features that need the network say so when the phone is offline. A quiet banner offers a reload when a new version is deployed. The three phone problems from the Epic 7 smoke test are fixed along the way.
 
 Before anything is built, the owner checks that Google sign-in works inside a home-screen app on a real iPhone (01). People reported failures of exactly this in 2025–2026, and there is no official word from Firebase.
+
+## Different from the spec
+
+Built 2026-11-07, smoke tested 2026-11-08 (issue notes have the details):
+* **Sign-in:** the check (01) passed: sign-in stays inside the home-screen app, and a cold start takes about 1 s. So no fallback issue, and ADR-0003 stands. Wake Lock also worked with Low Power Mode **on**, unlike in the Epic 8 smoke test.
+* **The Firestore offline signal** comes from a separate metadata-only listener on the recipes query, not from the recipes listener itself. The SDK shares the server listen, so the cost is the same and the cookbook never re-renders on metadata changes. The hold is 5 s.
+* **The strip** is fixed along the bottom edge, under the menu button. A CSS variable lifts the menu button and the edit form's Save bar while it shows. The update banner is at the top.
+* **The site photo** on `#/import` is fetched automatically, so offline only its fallback message changes ("Needs a connection…"); there was no button to disable.
+* **The precache** leaves out the Cyrillic, Greek and Vietnamese font files (2.7 MB → 2.4 MB).
+* **No PNG favicon fallback:** Safari supports SVG favicons since Safari 26.
+* **The install note** is at the top of the Data page.
 
 ## Build order
 

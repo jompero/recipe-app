@@ -6,6 +6,8 @@ build
 docs/pepperplate-data/
 .scratch/pepperplate-images/
 .scratch/base-data/
+# The app icon's generator scripts and previews; the final images are in public/ (EPIC-9).
+.scratch/pwa-icon/
 .emulator-data/
 firebase-debug.log
 firestore-debug.log
