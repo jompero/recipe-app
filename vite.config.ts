@@ -20,6 +20,9 @@ export default defineConfig({
         name: "Family Recipes",
         short_name: "Recipes",
         description: "The family cookbook, meal plan and grocery list.",
+        // The app's identity. Without one it is start_url; "./" resolves to that same address,
+        // so installed apps keep theirs, and a later start_url change can't split them.
+        id: "./",
         start_url: "./",
         scope: "./",
         display: "standalone",
