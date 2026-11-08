@@ -89,11 +89,8 @@ Different from the spec:
 Left for later:
 * **Android is untested:** nobody in the group has one. Check sign-in, photos and Wake Lock if anyone ever uses one.
 
-Found in the smoke test on the live site (2026-11-07), left for later. No code changes in Epic 7:
-* **Inputs zoom in and stay zoomed** on iOS (Safari and Chrome) when tapped; the owner has to pinch out after typing. The cookbook search doesn't. Likely cause: iOS zooms on focus when an input's text is smaller than 16px, and most inputs use a smaller Mantine size than the search (`src/theme.ts` sets `md` to 17px). Fix by giving inputs at least 16px on touch screens, not by blocking zoom in the viewport tag.
+Found in the smoke test on the live site (2026-11-07), left for later. No code changes in Epic 7. Input zoom, opening on the menu and the Roll button were fixed in Epic 9:
 * **Layout on iPad and desktop** needs a look; the app was designed for phones first.
-* **The roller's Roll button is at the bottom** (`#/plan/roll`), so rolling again means scrolling down each time. Keep it in reach (top, or sticky).
-* **Opening on the menu feels janky.** The app opens with the menu overlay on a fresh start (`src/components/MemberShell.tsx`). Go back to the original plan: open on the cookbook.
 
 ---
 
@@ -109,11 +106,18 @@ Specified in `.scratch/EPIC-8-custom-domain/spec.md` (grilled 2026-11-07). In sh
 ## Epic 9: Installable Phone App (PWA)
 **Goal:** Install the app on the home screen, with a smooth offline experience in the kitchen.
 
-Specified in `.scratch/EPIC-9-installable-app/spec.md` (grilled 2026-11-07). In short:
-* The owner first checks that Google sign-in works in a home-screen app on an iPhone. If it doesn't, a fallback issue amends ADR-0003.
-* `vite-plugin-pwa` precaches only the app's own files, never Firebase traffic (ADR-0009). Manifest and service worker paths stay relative, so the github.io fallback still installs.
-* The cast-iron pot icon, plus a simple new favicon.
-* A quiet "Update ready" banner, an offline strip driven by Firestore's offline signal, and "Needs a connection" on the network-only features.
-* An install note on the Data page.
-* Three phone fixes from the Epic 7 smoke test: input zoom, opening on the cookbook, and the Roll button.
-* A smoke test on two iPhones.
+**Done** (2026-11-08): installable from Safari and Chrome on iOS, with the cast-iron pot icon. Details are in [`.scratch/EPIC-9-installable-app/spec.md`](../.scratch/EPIC-9-installable-app/spec.md) and its issues:
+* US-9.1: the sign-in check in a home-screen app
+* US-9.2: phone polish
+* US-9.3: icon, favicon and page colours
+* US-9.4: manifest, service worker, update banner and ADR-0009
+* US-9.5: offline strip and "Needs a connection"
+* US-9.6: install note
+* US-9.7: smoke test on two iPhones
+* US-9.8: docs
+
+Popup sign-in works in the installed app, so ADR-0003 stands. The service worker precaches only the app's own files (ADR-0009).
+
+Left for later:
+* **Android:** the icon is declared maskable, but nothing has been tested on Android.
+* **Splash screens** (`apple-touch-startup-image`): iOS shows a blank white screen for a moment at launch instead.

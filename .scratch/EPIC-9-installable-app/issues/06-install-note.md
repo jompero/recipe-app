@@ -1,6 +1,6 @@
 # 06: "Install on your phone" note
 
-Status: ready-for-agent
+Status: done
 Story: US-9.6
 Branch: `EPIC-9/US-9.6-install-note`
 Spec: [../spec.md](../spec.md) (Install note)
@@ -17,7 +17,14 @@ Blocked by: 04 (the app must be installable before the note tells people to inst
 
 ## Acceptance criteria
 
-- [ ] Component test: the section shows in a browser tab and is hidden in standalone mode (both checks faked).
-- [ ] `npm run check` passes.
+- [x] Component test: the section shows in a browser tab and is hidden in standalone mode (both checks faked).
+- [x] `npm run check` passes.
 
 ## Comments
+
+**2026-11-07 (agent):** Merged in PR #63.
+- The section is at the top of the Data page, which is where a phone user lands; the Pepperplate import below it is desktop work.
+- It's hidden when `matchMedia('(display-mode: standalone)')` matches, or when `navigator.standalone` is true.
+- Tests cover a browser tab and both standalone checks.
+
+**2026-11-08:** In the smoke test (07), the note showed in Safari and was gone in the installed app.

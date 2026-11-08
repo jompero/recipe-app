@@ -34,7 +34,7 @@ Open http://localhost:5173/. Routes live after `#` (for example `/#/recipes/123`
 | `npm run dev:all` | Start everything: emulators (unless already running), seed, and Vite with `--host` |
 | `npm run dev` | Start the dev server |
 | `npm run build` | Build the static site into `dist/` |
-| `npm run preview` | Serve `dist/` locally |
+| `npm run preview` | Serve `dist/` locally, with the service worker (the only local way to try it) |
 | `npm run emulators` | Start the Firebase emulators with saved data |
 | `npm run emulators:save` | Save the running emulators' data to `.emulator-data/` |
 | `npm run seed` | Add fake allowlist members to the running emulator, plus the base-data recipes if it has none |
@@ -60,7 +60,8 @@ A pre-commit hook (Husky + lint-staged) runs ESLint `--fix` and Prettier on the 
 - **Members:** in the Firebase console, Firestore → `allowed_users`, one document per member named with their Gmail address in lowercase. Never put the addresses in the repo.
 - **Backups:** the Spark plan has no scheduled backups. Now and then, on the live site, open **Data** → **Export everything** and keep the file outside the repo (e.g. a cloud drive). **Restore** on the Data page puts it back.
 - **Address:** `recipes.danijompero.com` is the custom domain in this repo's Settings → Pages, with a `CNAME` record `recipes` → `jompero.github.io` at one.com (DNS for `danijompero.com`). `jompero.github.io/recipe-app/` 301-redirects there. The TXT record `_github-pages-challenge-jompero` at one.com verifies the domain for the GitHub account, which stops anyone else claiming it: **never delete it**. Firebase authorized domains and the API key referrers allow only the custom domain (plus the key's `family-recipes-64bda.firebaseapp.com/*`, which the sign-in popup needs).
-- **If the domain dies** (lapsed, DNS broken): in Settings → Pages, **Remove** the custom domain. github.io then serves the app again; the build's relative `base` works there. Add `jompero.github.io` back to Firebase (Authentication → Settings → Authorized domains) and `https://jompero.github.io/*` back to the API key's referrers. Browsers may have cached the old 301, so members may need to open the github.io address in a private tab or clear the site's data.
+- **If the domain dies** (lapsed, DNS broken): in Settings → Pages, **Remove** the custom domain. github.io then serves the app again; the build's relative `base` works there. Add `jompero.github.io` back to Firebase (Authentication → Settings → Authorized domains) and `https://jompero.github.io/*` back to the API key's referrers. Browsers may have cached the old 301, so members may need to open the github.io address in a private tab or clear the site's data. An installed app belongs to its address, so members remove it and install again from the github.io address.
+- **Installed app:** members install from Safari or Chrome on iOS with Share → Add to Home Screen (the Data page has the steps), then sign in once more, since the installed app keeps its own sign-in and offline copy. The service worker caches only the app's own files (ADR-0009). A new deploy shows an "Update ready · Reload" banner, and an ignored update applies on the next fresh launch. Reverting a deploy doesn't remove the service worker from phones: a real rollback needs a deploy with `vite-plugin-pwa`'s `selfDestroying: true`.
 - **Setup from scratch:** Phase 2 of [`docs/project/project-setup.md`](docs/project/project-setup.md).
 
 ## Local Firebase (emulator)
@@ -92,7 +93,7 @@ npm run dev         # terminal 2
    New-NetFirewallRule -DisplayName "recipe-app dev" -Direction Inbound -Protocol TCP -LocalPort 5173,9099,8080 -Profile Private -Action Allow
    ```
 2. Make sure your Wi-Fi network is set to **Private** in Windows settings.
-3. Run `npm run dev:all` (or `npm run emulators` and `npm run dev -- --host` separately), then open the "Network" address Vite prints (`http://<pc-ip>:5173/`) on your phone. The app connects to the emulator on the same host it was loaded from.
+3. Run `npm run dev:all` (or `npm run emulators` and `npm run dev -- --host` separately), then open the "Network" address Vite prints (`http://<pc-ip>:5173/`) on your phone. The app connects to the emulator on the same host it was loaded from. This address isn't a secure context, so there's no service worker and no install: try the installed app on the live site.
 
 ## Backups of the seed data
 

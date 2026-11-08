@@ -1,6 +1,6 @@
 # 03: App icon, favicon and page colours
 
-Status: ready-for-agent
+Status: done
 Story: US-9.3
 Branch: `EPIC-9/US-9.3-icons`
 Spec: [../spec.md](../spec.md) (Icon, favicon and colours)
@@ -19,9 +19,15 @@ Blocked by: none
 
 ## Acceptance criteria
 
-- [ ] The owner approved the favicon preview. Record it under Comments.
-- [ ] `npm run build`: the icons and favicon are in `dist/` and the links in `dist/index.html` are relative.
-- [ ] The desktop browser tab shows the new favicon, and the colour matches the app's page background.
-- [ ] `npm run check` passes.
+- [x] The owner approved the favicon preview. Record it under Comments.
+- [x] `npm run build`: the icons and favicon are in `dist/` and the links in `dist/index.html` are relative.
+- [x] The desktop browser tab shows the new favicon, and the colour matches the app's page background.
+- [x] `npm run check` passes.
 
 ## Comments
+
+**2026-11-07 (agent):** Merged in PR #60.
+- The four approved files are in `public/` and byte-identical to `.scratch/pwa-icon/`. Design notes are in `docs/project/app-icon.md`.
+- **Favicon:** a new flat `favicon.svg` with steel edges, because a flat black pot disappears on the dark green. The owner approved it from a 16/32/64 px preview on light and dark tabs. No PNG fallback: Safari supports SVG favicons since Safari 26 (WebKit, WWDC25; caniuse).
+- `theme-color` is `#ffffff`, Mantine's light body colour, replacing the orange. Vite turns the head links into relative paths (`./favicon.svg`).
+- **Safe zone:** checked from the SVG coordinates. The furthest drawn point (the shadow's edge) is about 194 px from the centre, inside the 205 px circle, so the 512 serves as `maskable`.

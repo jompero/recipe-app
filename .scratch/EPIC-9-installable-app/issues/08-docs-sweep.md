@@ -1,6 +1,6 @@
 # 08: Docs sweep
 
-Status: ready-for-agent
+Status: done
 Story: US-9.8
 Branch: `EPIC-9/progress-notes`
 Spec: [../spec.md](../spec.md)
@@ -24,7 +24,14 @@ One docs PR at the end, as in Epic 8. It collects the per-issue notes.
 
 ## Acceptance criteria
 
-- [ ] `npm run check` passes (Prettier on the markdown).
-- [ ] The PR body lists each Epic 9 issue with its result.
+- [x] `npm run check` passes (Prettier on the markdown).
+- [x] The PR body lists each Epic 9 issue with its result.
 
 ## Comments
+
+**2026-11-08 (agent):** This PR.
+- Issue notes filled in, and the spec set to done with "Different from the spec".
+- CLAUDE.md status and layout updated.
+- Backlog: the Epic 9 done note, and the three fixed smoke-test items removed.
+- README: installed app notes.
+- `.gitignore` now has `.scratch/pwa-icon/`, and the local `.git/info/exclude` line is removed (local only).
