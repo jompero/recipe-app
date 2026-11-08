@@ -3,6 +3,7 @@ import {
   Alert,
   Badge,
   Button,
+  Divider,
   Group,
   List,
   Modal,
@@ -26,6 +27,7 @@ import type { IngredientLine } from "../parsing/types.ts";
 import { NeedsConnection } from "./NeedsConnection.tsx";
 import { usePageMenu } from "./pageMenu.ts";
 import { usePhoneOffline } from "./useOffline.ts";
+import { usePrototypeVariant, useWide } from "../prototype/prototypeStore.ts";
 
 function plural(count: number, one: string, many: string): string {
   return `${count} ${count === 1 ? one : many}`;
@@ -286,6 +288,41 @@ function PepperplateImport() {
 /** Import, export and restore (Epic 2), and the Recipe bookmarklet (US-4.4). */
 export function DataPage() {
   usePageMenu("Data");
+  // PROTOTYPE (US-10.1): spacing between sections (all sizes) and a centred column (wide).
+  const wide = useWide();
+  const layout = usePrototypeVariant({
+    key: "data.layout",
+    label: "Data",
+    options: [
+      { value: "dividers", label: "Column + dividers" },
+      { value: "gap", label: "Column + big gaps" },
+      { value: "today", label: "Today" },
+    ],
+  });
+  if (layout !== "today") {
+    const sections = [
+      <InstallSection key="install" />,
+      <PepperplateImport key="pepperplate" />,
+      <ExportSection key="export" />,
+      <RestoreSection key="restore" />,
+      <BookmarkletSection key="bookmarklet" />,
+    ];
+    return (
+      <Stack gap={layout === "gap" ? 56 : "xl"} maw={wide ? 720 : undefined} mx="auto" pt="xl">
+        <Title order={1}>Data</Title>
+        {sections.map((section, i) =>
+          layout === "dividers" && i > 0 ? (
+            <Stack key={i} gap="xl">
+              <Divider mx={wide ? 120 : 40} />
+              {section}
+            </Stack>
+          ) : (
+            section
+          ),
+        )}
+      </Stack>
+    );
+  }
   return (
     <Stack gap="lg">
       <Title order={2}>Data</Title>

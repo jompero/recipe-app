@@ -27,6 +27,7 @@ import { PlanDatePicker } from "./PlanDatePicker.tsx";
 import { QuietToggle } from "./QuietToggle.tsx";
 import { useTicks } from "./useTicks.ts";
 import { useWakeLock } from "./useWakeLock.ts";
+import { usePrototypeVariant, useWide } from "../prototype/prototypeStore.ts";
 
 function isHeader(line: IngredientLine | InstructionLine): line is SectionHeader {
   return "header" in line;
@@ -235,6 +236,218 @@ function Recipe({ recipe }: { recipe: StoredRecipe }) {
   // Scaling is for this cook only: never saved.
   const [scale, setScale] = useState<Scale>("1");
   const stepNumbers = numberSteps(recipe.instructions);
+
+  // PROTOTYPE (US-10.1): two-column layouts on wide screens.
+  const wide = useWide();
+  const layout = usePrototypeVariant({
+    key: "recipe.layout",
+    label: "Recipe",
+    options: [
+      { value: "A", label: "A · photo on top" },
+      { value: "N", label: "N · Nordic spread" },
+      { value: "today", label: "Today (1 column)" },
+    ],
+  });
+  if (wide && layout !== "today") {
+    const ingredients = (
+      <>
+        <Group justify="space-between" align="baseline" mb="sm">
+          <Text component="h2" fw={400} m={0} style={{ ...LABEL_STYLE, fontSize: 11 }}>
+            Ingredients
+          </Text>
+          <QuietToggle label="Scale" value={scale} onChange={setScale} options={SCALES} />
+        </Group>
+        <Box component="ul" aria-label="Ingredients" p={0} m={0} style={{ listStyle: "none" }}>
+          {recipe.ingredients.map((line, i) =>
+            isHeader(line) ? (
+              <Text key={i} component="li" mt="md" mb={6} style={LABEL_STYLE}>
+                {line.header}
+              </Text>
+            ) : (
+              <Box
+                key={i}
+                component="li"
+                style={{ borderBottom: "1px solid var(--mantine-color-gray-3)" }}
+              >
+                <Tickable ticked={ticks.has(`i${i}`)} onToggle={() => toggle(`i${i}`)}>
+                  <Text fz={17} lh={1.45} py={5}>
+                    {scaleIngredient(line, Number(scale))}
+                  </Text>
+                </Tickable>
+              </Box>
+            ),
+          )}
+        </Box>
+      </>
+    );
+    const method = (
+      <>
+        <Text component="h2" mb="sm" mt={0} fw={400} style={{ ...LABEL_STYLE, fontSize: 11 }}>
+          Method
+        </Text>
+        <Box component="ol" aria-label="Method" p={0} m={0} style={{ listStyle: "none" }}>
+          {recipe.instructions.map((line, i) =>
+            isHeader(line) ? (
+              <Text key={i} component="li" mt="lg" mb={8} style={LABEL_STYLE}>
+                {line.header}
+              </Text>
+            ) : (
+              <Group key={i} component="li" mb="md" gap={14} wrap="nowrap" align="flex-start">
+                <Text
+                  component="span"
+                  ff="heading"
+                  fs="italic"
+                  fz={22}
+                  lh={1.1}
+                  c="linen.6"
+                  miw={18}
+                  style={{ flex: "none" }}
+                >
+                  {stepNumbers[i]}
+                </Text>
+                <Box style={{ flex: 1, minWidth: 0 }}>
+                  <Tickable ticked={ticks.has(`s${i}`)} onToggle={() => toggle(`s${i}`)}>
+                    <Text fz={17} lh={1.55}>
+                      {line.text}
+                    </Text>
+                  </Tickable>
+                </Box>
+              </Group>
+            ),
+          )}
+        </Box>
+      </>
+    );
+    const header = (
+      <>
+        {recipe.archived && (
+          <Text ta="center" c="dimmed" pt="xl" style={LABEL_STYLE}>
+            Archived
+          </Text>
+        )}
+        {archive.error && (
+          <Alert color="red" mt="md" title="Couldn't save">
+            {archive.error}
+          </Alert>
+        )}
+        <Title order={1} pt={recipe.archived ? "xs" : "xl"} fz={32} lh={1.25}>
+          {recipe.title}
+        </Title>
+        {recipe.source && (
+          <Text ta="center" c="dimmed" mt="xs" style={LABEL_STYLE}>
+            {recipe.sourceUrl ? (
+              <Anchor href={recipe.sourceUrl} target="_blank" rel="noreferrer" c="dimmed" inherit>
+                {recipe.source}
+              </Anchor>
+            ) : (
+              recipe.source
+            )}
+          </Text>
+        )}
+        {recipe.description && (
+          <Text
+            ta="center"
+            fs="italic"
+            fz={18}
+            lh={1.5}
+            mt="lg"
+            maw={620}
+            mx="auto"
+            style={{ whiteSpace: "pre-line" }}
+          >
+            {recipe.description}
+          </Text>
+        )}
+        {meta.length > 0 && (
+          <Group
+            justify="center"
+            gap={28}
+            mt="xl"
+            pt="sm"
+            maw={520}
+            mx="auto"
+            style={{ borderTop: "1px solid currentColor" }}
+          >
+            {meta.map(([label, value]) => (
+              <Box key={label} ta="center">
+                <Text c="dimmed" style={LABEL_STYLE}>
+                  {label}
+                </Text>
+                <Text fz={15} mt={2}>
+                  {value}
+                </Text>
+              </Box>
+            ))}
+          </Group>
+        )}
+        {recipe.tags.length > 0 && (
+          <Text ta="center" c="linen.6" mt="md" style={LABEL_STYLE}>
+            {recipe.tags.join(" · ")}
+          </Text>
+        )}
+      </>
+    );
+    // Sticky below the top bar (if any), scrolling on its own when taller than the screen.
+    const sticky = {
+      position: "sticky",
+      top: "calc(var(--top-bar, 0px) + 16px)",
+      alignSelf: "flex-start",
+      maxHeight: "calc(100vh - var(--top-bar, 0px) - 32px)",
+      overflowY: "auto",
+    } as const;
+
+    if (layout === "N" && photo) {
+      return (
+        <Group align="flex-start" wrap="nowrap" gap={48}>
+          {archive.confirm}
+          {addToPlan.ui}
+          <Box w="38.2%" style={{ ...sticky, flex: "none", overflow: "hidden" }}>
+            <Image
+              src={photo}
+              alt=""
+              fit="cover"
+              h="calc(100vh - var(--top-bar, 0px) - 32px)"
+              w="100%"
+            />
+          </Box>
+          <Box style={{ flex: 1, minWidth: 0 }}>
+            {header}
+            <Group align="flex-start" wrap="nowrap" gap={36} mt={48}>
+              <Box w="42%" style={{ ...sticky, flex: "none" }}>
+                {ingredients}
+              </Box>
+              <Box style={{ flex: 1, minWidth: 0 }}>{method}</Box>
+            </Group>
+          </Box>
+        </Group>
+      );
+    }
+    return (
+      <Stack gap={0}>
+        {archive.confirm}
+        {addToPlan.ui}
+        {photo && (
+          <Image
+            src={photo}
+            alt=""
+            fit="cover"
+            w="100%"
+            h="min(56vh, 560px)"
+            mt="calc(var(--mantine-spacing-md) * -1)"
+          />
+        )}
+        <Box maw={760} mx="auto">
+          {header}
+        </Box>
+        <Group align="flex-start" wrap="nowrap" gap={56} mt={48} maw={1060} mx="auto" w="100%">
+          <Box w={360} style={{ ...sticky, flex: "none" }}>
+            {ingredients}
+          </Box>
+          <Box style={{ flex: 1, minWidth: 0 }}>{method}</Box>
+        </Group>
+      </Stack>
+    );
+  }
 
   return (
     <Stack gap={0} maw={640} mx="auto">

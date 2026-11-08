@@ -1,6 +1,19 @@
-import { ActionIcon, AppShell, Divider, Modal, Stack, Text, UnstyledButton } from "@mantine/core";
+import {
+  ActionIcon,
+  AppShell,
+  Box,
+  Button,
+  Divider,
+  Group,
+  Modal,
+  Stack,
+  Text,
+  UnstyledButton,
+} from "@mantine/core";
 import { useState, type ReactNode } from "react";
-import { matchPath, useLocation, useNavigate } from "react-router";
+import { Link, matchPath, useLocation, useNavigate } from "react-router";
+import { PrototypeBar } from "../prototype/PrototypeBar.tsx";
+import { usePrototypeVariant, useWide } from "../prototype/prototypeStore.ts";
 import { LABEL_STYLE } from "../theme.ts";
 import { OFFLINE_STRIP_HEIGHT, OfflineStrip } from "./OfflineStrip.tsx";
 import { NO_PAGE_MENU, PageMenuContext, type PageMenu } from "./pageMenu.ts";
@@ -38,26 +51,115 @@ function useMenu() {
   return { open, show, close, go };
 }
 
+/** PROTOTYPE: which section a path belongs to, for the top bar's underline. */
+function sectionOf(pathname: string): string {
+  if (pathname.startsWith("/plan")) return "/plan";
+  if (pathname.startsWith("/groceries")) return "/groceries";
+  if (pathname.startsWith("/data")) return "/data";
+  if (pathname.startsWith("/account")) return "/account";
+  return "/";
+}
+
+const TOP_BAR_HEIGHT = 56;
+
 /** Phone-first frame for signed-in members. */
 export function MemberShell({ children }: { children: ReactNode }) {
   const location = useLocation();
+  const navigate = useNavigate();
   const menu = useMenu();
   const [page, setPage] = useState<PageMenu>(NO_PAGE_MENU);
   const offline = useOfflineStrip();
+  // PROTOTYPE (US-10.1): the wide-screen shell variants.
+  const wide = useWide();
+  const shell = usePrototypeVariant({
+    key: "shell",
+    label: "Shell",
+    options: [
+      { value: "bar", label: "Top bar" },
+      { value: "corner", label: "Corner button" },
+      { value: "today", label: "Today (bottom)" },
+    ],
+  });
+  const mode = wide ? shell : "today";
+  const editing = isEditForm(location.pathname);
+  const capped = wide && shell !== "today";
 
   return (
     // --offline-strip: how far the bottom controls (this menu button, the edit form's bar) move up
     // while the offline strip shows under them.
     <AppShell
       padding="md"
-      style={{ "--offline-strip": `${String(offline ? OFFLINE_STRIP_HEIGHT : 0)}px` }}
+      header={mode === "bar" && !editing ? { height: TOP_BAR_HEIGHT } : undefined}
+      style={{
+        "--offline-strip": `${String(offline ? OFFLINE_STRIP_HEIGHT : 0)}px`,
+        "--top-bar": `${String(mode === "bar" && !editing ? TOP_BAR_HEIGHT : 0)}px`,
+      }}
     >
+      {mode === "bar" && !editing && (
+        <AppShell.Header withBorder={false}>
+          <Group
+            h="100%"
+            maw={1200}
+            mx="auto"
+            px="md"
+            justify="space-between"
+            wrap="nowrap"
+            style={{ borderBottom: "1px solid var(--mantine-color-gray-3)" }}
+          >
+            <Group gap={28} wrap="nowrap" component="nav" aria-label="Sections">
+              {SECTIONS.map(({ label, path }) => {
+                const current = sectionOf(location.pathname) === path;
+                return (
+                  <UnstyledButton
+                    key={label}
+                    component={Link}
+                    to={path}
+                    aria-current={current ? "page" : undefined}
+                    style={{
+                      ...LABEL_STYLE,
+                      fontSize: 12,
+                      paddingBlock: 6,
+                      borderBottom: `1px solid ${current ? "currentColor" : "transparent"}`,
+                      color: current ? undefined : "var(--mantine-color-dimmed)",
+                    }}
+                  >
+                    {label}
+                  </UnstyledButton>
+                );
+              })}
+            </Group>
+            <Group gap={4} wrap="nowrap">
+              {page.actions.map((action) => (
+                <Button
+                  key={action.label}
+                  variant="subtle"
+                  size="compact-sm"
+                  onClick={() => {
+                    if ("to" in action) void navigate(action.to);
+                    else action.onSelect();
+                  }}
+                >
+                  {action.label}
+                </Button>
+              ))}
+            </Group>
+          </Group>
+        </AppShell.Header>
+      )}
       {/* Bottom padding keeps the last lines of a page clear of the menu button. */}
-      <AppShell.Main pb={100}>
-        <PageMenuContext.Provider value={setPage}>{children}</PageMenuContext.Provider>
+      <AppShell.Main pb={mode === "today" ? 100 : 48}>
+        <PageMenuContext.Provider value={setPage}>
+          {capped ? (
+            <Box maw={1200} mx="auto">
+              {children}
+            </Box>
+          ) : (
+            children
+          )}
+        </PageMenuContext.Provider>
       </AppShell.Main>
       {/* The edit form has its own Save / Cancel bar instead. */}
-      {!isEditForm(location.pathname) && (
+      {!editing && mode !== "bar" && (
         <ActionIcon
           aria-label="Menu"
           onClick={menu.show}
@@ -65,13 +167,18 @@ export function MemberShell({ children }: { children: ReactNode }) {
           radius="xl"
           variant="default"
           pos="fixed"
-          bottom="calc(18px + var(--offline-strip, 0px))"
-          left="50%"
-          style={{ transform: "translateX(-50%)", zIndex: 100 }}
+          {...(mode === "corner"
+            ? { top: 16, right: 16, style: { zIndex: 100 } }
+            : {
+                bottom: "calc(18px + var(--offline-strip, 0px))",
+                left: "50%",
+                style: { transform: "translateX(-50%)", zIndex: 100 },
+              })}
         >
           <MenuGlyph />
         </ActionIcon>
       )}
+      <PrototypeBar />
       {offline && <OfflineStrip />}
       <Modal
         opened={menu.open}

@@ -28,6 +28,8 @@ import { LABEL_STYLE } from "../theme.ts";
 import { useLiveRecipes } from "./liveRecipes.ts";
 import { usePageMenu } from "./pageMenu.ts";
 import { QuietToggle } from "./QuietToggle.tsx";
+import { usePrototypeVariant, useTablet, useWide } from "../prototype/prototypeStore.ts";
+import { useThumb480 } from "../prototype/thumb480.ts";
 
 /** The cookbook: every recipe as a photo card (or a list), with search, tags and sort. */
 export function CookbookPage() {
@@ -63,6 +65,37 @@ export function CookbookPage() {
   const shown = selectRecipes(all, state);
   const chips = tagChips(all, state.archived);
 
+  // PROTOTYPE (US-10.1): card size and thumbnail resolution on bigger screens.
+  const wide = useWide();
+  const tablet = useTablet();
+  const cardSize = usePrototypeVariant({
+    key: "cookbook.card",
+    label: "Card",
+    options: [
+      { value: "210", label: "M (~210px)" },
+      { value: "170", label: "S (~170px)" },
+      { value: "250", label: "L (~250px)" },
+      { value: "today", label: "Today (2 cols)" },
+    ],
+  });
+  const thumbSize = usePrototypeVariant({
+    key: "cookbook.thumb",
+    label: "Thumb",
+    options: [
+      { value: "320", label: "320px (stored)" },
+      { value: "480", label: "480px (made now)" },
+    ],
+  });
+  const gridStyle =
+    tablet && cardSize !== "today"
+      ? {
+          display: "grid",
+          gridTemplateColumns: `repeat(auto-fill, minmax(${cardSize}px, 1fr))`,
+          columnGap: "var(--mantine-spacing-md)",
+          rowGap: "var(--mantine-spacing-xl)",
+        }
+      : null;
+
   return (
     <Stack gap="lg">
       <Stack gap={4} pt="xl">
@@ -92,8 +125,8 @@ export function CookbookPage() {
         role="group"
         aria-label="Tags"
         gap={6}
-        wrap="nowrap"
-        style={{ overflowX: "auto" }}
+        wrap={wide ? "wrap" : "nowrap"}
+        style={{ overflowX: wide ? undefined : "auto" }}
         pb={4}
       >
         {chips.map((tag) => (
@@ -156,11 +189,27 @@ export function CookbookPage() {
           </Button>
         </Stack>
       ) : state.view === "list" ? (
-        <RecipeList recipes={shown} sort={state.sort} onUnarchive={onUnarchive} />
+        <RecipeList recipes={shown} sort={state.sort} onUnarchive={onUnarchive} columns={wide} />
+      ) : gridStyle ? (
+        <div style={gridStyle}>
+          {shown.map((recipe) => (
+            <RecipeCard
+              key={recipe.id}
+              recipe={recipe}
+              onUnarchive={onUnarchive}
+              big={thumbSize === "480"}
+            />
+          ))}
+        </div>
       ) : (
         <SimpleGrid cols={2} spacing="sm" verticalSpacing="xl">
           {shown.map((recipe) => (
-            <RecipeCard key={recipe.id} recipe={recipe} onUnarchive={onUnarchive} />
+            <RecipeCard
+              key={recipe.id}
+              recipe={recipe}
+              onUnarchive={onUnarchive}
+              big={thumbSize === "480"}
+            />
           ))}
         </SimpleGrid>
       )}
@@ -194,20 +243,30 @@ function UnarchiveButton({
   );
 }
 
-function RecipeCard({ recipe, onUnarchive }: { recipe: StoredRecipe; onUnarchive: Unarchive }) {
+function RecipeCard({
+  recipe,
+  onUnarchive,
+  big,
+}: {
+  recipe: StoredRecipe;
+  onUnarchive: Unarchive;
+  big: boolean;
+}) {
   return (
     <Stack gap={4} align="center">
-      <RecipeCardLink recipe={recipe} />
+      <RecipeCardLink recipe={recipe} big={big} />
       <UnarchiveButton recipe={recipe} onUnarchive={onUnarchive} />
     </Stack>
   );
 }
 
-function RecipeCardLink({ recipe }: { recipe: StoredRecipe }) {
+function RecipeCardLink({ recipe, big }: { recipe: StoredRecipe; big: boolean }) {
+  const thumb480 = useThumb480(recipe.id, recipe.hasImage, big);
+  const src = thumb480 ?? recipe.thumbnail;
   return (
     <UnstyledButton component={Link} to={`/recipe/${recipe.id}`} ta="center" w="100%">
-      {recipe.thumbnail ? (
-        <Image src={recipe.thumbnail} alt="" style={{ aspectRatio: "4 / 5" }} fit="cover" />
+      {src ? (
+        <Image src={src} alt="" style={{ aspectRatio: "4 / 5" }} fit="cover" />
       ) : (
         <Box bg="gray.1" style={{ aspectRatio: "4 / 5" }} />
       )}
@@ -223,24 +282,32 @@ function RecipeList({
   recipes,
   sort,
   onUnarchive,
+  columns,
 }: {
   recipes: StoredRecipe[];
   sort: CookbookState["sort"];
   onUnarchive: Unarchive;
+  columns: boolean;
 }) {
   return (
-    <Box component="ul" aria-label="Recipes" p={0} m={0} style={{ listStyle: "none" }}>
+    <Box
+      component="ul"
+      aria-label="Recipes"
+      p={0}
+      m={0}
+      style={{ listStyle: "none", ...(columns ? { columns: 3, columnGap: 40 } : {}) }}
+    >
       {letterGroups(recipes, sort).map(({ letter, recipes: group }) => (
         <Fragment key={letter ?? "all"}>
           {letter && (
-            <li>
+            <li style={{ breakAfter: "avoid", breakInside: "avoid" }}>
               <Text component="h3" ff="heading" fs="italic" fz={28} c="linen.6" mt="lg" mb={4}>
                 {letter}
               </Text>
             </li>
           )}
           {group.map((recipe) => (
-            <li key={recipe.id}>
+            <li key={recipe.id} style={{ breakInside: "avoid" }}>
               <RecipeRow recipe={recipe} onUnarchive={onUnarchive} />
             </li>
           ))}

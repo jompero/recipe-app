@@ -42,6 +42,9 @@ import { useLiveRecipes } from "./liveRecipes.ts";
 import { usePageMenu } from "./pageMenu.ts";
 import { PlanDatePicker } from "./PlanDatePicker.tsx";
 import { usePlanDays } from "./usePlanDays.ts";
+import { monthFromParam, monthKey } from "../prototype/month.ts";
+import { PlanMonthPrototype } from "../prototype/PlanMonthPrototype.tsx";
+import { usePrototypeVariant, useWide } from "../prototype/prototypeStore.ts";
 
 /**
  * The Plan (US-5.1, US-5.2): one week, Monday to Sunday, kept live, with the week in the URL.
@@ -87,6 +90,70 @@ export function PlanPage() {
     const day = parseDateKey(date);
     return day ? dayLabel(day) : date;
   };
+
+  // PROTOTYPE (US-10.1): the month view on wide screens.
+  const wide = useWide();
+  const planView = usePrototypeVariant({
+    key: "plan.view",
+    label: "Plan",
+    options: [
+      { value: "titles", label: "Month · titles" },
+      { value: "thumbs", label: "Month · thumbnails" },
+      { value: "week", label: "Week (today)" },
+    ],
+  });
+  if (wide && planView !== "week") {
+    return (
+      <Stack gap="lg">
+        <Stack gap={4} pt="xl" align="center">
+          <Title order={1}>Plan</Title>
+        </Stack>
+        {saveError && (
+          <Alert
+            color="red"
+            title="Couldn't save the change"
+            withCloseButton
+            onClose={() => setSaveError(null)}
+          >
+            {saveError}
+          </Alert>
+        )}
+        <PlanMonthPrototype
+          first={monthFromParam(params.get("month"), today)}
+          onMonth={(month) =>
+            void navigate({ search: month ? `?month=${monthKey(month)}` : "" }, { replace: true })
+          }
+          recipes={recipes.status === "ready" ? recipes.recipes : null}
+          todayKey={todayKey}
+          thumbs={planView === "thumbs"}
+          onAdd={setAddingTo}
+          onMove={(date, entry) => setMoving({ date, entry })}
+          onRemove={(date, entry) => save(removeEntry(date, entry))}
+        />
+        <AddEntrySheet
+          opened={addingTo !== null}
+          dayLabel={addingTo ? labelOf(addingTo) : ""}
+          recipes={recipes.status === "ready" ? recipes.recipes : []}
+          onAdd={(entry) => {
+            if (addingTo) save(addEntry(addingTo, entry));
+            setAddingTo(null);
+          }}
+          onClose={() => setAddingTo(null)}
+        />
+        <PlanDatePicker
+          opened={moving !== null}
+          title="Move to…"
+          start={moving?.date ?? todayKey}
+          selected={moving?.date ?? null}
+          onPick={(to) => {
+            if (moving) save(moveEntry(moving.date, to, moving.entry));
+            setMoving(null);
+          }}
+          onClose={() => setMoving(null)}
+        />
+      </Stack>
+    );
+  }
 
   return (
     <Stack gap="lg">

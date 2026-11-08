@@ -36,6 +36,7 @@ import { dayLabel, toDateKey } from "../plan/week.ts";
 import { LABEL_STYLE } from "../theme.ts";
 import { usePageMenu } from "./pageMenu.ts";
 import { useGroceryList } from "./useGroceryList.ts";
+import { usePrototypeVariant, useWide } from "../prototype/prototypeStore.ts";
 
 type View = "merged" | "recipe";
 const VIEW_KEY = "recipe-app:grocery-view";
@@ -94,8 +95,29 @@ export function GroceryListPage() {
     save(on ? tick(ids) : untick(ids));
   };
 
+  // PROTOTYPE (US-10.1): a narrow column on wide screens; where the amount sits (all sizes).
+  const wide = useWide();
+  const amountAt = usePrototypeVariant({
+    key: "groceries.amount",
+    label: "Amount",
+    options: [
+      { value: "after", label: "potatoes · 2 kg" },
+      { value: "first", label: "2 kg potatoes" },
+      { value: "right", label: "Right edge (today)" },
+    ],
+  });
+  const column = usePrototypeVariant({
+    key: "groceries.column",
+    label: "Column",
+    options: [
+      { value: "560", label: "560px" },
+      { value: "720", label: "720px" },
+      { value: "full", label: "Full (today)" },
+    ],
+  });
+
   return (
-    <Stack gap="lg">
+    <Stack gap="lg" maw={wide && column !== "full" ? Number(column) : undefined} mx="auto">
       <Stack gap={4} pt="xl" align="center">
         <Title order={1}>Grocery list</Title>
         {list?.updatedAt && list.lines.length > 0 && (
@@ -146,6 +168,7 @@ export function GroceryListPage() {
                 {mergeLines(list.lines).map((line) => (
                   <MergedRow
                     key={line.key}
+                    amountAt={amountAt}
                     line={line}
                     ticked={ticked}
                     onTick={(on) => setTicked(line.sources, on)}
@@ -252,11 +275,13 @@ export function GroceryListPage() {
 
 /** One merged line: a checkbox for all its sources, and tap to see (and remove) them. */
 function MergedRow({
+  amountAt,
   line,
   ticked,
   onTick,
   onRemove,
 }: {
+  amountAt: string;
   line: MergedLine;
   ticked: ReadonlySet<string>;
   onTick: (on: boolean) => void;
@@ -287,21 +312,50 @@ function MergedRow({
           aria-expanded={open}
           style={{ flex: 1, minWidth: 0 }}
         >
-          <Group
-            justify="space-between"
-            wrap="nowrap"
-            gap="sm"
-            style={
-              all ? { textDecoration: "line-through", color: "var(--mantine-color-dimmed)" } : {}
-            }
-          >
-            <Text>{line.name}</Text>
-            {line.amount && (
-              <Text c="dimmed" fz="sm" style={{ whiteSpace: "nowrap" }}>
-                {line.amount}
-              </Text>
-            )}
-          </Group>
+          {amountAt === "right" ? (
+            <Group
+              justify="space-between"
+              wrap="nowrap"
+              gap="sm"
+              style={
+                all ? { textDecoration: "line-through", color: "var(--mantine-color-dimmed)" } : {}
+              }
+            >
+              <Text>{line.name}</Text>
+              {line.amount && (
+                <Text c="dimmed" fz="sm" style={{ whiteSpace: "nowrap" }}>
+                  {line.amount}
+                </Text>
+              )}
+            </Group>
+          ) : amountAt === "after" ? (
+            <Text
+              style={
+                all ? { textDecoration: "line-through", color: "var(--mantine-color-dimmed)" } : {}
+              }
+            >
+              {line.name}
+              {line.amount && (
+                <Text component="span" c="dimmed" fz="sm">
+                  {" · "}
+                  {line.amount}
+                </Text>
+              )}
+            </Text>
+          ) : (
+            <Text
+              style={
+                all ? { textDecoration: "line-through", color: "var(--mantine-color-dimmed)" } : {}
+              }
+            >
+              {line.amount && (
+                <Text component="span" c="linen.6" fz="sm" mr={6}>
+                  {line.amount}
+                </Text>
+              )}
+              {line.name}
+            </Text>
+          )}
         </UnstyledButton>
       </Group>
       {open && (
