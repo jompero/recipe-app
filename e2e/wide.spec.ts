@@ -145,3 +145,20 @@ test("US-10.6: a short recipe with a photo fits the screen, so nothing scrolls",
   });
   expect(overflow).toBeLessThanOrEqual(1);
 });
+
+test("US-10.7: the grocery list is a centred 560px column, amounts next to the items", async ({
+  browser,
+}) => {
+  await makeMember(DAVE);
+  const page = await signedInPage(browser, DAVE, "#/groceries");
+  const item = `cream ${String(Date.now())}`;
+  await page.getByRole("textbox", { name: "Add an item" }).fill(`2 dl ${item}`);
+  await page.getByRole("button", { name: "Add" }).click();
+  const row = page.getByRole("listitem", { name: item });
+  await expect(row).toHaveText(`${item} · 2 dl`);
+
+  const box = await row.boundingBox();
+  const viewport = page.viewportSize()!;
+  expect(box!.width).toBeLessThanOrEqual(560);
+  expect(Math.abs(box!.x * 2 + box!.width - viewport.width)).toBeLessThan(4);
+});
