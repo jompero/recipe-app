@@ -42,6 +42,10 @@ function useMenu() {
   return { open, show, close, go };
 }
 
+/** Space under every page: room for the menu button on a phone, a margin on a wide screen. */
+const PHONE_PAGE_BOTTOM = 100;
+const WIDE_PAGE_BOTTOM = 48;
+
 /**
  * The frame for signed-in members. Phones get the one bottom button and the menu overlay; wide
  * screens (iPad landscape, desktop) get the top bar and content capped at CONTENT_MAX_WIDTH.
@@ -59,18 +63,20 @@ export function MemberShell({ children }: { children: ReactNode }) {
   return (
     // --offline-strip: how far the bottom controls (this menu button, the edit form's bar) move up
     // while the offline strip shows under them. --top-bar: how far sticky things on a page sit
-    // below the top bar.
+    // below the top bar. --page-bottom: the space under every page, which the recipe page's sticky
+    // photo sizes itself against so it never moves.
     <AppShell
       padding="md"
       header={topBar ? { height: TOP_BAR_HEIGHT } : undefined}
       style={{
         "--offline-strip": `${String(offline ? OFFLINE_STRIP_HEIGHT : 0)}px`,
         "--top-bar": `${String(topBar ? TOP_BAR_HEIGHT : 0)}px`,
+        "--page-bottom": `${String(wide ? WIDE_PAGE_BOTTOM : PHONE_PAGE_BOTTOM)}px`,
       }}
     >
       {topBar && <TopBar page={page} />}
-      {/* Bottom padding keeps the last lines of a page clear of the menu button. */}
-      <AppShell.Main pb={wide ? 48 : 100}>
+      {/* On a phone, the bottom padding keeps the last lines of a page clear of the menu button. */}
+      <AppShell.Main pb="var(--page-bottom)">
         <PageMenuContext.Provider value={setPage}>
           <Box maw={wide ? CONTENT_MAX_WIDTH : undefined} mx="auto">
             {children}

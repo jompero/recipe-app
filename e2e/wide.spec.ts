@@ -115,8 +115,33 @@ test("US-10.6: a recipe is a spread, and the ingredients stay in view while the 
   expect(ingredientsBox!.x + ingredientsBox!.width).toBeLessThanOrEqual(methodBox!.x);
   expect(Math.abs(ingredientsBox!.y - methodBox!.y)).toBeLessThan(40);
 
-  await page.getByText("Step 30:").scrollIntoViewIfNeeded();
+  // Scrolled to the very end, the photo hasn't moved and the ingredients are still in view.
+  await page.mouse.wheel(0, 20_000);
   await expect(page.getByText("Step 30:")).toBeInViewport();
   await expect(ingredients).toBeInViewport();
-  await expect(page.getByRole("presentation").first()).toBeInViewport();
+  const photoAtEnd = await page.getByRole("presentation").first().boundingBox();
+  expect(Math.abs(photoAtEnd!.y - photoBox!.y)).toBeLessThan(1);
+  expect(photoAtEnd!.height).toBeCloseTo(photoBox!.height, 0);
+});
+
+test("US-10.6: a short recipe with a photo fits the screen, so nothing scrolls", async ({
+  browser,
+}) => {
+  await makeMember(DAVE);
+  await putDoc("recipes/e2e-toast", {
+    ...recipe("Toast", ["1 slice bread"]),
+    thumbnail: PHOTO,
+    instructions: [{ text: "Toast the bread." }],
+  });
+  const page = await signedInPage(browser, DAVE, "#/recipe/e2e-toast");
+  await expect(page.getByRole("list", { name: "Method" })).toBeVisible();
+  const overflow = await page.evaluate(() => {
+    const root = (
+      globalThis as unknown as {
+        document: { documentElement: { scrollHeight: number; clientHeight: number } };
+      }
+    ).document.documentElement;
+    return root.scrollHeight - root.clientHeight;
+  });
+  expect(overflow).toBeLessThanOrEqual(1);
 });
