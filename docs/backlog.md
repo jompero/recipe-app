@@ -90,7 +90,7 @@ Left for later:
 * **Android is untested:** nobody in the group has one. Check sign-in, photos and Wake Lock if anyone ever uses one.
 
 Found in the smoke test on the live site (2026-11-07), left for later. No code changes in Epic 7. Input zoom, opening on the menu and the Roll button were fixed in Epic 9:
-* **Layout on iPad and desktop** needs a look; the app was designed for phones first.
+* **Layout on iPad and desktop** needs a look; the app was designed for phones first. Picked up as Epic 10 (below).
 
 ---
 
@@ -121,3 +121,22 @@ Popup sign-in works in the installed app, so ADR-0003 stands. The service worker
 Left for later:
 * **Android:** the icon is declared maskable, but nothing has been tested on Android.
 * **Splash screens** (`apple-touch-startup-image`): iOS shows a blank white screen for a moment at launch instead.
+
+---
+
+## Epic 10: Wide Layouts (iPad Landscape and Desktop)
+**Goal:** Make the app use an iPad in landscape and a computer screen well, without changing the phone layout.
+
+Specified in [`.scratch/EPIC-10-wide-layouts/spec.md`](../.scratch/EPIC-10-wide-layouts/spec.md) (grilled 2026-11-08). In short:
+* One wide layout from Mantine's `md` (about 992px) up, with a sticky top bar instead of the menu button and content capped at about 1200px. Phones keep the bottom button.
+* Layouts were prototyped first on a throwaway branch (US-10.1, done 2026-11-08); the picks are in the spec.
+* The build stories then cover:
+  * the Data page's spacing
+  * the cookbook grid (320px thumbnails kept)
+  * the recipe page in two columns
+  * the grocery list column
+  * the roller's week grid
+* Three features come last:
+  * the Plan's month view (wide only)
+  * drag and drop on the Plan (all sizes, long-press on phones)
+  * grocery aisle sections from a static table
