@@ -33,7 +33,7 @@ The owner on their iPhone, and one member on theirs, on the live site `https://r
 
 ## Update banner
 
-- [ ] When the agent merges a small change (the docs sweep 08, or any fix issue), keep the installed app open, or bring it back from the background a few minutes after the deploy: "Update ready · Reload" appears. Tap Reload: the app reloads and keeps working.
+- [x] When the agent merges a small change (the docs sweep 08, or any fix issue), keep the installed app open, or bring it back from the background a few minutes after the deploy: "Update ready · Reload" appears. Tap Reload: the app reloads and keeps working.
 
 ## Chrome on iOS (member's or owner's phone)
 
@@ -47,4 +47,4 @@ The owner on their iPhone, and one member on theirs, on the live site `https://r
 
 **2026-11-08, owner and one member, iPhones on the live site:**
 - **Passed:** install, everyday use, offline and Chrome on iOS.
-- **Update banner:** not checked when this was written. It needs a new deploy while the app is open, and that deploy is the docs sweep (08). If it fails there, it becomes a numbered fix issue.
+- **Update banner:** passed on 2026-11-08, on the deploy of PR #65 (which changed the manifest `id`). With the installed app open, "Update ready · Reload" appeared, and Reload switched to the new version and the app kept working. So the new manifest `id` needed no reinstall.
