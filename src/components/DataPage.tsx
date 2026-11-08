@@ -3,6 +3,7 @@ import {
   Alert,
   Badge,
   Button,
+  Divider,
   Group,
   List,
   Modal,
@@ -26,6 +27,7 @@ import type { IngredientLine } from "../parsing/types.ts";
 import { NeedsConnection } from "./NeedsConnection.tsx";
 import { usePageMenu } from "./pageMenu.ts";
 import { usePhoneOffline } from "./useOffline.ts";
+import { useWide } from "./useWide.ts";
 
 function plural(count: number, one: string, many: string): string {
   return `${count} ${count === 1 ? one : many}`;
@@ -283,16 +285,25 @@ function PepperplateImport() {
   );
 }
 
-/** Import, export and restore (Epic 2), and the Recipe bookmarklet (US-4.4). */
+/**
+ * Import, export and restore (Epic 2), and the Recipe bookmarklet (US-4.4).
+ * Short centred dividers part the sections; wide screens get a 720px column (US-10.3).
+ */
 export function DataPage() {
   usePageMenu("Data");
+  const wide = useWide();
+  const divider = <Divider mx={wide ? 120 : 40} />;
   return (
-    <Stack gap="lg">
-      <Title order={2}>Data</Title>
+    <Stack gap="xl" pt="xl" maw={wide ? 720 : undefined} mx="auto">
+      <Title order={1}>Data</Title>
       <InstallSection />
+      {divider}
       <PepperplateImport />
+      {divider}
       <ExportSection />
+      {divider}
       <RestoreSection />
+      {divider}
       <BookmarkletSection />
     </Stack>
   );
