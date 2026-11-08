@@ -28,7 +28,7 @@ Variants:
 - [x] Every variant renders on wide screens in desktop Chrome (the owner checked at 1552px).
 - [x] The owner has picked a variant for every row. The picks are written under "Prototype picks" in the spec and into the affected issues (02–04, 06–09).
 - [x] 320px thumbnails won, so 05 is set to `wontfix` with a note.
-- [ ] The prototype branch is pushed (for reference) but not merged.
+- [x] The prototype branch is pushed (for reference) but not merged.
 
 ## Comments
 
