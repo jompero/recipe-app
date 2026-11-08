@@ -83,3 +83,40 @@ test("US-10.4: the cookbook shows rows of ~210px cards and the A–Z list in col
   await page.getByRole("radio", { name: "List" }).click();
   await expect(page.getByRole("list", { name: "Recipes" })).toHaveCSS("column-count", "3");
 });
+
+/** A 1×1 PNG: enough for the recipe page to lay out a photo. */
+const PHOTO =
+  "data:image/png;base64,iVBORw0KGgoAAAANSUhEUgAAAAEAAAABCAQAAAC1HAwCAAAAC0lEQVR42mNkYAAAAAYAAjCB0C8AAAAASUVORK5CYII=";
+
+test("US-10.6: a recipe is a spread, and the ingredients stay in view while the method scrolls", async ({
+  browser,
+}) => {
+  await makeMember(DAVE);
+  const long = {
+    ...recipe("Slow Stew", ["1 kg beef", "2 onions", "3 carrots"]),
+    description: "A long, slow stew.",
+    thumbnail: PHOTO,
+    instructions: Array.from({ length: 30 }, (_, i) => ({
+      text: `Step ${String(i + 1)}: stir, taste and wait a little longer before the next step.`,
+    })),
+  };
+  await putDoc("recipes/e2e-slow-stew", long);
+  const page = await signedInPage(browser, DAVE, "#/recipe/e2e-slow-stew");
+  const ingredients = page.getByRole("list", { name: "Ingredients" });
+  const method = page.getByRole("list", { name: "Method" });
+  await expect(method).toBeVisible();
+
+  const [photoBox, ingredientsBox, methodBox] = await Promise.all([
+    page.getByRole("presentation").first().boundingBox(),
+    ingredients.boundingBox(),
+    method.boundingBox(),
+  ]);
+  expect(photoBox!.x + photoBox!.width).toBeLessThanOrEqual(ingredientsBox!.x);
+  expect(ingredientsBox!.x + ingredientsBox!.width).toBeLessThanOrEqual(methodBox!.x);
+  expect(Math.abs(ingredientsBox!.y - methodBox!.y)).toBeLessThan(40);
+
+  await page.getByText("Step 30:").scrollIntoViewIfNeeded();
+  await expect(page.getByText("Step 30:")).toBeInViewport();
+  await expect(ingredients).toBeInViewport();
+  await expect(page.getByRole("presentation").first()).toBeInViewport();
+});

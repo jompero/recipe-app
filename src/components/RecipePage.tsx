@@ -27,6 +27,7 @@ import { PlanDatePicker } from "./PlanDatePicker.tsx";
 import { QuietToggle } from "./QuietToggle.tsx";
 import { useTicks } from "./useTicks.ts";
 import { useWakeLock } from "./useWakeLock.ts";
+import { useWide } from "./useWide.ts";
 
 function isHeader(line: IngredientLine | InstructionLine): line is SectionHeader {
   return "header" in line;
@@ -194,7 +195,7 @@ function usePhoto(recipe: StoredRecipe): string | null {
   return full?.id === recipe.id ? full.url : recipe.thumbnail;
 }
 
-/** One recipe on one scrolling page, for cooking from. */
+/** The recipe the address names, or "not found". */
 export function RecipePage() {
   const { id } = useParams();
   const live = useLiveRecipes();
@@ -216,6 +217,28 @@ export function RecipePage() {
   return <Recipe recipe={recipe} />;
 }
 
+/** The golden-ratio share of the width the photo takes in the wide spread (US-10.1 pick "N"). */
+const SPREAD_PHOTO = "38.2%";
+
+/**
+ * Sticky below the top bar, and scrolling on its own when taller than the screen, so the photo
+ * and the ingredients stay in view while the method scrolls (wide layout only).
+ */
+const STICKY = {
+  position: "sticky",
+  top: "calc(var(--top-bar, 0px) + var(--mantine-spacing-md))",
+  alignSelf: "flex-start",
+  maxHeight: "calc(100dvh - var(--top-bar, 0px) - 2 * var(--mantine-spacing-md))",
+  overflowY: "auto",
+} as const;
+
+const sectionLabel = { ...LABEL_STYLE, fontSize: 11 } as const;
+
+/**
+ * One recipe, for cooking from. On a phone, one scrolling column. On a wide screen (US-10.6), the
+ * Nordic cookbook spread: the photo on the left, then the title above ingredients and method side
+ * by side; without a photo, the title above the two columns.
+ */
 function Recipe({ recipe }: { recipe: StoredRecipe }) {
   const meta = [
     ["Serves", recipe.yield],
@@ -235,25 +258,10 @@ function Recipe({ recipe }: { recipe: StoredRecipe }) {
   // Scaling is for this cook only: never saved.
   const [scale, setScale] = useState<Scale>("1");
   const stepNumbers = numberSteps(recipe.instructions);
+  const wide = useWide();
 
-  return (
-    <Stack gap={0} maw={640} mx="auto">
-      {photo && (
-        // Full-bleed: out past the page padding on both sides. The height follows the photo's
-        // own shape, capped so a tall photo doesn't fill the screen, and never collapses.
-        <Image
-          src={photo}
-          alt=""
-          fit="cover"
-          mx="calc(var(--mantine-spacing-md) * -1)"
-          mt="calc(var(--mantine-spacing-md) * -1)"
-          w="calc(100% + 2 * var(--mantine-spacing-md))"
-          h="auto"
-          mah="70vh"
-          mih={180}
-          style={{ maxWidth: "none" }}
-        />
-      )}
+  const header = (
+    <>
       {recipe.archived && (
         <Text ta="center" c="dimmed" pt="xl" style={LABEL_STYLE}>
           Archived
@@ -264,9 +272,7 @@ function Recipe({ recipe }: { recipe: StoredRecipe }) {
           {archive.error}
         </Alert>
       )}
-      {archive.confirm}
-      {addToPlan.ui}
-      <Title order={1} pt={recipe.archived ? "xs" : "xl"} fz={28} lh={1.25}>
+      <Title order={1} pt={recipe.archived ? "xs" : "xl"} fz={wide ? 32 : 28} lh={1.25}>
         {recipe.title}
       </Title>
       {recipe.source && (
@@ -281,7 +287,16 @@ function Recipe({ recipe }: { recipe: StoredRecipe }) {
         </Text>
       )}
       {recipe.description && (
-        <Text ta="center" fs="italic" fz={18} lh={1.5} mt="lg" style={{ whiteSpace: "pre-line" }}>
+        <Text
+          ta="center"
+          fs="italic"
+          fz={18}
+          lh={1.5}
+          mt="lg"
+          maw={wide ? 620 : undefined}
+          mx="auto"
+          style={{ whiteSpace: "pre-line" }}
+        >
           {recipe.description}
         </Text>
       )}
@@ -291,6 +306,8 @@ function Recipe({ recipe }: { recipe: StoredRecipe }) {
           gap={28}
           mt="xl"
           pt="sm"
+          maw={wide ? 520 : undefined}
+          mx="auto"
           style={{ borderTop: "1px solid currentColor" }}
         >
           {meta.map(([label, value]) => (
@@ -310,9 +327,13 @@ function Recipe({ recipe }: { recipe: StoredRecipe }) {
           {recipe.tags.join(" · ")}
         </Text>
       )}
+    </>
+  );
 
-      <Group justify="space-between" align="baseline" mt={40} mb="sm">
-        <Text component="h2" fw={400} m={0} style={{ ...LABEL_STYLE, fontSize: 11 }}>
+  const ingredients = (
+    <>
+      <Group justify="space-between" align="baseline" mb="sm">
+        <Text component="h2" fw={400} m={0} style={sectionLabel}>
           Ingredients
         </Text>
         <QuietToggle label="Scale" value={scale} onChange={setScale} options={SCALES} />
@@ -338,7 +359,12 @@ function Recipe({ recipe }: { recipe: StoredRecipe }) {
           ),
         )}
       </Box>
-      <Text component="h2" mt={40} mb="sm" fw={400} style={{ ...LABEL_STYLE, fontSize: 11 }}>
+    </>
+  );
+
+  const method = (
+    <>
+      <Text component="h2" mt={0} mb="sm" fw={400} style={sectionLabel}>
         Method
       </Text>
       <Box component="ol" aria-label="Method" p={0} m={0} style={{ listStyle: "none" }}>
@@ -375,6 +401,81 @@ function Recipe({ recipe }: { recipe: StoredRecipe }) {
           );
         })}
       </Box>
+    </>
+  );
+
+  const dialogs = (
+    <>
+      {archive.confirm}
+      {addToPlan.ui}
+    </>
+  );
+
+  if (!wide) {
+    return (
+      <Stack gap={0} maw={640} mx="auto" data-layout="column">
+        {photo && (
+          // Full-bleed: out past the page padding on both sides. The height follows the photo's
+          // own shape, capped so a tall photo doesn't fill the screen, and never collapses.
+          <Image
+            src={photo}
+            alt=""
+            fit="cover"
+            mx="calc(var(--mantine-spacing-md) * -1)"
+            mt="calc(var(--mantine-spacing-md) * -1)"
+            w="calc(100% + 2 * var(--mantine-spacing-md))"
+            h="auto"
+            mah="70vh"
+            mih={180}
+            style={{ maxWidth: "none" }}
+          />
+        )}
+        {dialogs}
+        {header}
+        <Box mt={40}>{ingredients}</Box>
+        <Box mt={40}>{method}</Box>
+      </Stack>
+    );
+  }
+
+  if (photo) {
+    return (
+      <Group align="flex-start" wrap="nowrap" gap={48} data-layout="spread">
+        {dialogs}
+        <Box w={SPREAD_PHOTO} style={{ ...STICKY, flex: "none", overflow: "hidden" }}>
+          <Image
+            src={photo}
+            alt=""
+            fit="cover"
+            w="100%"
+            h="calc(100dvh - var(--top-bar, 0px) - 2 * var(--mantine-spacing-md))"
+          />
+        </Box>
+        <Box style={{ flex: 1, minWidth: 0 }}>
+          {header}
+          <Group align="flex-start" wrap="nowrap" gap={36} mt={48}>
+            <Box w="42%" style={{ ...STICKY, flex: "none" }}>
+              {ingredients}
+            </Box>
+            <Box style={{ flex: 1, minWidth: 0 }}>{method}</Box>
+          </Group>
+        </Box>
+      </Group>
+    );
+  }
+
+  return (
+    <Stack gap={0} data-layout="columns">
+      {dialogs}
+      <Box maw={760} mx="auto">
+        {header}
+      </Box>
+      <Group align="flex-start" wrap="nowrap" gap={56} mt={48} maw={1060} mx="auto" w="100%">
+        <Box w={360} style={{ ...STICKY, flex: "none" }}>
+          {ingredients}
+        </Box>
+        <Box style={{ flex: 1, minWidth: 0 }}>{method}</Box>
+      </Group>
     </Stack>
   );
 }
