@@ -221,6 +221,14 @@ export function RecipePage() {
 const SPREAD_PHOTO = "38.2%";
 
 /**
+ * The screen height a sticky column can use: from where it sticks (below the top bar) down to the
+ * page's bottom padding. No taller, or the page scrolls further than its content and the sticky
+ * column is pushed up at the end (the photo "moving a little", found in the US-10.6 check).
+ */
+const STICKY_HEIGHT =
+  "calc(100dvh - var(--top-bar, 0px) - var(--mantine-spacing-md) - var(--page-bottom, 0px))";
+
+/**
  * Sticky below the top bar, and scrolling on its own when taller than the screen, so the photo
  * and the ingredients stay in view while the method scrolls (wide layout only).
  */
@@ -228,7 +236,7 @@ const STICKY = {
   position: "sticky",
   top: "calc(var(--top-bar, 0px) + var(--mantine-spacing-md))",
   alignSelf: "flex-start",
-  maxHeight: "calc(100dvh - var(--top-bar, 0px) - 2 * var(--mantine-spacing-md))",
+  maxHeight: STICKY_HEIGHT,
   overflowY: "auto",
 } as const;
 
@@ -443,13 +451,7 @@ function Recipe({ recipe }: { recipe: StoredRecipe }) {
       <Group align="flex-start" wrap="nowrap" gap={48} data-layout="spread">
         {dialogs}
         <Box w={SPREAD_PHOTO} style={{ ...STICKY, flex: "none", overflow: "hidden" }}>
-          <Image
-            src={photo}
-            alt=""
-            fit="cover"
-            w="100%"
-            h="calc(100dvh - var(--top-bar, 0px) - 2 * var(--mantine-spacing-md))"
-          />
+          <Image src={photo} alt="" fit="cover" w="100%" h={STICKY_HEIGHT} />
         </Box>
         <Box style={{ flex: 1, minWidth: 0 }}>
           {header}

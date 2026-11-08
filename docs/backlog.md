@@ -140,3 +140,6 @@ Specified in [`.scratch/EPIC-10-wide-layouts/spec.md`](../.scratch/EPIC-10-wide-
   * the Plan's month view (wide only)
   * drag and drop on the Plan (all sizes, long-press on phones)
   * grocery aisle sections from a static table
+
+Left for later:
+* **The recipe spread can feel cramped at 1024px** (iPad Mini landscape) when there's a photo: the photo takes 38.2%, leaving about 245px for the ingredients and 300px for the method. Options if it bothers anyone: a smaller photo share below about 1180px, the method under the ingredients at that width, or the photo-less two-column arrangement there. Found in the US-10.6 check (2026-11-08).
