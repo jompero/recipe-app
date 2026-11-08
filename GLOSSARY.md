@@ -58,3 +58,13 @@ _Avoid_: Update prompt, refresh toast
 **Offline strip**:
 The slim line along the bottom edge, under the menu button, saying the app is working from its offline copy and changes will sync later. It goes away by itself.
 _Avoid_: Offline banner, connection warning
+
+## Bigger screens
+
+**Wide layout**:
+How the app looks from about 992px wide up (Mantine's `md` breakpoint): an iPad in landscape or a computer. The top bar replaces the menu button, and pages use the extra room (e.g. the Plan's month view). Below that, every screen gets the phone layout.
+_Avoid_: Desktop mode, tablet layout
+
+**Top bar**:
+The bar along the top in the wide layout: the sections on the left, the current page's actions on the right. Phones have the menu button instead.
+_Avoid_: Header, navbar
