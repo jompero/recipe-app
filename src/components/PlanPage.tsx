@@ -604,7 +604,13 @@ function EntryContent({
       </Group>
     );
     return recipe ? (
-      <UnstyledButton component={Link} to={`/recipe/${recipe.id}`} w="100%" display="block">
+      <UnstyledButton
+        component={Link}
+        to={`/recipe/${recipe.id}`}
+        w="100%"
+        display="block"
+        draggable={false}
+      >
         {line}
       </UnstyledButton>
     ) : (
@@ -627,7 +633,7 @@ function EntryContent({
     );
   }
   return (
-    <UnstyledButton component={Link} to={`/recipe/${recipe.id}`} w="100%">
+    <UnstyledButton component={Link} to={`/recipe/${recipe.id}`} w="100%" draggable={false}>
       <Group gap="sm" wrap="nowrap">
         {recipe.thumbnail ? (
           <Image src={recipe.thumbnail} alt="" w={THUMB} h={THUMB} fit="cover" radius="xs" />

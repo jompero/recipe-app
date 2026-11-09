@@ -26,6 +26,7 @@
     "deploy:rules": "firebase deploy --only firestore:rules --project prod"
   },
   "dependencies": {
+    "@dnd-kit/collision": "0.5.3",
     "@dnd-kit/dom": "0.5.3",
     "@dnd-kit/react": "0.5.3",
     "@fontsource-variable/cormorant": "^5.3.0",

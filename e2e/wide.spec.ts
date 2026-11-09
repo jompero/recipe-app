@@ -53,6 +53,18 @@ test("US-10.2: content is capped at 1200px on a wide screen", async ({ browser }
   expect(Math.abs((box?.x ?? 0) * 2 + (box?.width ?? 0) - 1600)).toBeLessThan(4);
 });
 
+test("US-10.3: the Data page is a centred 720px column", async ({ browser }) => {
+  await makeMember(DAVE);
+  const page = await signedInPage(browser, DAVE, "#/data");
+  const column = page.getByRole("heading", { level: 1, name: "Data" }).locator("..");
+  await expect(column.getByRole("heading", { name: "Import from Pepperplate" })).toBeVisible();
+
+  const box = await column.boundingBox();
+  const viewport = page.viewportSize()!;
+  expect(box!.width).toBeLessThanOrEqual(720);
+  expect(Math.abs(box!.x * 2 + box!.width - viewport.width)).toBeLessThan(4);
+});
+
 test("US-10.4: the cookbook shows rows of ~210px cards and the A–Z list in columns", async ({
   browser,
 }) => {
@@ -224,6 +236,7 @@ test("US-10.9: the Plan opens on the month, and a day's + adds to it", async ({ 
 test("US-10.10: an entry dragged to another day in the month moves there", async ({ browser }) => {
   await makeMember(DAVE);
   await putDoc("recipes/e2e-drag-tart", recipe("Drag Tart", ["1 egg"]));
+  await putDoc("menu_days/2031-04-25", { entries: [], updatedAt: new Date() });
   await putDoc("menu_days/2031-04-08", {
     entries: [{ id: "e2e-month-drag", recipeId: "e2e-drag-tart" }],
     updatedAt: new Date(),
@@ -234,7 +247,7 @@ test("US-10.10: an entry dragged to another day in the month moves there", async
   const tart = tuesday.getByRole("link", { name: "Drag Tart" });
   await expect(tart).toBeVisible();
 
-  await dragTo(page, tart, friday);
+  await dragTo(page, tart, friday, friday);
   await expect(friday.getByRole("link", { name: "Drag Tart" })).toBeVisible();
   await expect(tuesday.getByRole("link")).toHaveCount(0);
 });
