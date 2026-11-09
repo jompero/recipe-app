@@ -1,4 +1,5 @@
 import {
+  calendarWeeks,
   addDays,
   dayLabel,
   mondayOf,
@@ -96,5 +97,63 @@ describe("labels", () => {
   test("a day", () => {
     expect(dayLabel(local(2026, 11, 4))).toBe("Wed 4 Nov");
     expect(dayLabel(local(2026, 11, 8))).toBe("Sun 8 Nov");
+  });
+});
+
+describe("calendarWeeks", () => {
+  test("a range starting mid-week fills its week from Monday to Sunday", () => {
+    expect(calendarWeeks("2026-11-04", "2026-11-06")).toEqual([
+      [
+        "2026-11-02",
+        "2026-11-03",
+        "2026-11-04",
+        "2026-11-05",
+        "2026-11-06",
+        "2026-11-07",
+        "2026-11-08",
+      ],
+    ]);
+  });
+
+  test("a range over two weeks gives two rows", () => {
+    const weeks = calendarWeeks("2026-11-06", "2026-11-12");
+    expect(weeks).toHaveLength(2);
+    expect(weeks[0]![0]).toBe("2026-11-02");
+    expect(weeks[1]![6]).toBe("2026-11-15");
+  });
+
+  test("a single day is one week", () => {
+    expect(calendarWeeks("2026-11-08", "2026-11-08")).toEqual([
+      [
+        "2026-11-02",
+        "2026-11-03",
+        "2026-11-04",
+        "2026-11-05",
+        "2026-11-06",
+        "2026-11-07",
+        "2026-11-08",
+      ],
+    ]);
+  });
+
+  test("weeks across a clock change and a new year keep seven days each", () => {
+    const weeks = calendarWeeks("2026-10-22", "2027-01-02");
+    expect(weeks.every((week) => week.length === 7)).toBe(true);
+    expect(weeks[0]!.at(-1)).toBe("2026-10-25"); // clocks go back in Helsinki that Sunday
+    expect(weeks[1]![0]).toBe("2026-10-26");
+    expect(weeks.at(-1)).toEqual([
+      "2026-12-28",
+      "2026-12-29",
+      "2026-12-30",
+      "2026-12-31",
+      "2027-01-01",
+      "2027-01-02",
+      "2027-01-03",
+    ]);
+  });
+
+  test("a backwards range or a non-date is empty", () => {
+    expect(calendarWeeks("2026-11-08", "2026-11-01")).toEqual([]);
+    expect(calendarWeeks("soon", "2026-11-01")).toEqual([]);
   });
 });

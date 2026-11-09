@@ -12,8 +12,9 @@ window.scrollTo = () => {};
 
 Object.defineProperty(window, "matchMedia", {
   writable: true,
-  // A phone with a mouse, unless a test changes it (src/test-utils/media.ts).
-  value: vi.fn().mockImplementation((query: string) => ({
+  // A phone with a mouse, unless a test changes it (src/test-utils/media.ts). A plain function,
+  // not a vi.fn: a test that spies on it and restores the spy then gets this back unchanged.
+  value: (query: string) => ({
     matches: mediaMatches(query),
     media: query,
     onchange: null,
@@ -22,7 +23,7 @@ Object.defineProperty(window, "matchMedia", {
     addEventListener: vi.fn(),
     removeEventListener: vi.fn(),
     dispatchEvent: vi.fn(),
-  })),
+  }),
 });
 
 if (!("fonts" in document)) {
