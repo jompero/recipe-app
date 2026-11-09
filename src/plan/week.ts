@@ -66,3 +66,19 @@ export function weekLabel(monday: Date): string {
 export function dayLabel(date: Date): string {
   return `${WEEKDAYS[date.getDay()]} ${String(date.getDate())} ${MONTHS[date.getMonth()]}`;
 }
+
+/**
+ * The Monday-to-Sunday weeks covering `first` to `last` (date keys, both included), as date keys:
+ * from the Monday on or before `first` to the Sunday on or after `last`. Empty if either isn't a
+ * date or `last` comes before `first`. Lays out the roller's week grid (US-10.8).
+ */
+export function calendarWeeks(first: string, last: string): string[][] {
+  const start = parseDateKey(first);
+  const end = parseDateKey(last);
+  if (!start || !end || end < start) return [];
+  const weeks: string[][] = [];
+  for (let monday = mondayOf(start); monday <= end; monday = addDays(monday, 7)) {
+    weeks.push(weekDays(monday).map(toDateKey));
+  }
+  return weeks;
+}

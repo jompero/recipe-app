@@ -4,6 +4,7 @@ import type { Session } from "../data/auth.ts";
 import type { PlanDays } from "../data/menu.ts";
 import type { StoredRecipe } from "../data/recipes.ts";
 import { storedRecipe } from "../test-utils/recipeFixture.ts";
+import { setWideScreen } from "../test-utils/media.ts";
 import { renderApp, screen } from "../test-utils/renderApp.tsx";
 import { ROLL_STORAGE_KEY } from "./RollPage.tsx";
 
@@ -269,4 +270,39 @@ test("the Plan's menu opens the roller on the week on screen", async () => {
 
   expect(router.state.location.pathname).toBe("/plan/roll");
   expect(screen.getByLabelText("From")).toHaveValue("2026-11-16");
+});
+
+describe("on a wide screen (US-10.8)", () => {
+  beforeEach(() => setWideScreen());
+
+  test("the days are a Monday-to-Sunday grid; Lock and Skip work from a cell", async () => {
+    openRoller();
+    const grid = screen.getByLabelText("Rolled days");
+    expect(within(grid).getAllByRole("region")).toHaveLength(7);
+    expect(grid.children).toHaveLength(7);
+
+    await userEvent.click(within(day("Mon 2 Nov")).getByRole("button", { name: "Lock Mon 2 Nov" }));
+    await userEvent.click(within(day("Tue 3 Nov")).getByRole("button", { name: "Skip Tue 3 Nov" }));
+    fake.random.mockReturnValue(0.99);
+    await rollAgain();
+    const after = picks();
+    expect(after[0]).toBe("Pasta");
+    expect(after[1]).toBe("Skipped");
+  });
+
+  test("the dates and the buttons share one sticky bar", () => {
+    openRoller();
+    const actions = screen.getByRole("group", { name: "Roll actions" });
+    expect(within(actions).getByLabelText("From")).toBeInTheDocument();
+    expect(within(actions).getByRole("button", { name: "Save" })).toBeInTheDocument();
+    expect(actions).toHaveStyle({ position: "sticky", top: "var(--top-bar, 0px)" });
+  });
+
+  test("a range longer than a week wraps onto a second row; days outside it are blank", () => {
+    openRoller();
+    fireEvent.change(screen.getByLabelText("To"), { target: { value: "2026-11-10" } });
+    const grid = screen.getByLabelText("Rolled days");
+    expect(within(grid).getAllByRole("region")).toHaveLength(9);
+    expect(grid.children).toHaveLength(14);
+  });
 });

@@ -162,3 +162,32 @@ test("US-10.7: the grocery list is a centred 560px column, amounts next to the i
   expect(box!.width).toBeLessThanOrEqual(560);
   expect(Math.abs(box!.x * 2 + box!.width - viewport.width)).toBeLessThan(4);
 });
+
+test("US-10.8: the roller is a week grid that wraps for a longer range", async ({ browser }) => {
+  await makeMember(DAVE);
+  for (const title of ["Roll Pasta", "Roll Soup", "Roll Salad", "Roll Tacos"]) {
+    await putDoc(`recipes/e2e-${title.replace(" ", "-").toLowerCase()}`, recipe(title, ["1 egg"]));
+  }
+  const page = await signedInPage(browser, DAVE, "#/plan/roll?week=2026-11-02");
+  // A roll from an earlier test in this window would be kept; start from a fresh one.
+  const grid = page.getByLabel("Rolled days");
+  const days = grid.getByRole("region");
+  await expect(days).toHaveCount(7);
+  const tops = await days.evaluateAll((cells) =>
+    cells.map((cell) => Math.round((cell as unknown as { offsetTop: number }).offsetTop)),
+  );
+  expect(new Set(tops).size).toBe(1);
+
+  await page.getByLabel("To").fill("2026-11-10");
+  await expect(days).toHaveCount(9);
+  const rows = await days.evaluateAll((cells) =>
+    cells.map((cell) => Math.round((cell as unknown as { offsetTop: number }).offsetTop)),
+  );
+  expect(new Set(rows).size).toBe(2);
+
+  await grid.getByRole("button", { name: "Lock Mon 2 Nov" }).click();
+  await expect(grid.getByRole("button", { name: "Lock Mon 2 Nov" })).toHaveAttribute(
+    "aria-pressed",
+    "true",
+  );
+});

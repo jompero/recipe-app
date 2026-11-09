@@ -32,6 +32,7 @@ import {
 import { random } from "../plan/random.ts";
 import {
   addDays,
+  calendarWeeks,
   dayLabel,
   mondayOf,
   parseDateKey,
@@ -42,6 +43,7 @@ import { LABEL_STYLE } from "../theme.ts";
 import { useLiveRecipes } from "./liveRecipes.ts";
 import { usePageMenu } from "./pageMenu.ts";
 import { usePlanDays } from "./usePlanDays.ts";
+import { useWide } from "./useWide.ts";
 
 /** Where the unsaved roll is kept, so looking at a recipe and coming back doesn't lose it. */
 export const ROLL_STORAGE_KEY = "plan.roll";
@@ -157,64 +159,150 @@ export function RollPage() {
 
   const recipeById = new Map((recipes ?? []).map((recipe) => [recipe.id, recipe]));
   const chips = recipes ? tagChips(recipes, false) : [];
+  const wide = useWide();
+
+  const title = (
+    <Stack gap={4} pt="xl" align="center">
+      <Title order={1}>Roll</Title>
+      <Text c="dimmed" fs="italic" ta="center">
+        Lock the meals you like, roll the rest again.
+      </Text>
+    </Stack>
+  );
+  const dates = (
+    <>
+      <TextInput
+        type="date"
+        label="From"
+        value={roll.first}
+        onChange={(event) => setRange(event.currentTarget.value, roll.last, "first")}
+      />
+      <TextInput
+        type="date"
+        label="To"
+        value={roll.last}
+        onChange={(event) => setRange(roll.first, event.currentTarget.value, "last")}
+      />
+    </>
+  );
+  const tags = chips.length > 0 && (
+    // Side-scrolling on a phone; wrapping onto lines on a wide screen.
+    <Group
+      role="group"
+      aria-label="Tags"
+      gap={6}
+      wrap={wide ? "wrap" : "nowrap"}
+      style={wide ? undefined : { overflowX: "auto" }}
+      pb={4}
+    >
+      {chips.map((tag) => (
+        <Chip
+          key={tag}
+          value={tag}
+          size="xs"
+          checked={roll.tags.includes(tag)}
+          onChange={(on) =>
+            setRoll({
+              ...roll,
+              tags: on ? [...roll.tags, tag] : roll.tags.filter((t) => t !== tag),
+            })
+          }
+          styles={{ label: { flex: "none" } }}
+        >
+          {tag}
+        </Chip>
+      ))}
+    </Group>
+  );
+  const noPool = recipes && pool.length === 0 && (
+    <Text c="dimmed" fs="italic" ta="center">
+      No recipes have these tags.
+    </Text>
+  );
+  const buttons = (
+    <>
+      <Button variant="outline" onClick={rollAgain} disabled={planned === null || shuffling}>
+        Roll
+      </Button>
+      <Button onClick={save} disabled={additions.length === 0 || shuffling}>
+        Save
+      </Button>
+      <Button variant="subtle" onClick={finish}>
+        Discard
+      </Button>
+    </>
+  );
+  /** What a rolled day shows: its row, what's planned already, and a title while shuffling. */
+  const dayProps = (row: RollRow, index: number) => ({
+    row,
+    label: labelOf(row.date),
+    existing: plan.status === "ready" ? (plan.days[row.date] ?? []) : [],
+    recipeById,
+    shuffleTitle:
+      shuffling && row.state === "rolled" && pool.length > 0
+        ? recipeById.get(pool[(tick * 7 + index * 13) % pool.length]!)?.title
+        : undefined,
+    onState: (state: RollRow["state"]) => setRow(row.date, state),
+  });
+
+  if (wide) {
+    // The week grid (US-10.8): Monday to Sunday, a row per week of the range, with the dates and
+    // the buttons in one bar that sticks below the top bar.
+    const rowByDate = new Map(roll.rows.map((row, index) => [row.date, { row, index }]));
+    return (
+      <Stack gap="md">
+        {title}
+        <Group
+          role="group"
+          aria-label="Roll actions"
+          justify="space-between"
+          align="flex-end"
+          wrap="nowrap"
+          py="xs"
+          bg="var(--mantine-color-body)"
+          style={{
+            position: "sticky",
+            top: "var(--top-bar, 0px)",
+            zIndex: 2,
+            borderBottom: "1px solid var(--mantine-color-gray-3)",
+          }}
+        >
+          <Group gap="sm" wrap="nowrap">
+            {dates}
+          </Group>
+          <Group gap="sm" wrap="nowrap">
+            {buttons}
+          </Group>
+        </Group>
+        {tags}
+        {noPool}
+        <Box
+          aria-label="Rolled days"
+          style={{ display: "grid", gridTemplateColumns: "repeat(7, minmax(0, 1fr))", gap: 10 }}
+        >
+          {calendarWeeks(roll.first, roll.last)
+            .flat()
+            .map((date) => {
+              const found = rowByDate.get(date);
+              return found ? (
+                <RollCell key={date} {...dayProps(found.row, found.index)} />
+              ) : (
+                <OutsideDay key={date} label={labelOf(date)} />
+              );
+            })}
+        </Box>
+      </Stack>
+    );
+  }
 
   return (
     <Stack gap="lg">
-      <Stack gap={4} pt="xl" align="center">
-        <Title order={1}>Roll</Title>
-        <Text c="dimmed" fs="italic" ta="center">
-          Lock the meals you like, roll the rest again.
-        </Text>
-      </Stack>
-      <Group grow>
-        <TextInput
-          type="date"
-          label="From"
-          value={roll.first}
-          onChange={(event) => setRange(event.currentTarget.value, roll.last, "first")}
-        />
-        <TextInput
-          type="date"
-          label="To"
-          value={roll.last}
-          onChange={(event) => setRange(roll.first, event.currentTarget.value, "last")}
-        />
-      </Group>
-      {chips.length > 0 && (
-        <Group
-          role="group"
-          aria-label="Tags"
-          gap={6}
-          wrap="nowrap"
-          style={{ overflowX: "auto" }}
-          pb={4}
-        >
-          {chips.map((tag) => (
-            <Chip
-              key={tag}
-              value={tag}
-              size="xs"
-              checked={roll.tags.includes(tag)}
-              onChange={(on) =>
-                setRoll({
-                  ...roll,
-                  tags: on ? [...roll.tags, tag] : roll.tags.filter((t) => t !== tag),
-                })
-              }
-              styles={{ label: { flex: "none" } }}
-            >
-              {tag}
-            </Chip>
-          ))}
-        </Group>
-      )}
-      {recipes && pool.length === 0 && (
-        <Text c="dimmed" fs="italic" ta="center">
-          No recipes have these tags.
-        </Text>
-      )}
+      {title}
+      <Group grow>{dates}</Group>
+      {tags}
+      {noPool}
       {/* Above the days and sticky, so Roll is in reach however long the range is. Not at the
-          bottom: the menu button sits there. Below the top bar on a wide screen. */}
+          bottom: the menu button sits there. */}
       <Group
         role="group"
         aria-label="Roll actions"
@@ -224,31 +312,11 @@ export function RollPage() {
         bg="var(--mantine-color-body)"
         style={{ position: "sticky", top: "var(--top-bar, 0px)", zIndex: 2 }}
       >
-        <Button variant="outline" onClick={rollAgain} disabled={planned === null || shuffling}>
-          Roll
-        </Button>
-        <Button onClick={save} disabled={additions.length === 0 || shuffling}>
-          Save
-        </Button>
-        <Button variant="subtle" onClick={finish}>
-          Discard
-        </Button>
+        {buttons}
       </Group>
       <Stack gap={0}>
         {roll.rows.map((row, index) => (
-          <RollDay
-            key={row.date}
-            row={row}
-            label={labelOf(row.date)}
-            existing={plan.status === "ready" ? (plan.days[row.date] ?? []) : []}
-            recipeById={recipeById}
-            shuffleTitle={
-              shuffling && row.state === "rolled" && pool.length > 0
-                ? recipeById.get(pool[(tick * 7 + index * 13) % pool.length]!)?.title
-                : undefined
-            }
-            onState={(state) => setRow(row.date, state)}
-          />
+          <RollDay key={row.date} {...dayProps(row, index)} />
         ))}
       </Stack>
     </Stack>
@@ -257,14 +325,7 @@ export function RollPage() {
 
 const THUMB = 44;
 
-function RollDay({
-  row,
-  label,
-  existing,
-  recipeById,
-  shuffleTitle,
-  onState,
-}: {
+interface DayProps {
   row: RollRow;
   label: string;
   /** What the day already has on the Plan. */
@@ -273,11 +334,143 @@ function RollDay({
   /** A random title to show while shuffling, instead of the pick. */
   shuffleTitle: string | undefined;
   onState: (state: RollRow["state"]) => void;
-}) {
-  const recipe = row.recipeId ? recipeById.get(row.recipeId) : undefined;
-  const already = existing.map((entry) =>
+}
+
+/** What's planned on the day already, as titles. */
+const plannedTitles = (existing: MenuEntry[], recipeById: Map<string, StoredRecipe>) =>
+  existing.map((entry) =>
     "note" in entry ? entry.note : (recipeById.get(entry.recipeId)?.title ?? "Missing recipe"),
   );
+
+/** Lock and Skip for a rolled day. */
+function DayButtons({
+  row,
+  label,
+  canLock,
+  onState,
+}: {
+  row: RollRow;
+  label: string;
+  canLock: boolean;
+  onState: (state: RollRow["state"]) => void;
+}) {
+  return (
+    <>
+      <Button
+        size="compact-xs"
+        variant={row.state === "locked" ? "filled" : "subtle"}
+        aria-pressed={row.state === "locked"}
+        aria-label={`Lock ${label}`}
+        disabled={row.state !== "locked" && !canLock}
+        onClick={() => onState(row.state === "locked" ? "rolled" : "locked")}
+      >
+        Lock
+      </Button>
+      <Button
+        size="compact-xs"
+        variant={row.state === "skipped" ? "filled" : "subtle"}
+        color="gray"
+        aria-pressed={row.state === "skipped"}
+        aria-label={`Skip ${label}`}
+        onClick={() => onState(row.state === "skipped" ? "rolled" : "skipped")}
+      >
+        Skip
+      </Button>
+    </>
+  );
+}
+
+/**
+ * A rolled day in the week grid (wide screens): the day, what's planned already, the pick's
+ * photo and title, then Lock and Skip. A locked day has a green border.
+ */
+function RollCell({ row, label, existing, recipeById, shuffleTitle, onState }: DayProps) {
+  const recipe = row.recipeId ? recipeById.get(row.recipeId) : undefined;
+  const already = plannedTitles(existing, recipeById);
+  const photo = (src: string | null | undefined) =>
+    src ? (
+      <Image src={src} alt="" fit="cover" style={{ aspectRatio: "4 / 3" }} />
+    ) : (
+      <Box bg="gray.1" style={{ aspectRatio: "4 / 3" }} />
+    );
+  return (
+    <Stack
+      component="section"
+      aria-label={label}
+      data-state={row.state}
+      gap={6}
+      p="xs"
+      miw={0}
+      style={{
+        border: `1px solid var(--mantine-color-${row.state === "locked" ? "linen-6" : "gray-3"})`,
+      }}
+    >
+      <Text ff="heading" fs="italic" fz={16}>
+        {label}
+      </Text>
+      {already.length > 0 && (
+        <Text fz="xs" c="dimmed" lineClamp={2}>
+          Planned: {already.join(" · ")}
+        </Text>
+      )}
+      <Box style={{ flex: 1 }}>
+        {row.state === "skipped" ? (
+          <Text fs="italic" c="dimmed">
+            Skipped
+          </Text>
+        ) : shuffleTitle !== undefined ? (
+          <Box aria-hidden>
+            {photo(null)}
+            <Text ff="heading" fz={15} c="dimmed" mt={4} lineClamp={2}>
+              {shuffleTitle}
+            </Text>
+          </Box>
+        ) : !recipe ? (
+          <Text fs="italic" c="dimmed">
+            Nothing to pick
+          </Text>
+        ) : (
+          <UnstyledButton component={Link} to={`/recipe/${recipe.id}`} w="100%">
+            {photo(recipe.thumbnail)}
+            <Text ff="heading" fz={15} lh={1.25} mt={4} lineClamp={2}>
+              {recipe.title}
+            </Text>
+            {row.state === "locked" && (
+              <Text c="linen.6" style={LABEL_STYLE}>
+                Locked
+              </Text>
+            )}
+          </UnstyledButton>
+        )}
+      </Box>
+      <Group gap={4} grow>
+        <DayButtons row={row} label={label} canLock={recipe !== undefined} onState={onState} />
+      </Group>
+    </Stack>
+  );
+}
+
+/** A day of the grid's weeks outside the range: greyed out, nothing to do. */
+function OutsideDay({ label }: { label: string }) {
+  return (
+    <Box
+      aria-hidden
+      p="xs"
+      bg="gray.0"
+      mih={120}
+      style={{ opacity: 0.6, border: "1px dashed var(--mantine-color-gray-3)" }}
+    >
+      <Text ff="heading" fs="italic" fz={16} c="dimmed">
+        {label}
+      </Text>
+    </Box>
+  );
+}
+
+/** A rolled day in the list (phones): the day with Lock and Skip, then the pick. */
+function RollDay({ row, label, existing, recipeById, shuffleTitle, onState }: DayProps) {
+  const recipe = row.recipeId ? recipeById.get(row.recipeId) : undefined;
+  const already = plannedTitles(existing, recipeById);
   return (
     <Box
       component="section"
@@ -292,26 +485,7 @@ function RollDay({
           {label}
         </Text>
         <Group gap={4} wrap="nowrap">
-          <Button
-            size="compact-xs"
-            variant={row.state === "locked" ? "filled" : "subtle"}
-            aria-pressed={row.state === "locked"}
-            aria-label={`Lock ${label}`}
-            disabled={row.state !== "locked" && !recipe}
-            onClick={() => onState(row.state === "locked" ? "rolled" : "locked")}
-          >
-            Lock
-          </Button>
-          <Button
-            size="compact-xs"
-            variant={row.state === "skipped" ? "filled" : "subtle"}
-            color="gray"
-            aria-pressed={row.state === "skipped"}
-            aria-label={`Skip ${label}`}
-            onClick={() => onState(row.state === "skipped" ? "rolled" : "skipped")}
-          >
-            Skip
-          </Button>
+          <DayButtons row={row} label={label} canLock={recipe !== undefined} onState={onState} />
         </Group>
       </Group>
       {already.length > 0 && (
