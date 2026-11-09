@@ -66,3 +66,34 @@
     opacity: 1;
   }
 }
+
+/*
+ * Drag and drop (US-10.10). A held finger shouldn't select text, bring up iOS's link preview or
+ * drag the photo, so entries opt out of those. The dragged entry's place stays, faded; the day
+ * under it gets a dashed outline.
+ */
+.draggable {
+  -webkit-touch-callout: none;
+  -webkit-user-select: none;
+  user-select: none;
+}
+
+.draggable img {
+  -webkit-user-drag: none;
+}
+
+/* dnd-kit marks the copy left behind, and the entry under the pointer. */
+.draggable[data-dnd-placeholder] {
+  opacity: 0.35;
+}
+
+.draggable[data-dnd-dragging] {
+  background: var(--mantine-color-body);
+  box-shadow: var(--mantine-shadow-md);
+}
+
+.day[data-drop-target] {
+  background: var(--mantine-color-linen-0);
+  outline: 2px dashed var(--mantine-color-linen-5);
+  outline-offset: -2px;
+}

@@ -1,6 +1,7 @@
 // The wide layout (Epic 10), at iPad landscape size: only the `ipad-landscape` project runs this
 // file. Each wide-layout story adds its page's check here.
 import { expect, test } from "@playwright/test";
+import { dragTo } from "./drag.ts";
 import { makeMember, signedInPage } from "./members.ts";
 import { putDoc, recipe, todayKey } from "./seed.ts";
 
@@ -218,4 +219,22 @@ test("US-10.9: the Plan opens on the month, and a day's + adds to it", async ({ 
   await expect(
     page.getByRole("region", { name: /Today/ }).or(page.locator('section[aria-current="date"]')),
   ).toBeVisible();
+});
+
+test("US-10.10: an entry dragged to another day in the month moves there", async ({ browser }) => {
+  await makeMember(DAVE);
+  await putDoc("recipes/e2e-drag-tart", recipe("Drag Tart", ["1 egg"]));
+  await putDoc("menu_days/2031-04-08", {
+    entries: [{ id: "e2e-month-drag", recipeId: "e2e-drag-tart" }],
+    updatedAt: new Date(),
+  });
+  const page = await signedInPage(browser, DAVE, "#/plan?view=month&month=2031-04");
+  const tuesday = page.getByRole("region", { name: "Tue 8 Apr" });
+  const friday = page.getByRole("region", { name: "Fri 25 Apr" });
+  const tart = tuesday.getByRole("link", { name: "Drag Tart" });
+  await expect(tart).toBeVisible();
+
+  await dragTo(page, tart, friday);
+  await expect(friday.getByRole("link", { name: "Drag Tart" })).toBeVisible();
+  await expect(tuesday.getByRole("link")).toHaveCount(0);
 });

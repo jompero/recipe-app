@@ -51,7 +51,9 @@ import { useLiveRecipes } from "./liveRecipes.ts";
 import { usePageMenu } from "./pageMenu.ts";
 import classes from "./PlanPage.module.css";
 import { PlanDatePicker } from "./PlanDatePicker.tsx";
+import { DraggableItem, PlanDragDrop } from "./planDrag.tsx";
 import { QuietToggle } from "./QuietToggle.tsx";
+import { useDayDrop } from "./useDayDrop.ts";
 import { usePlanDays } from "./usePlanDays.ts";
 import { useWide } from "./useWide.ts";
 
@@ -130,6 +132,7 @@ export function PlanPage() {
 
   /** What a day shows and does, in either view. */
   const dayProps = (key: string) => ({
+    date: key,
     label: labelOf(key),
     isToday: key === todayKey,
     isPast: key < todayKey,
@@ -208,21 +211,23 @@ export function PlanPage() {
           {saveError}
         </Alert>
       )}
-      {view === "month" ? (
-        <MonthGrid
-          month={month}
-          weeks={weeks}
-          dayProps={dayProps}
-          onMore={(key) => goToWeek(mondayOf(parseDateKey(key) ?? today))}
-        />
-      ) : (
-        <Stack gap={0}>
-          {days.map((date) => {
-            const key = toDateKey(date);
-            return <PlanDay key={key} {...dayProps(key)} />;
-          })}
-        </Stack>
-      )}
+      <PlanDragDrop onMove={(from, to, entry) => save(moveEntry(from, to, entry))}>
+        {view === "month" ? (
+          <MonthGrid
+            month={month}
+            weeks={weeks}
+            dayProps={dayProps}
+            onMore={(key) => goToWeek(mondayOf(parseDateKey(key) ?? today))}
+          />
+        ) : (
+          <Stack gap={0}>
+            {days.map((date) => {
+              const key = toDateKey(date);
+              return <PlanDay key={key} {...dayProps(key)} />;
+            })}
+          </Stack>
+        )}
+      </PlanDragDrop>
       <AddEntrySheet
         opened={addingTo !== null}
         dayLabel={addingTo ? labelOf(addingTo) : ""}
@@ -250,6 +255,8 @@ export function PlanPage() {
 
 /** What a day needs, in the week list or the month grid. */
 interface DayProps {
+  /** The day's key, YYYY-MM-DD. */
+  date: string;
   label: string;
   isToday: boolean;
   isPast: boolean;
@@ -316,6 +323,7 @@ function MonthDay({
   dayNumber,
   outside,
   onMore,
+  date,
   label,
   isToday,
   isPast,
@@ -327,14 +335,17 @@ function MonthDay({
   onScale,
 }: DayProps & { dayNumber: number; outside: boolean; onMore: () => void }) {
   const extra = (entries?.length ?? 0) - MONTH_CELL_ENTRIES;
+  const { ref: dropRef, isDropTarget } = useDayDrop(date);
   return (
     <Box
       component="section"
+      ref={dropRef}
       aria-label={label}
       aria-current={isToday ? "date" : undefined}
       data-past={isPast || undefined}
       data-outside={outside || undefined}
-      className={classes.cell}
+      data-drop-target={isDropTarget || undefined}
+      className={`${classes.cell} ${classes.day}`}
     >
       <Group justify="space-between" wrap="nowrap" gap={2}>
         <Text
@@ -361,7 +372,7 @@ function MonthDay({
       ) : (
         <Stack component="ul" gap={4} p={0} m={0} mt={4} style={{ listStyle: "none" }}>
           {entries.slice(0, MONTH_CELL_ENTRIES).map((entry) => (
-            <li key={entry.id}>
+            <DraggableItem key={entry.id} date={date} entry={entry} className={classes.draggable}>
               <Entry
                 compact
                 entry={entry}
@@ -370,7 +381,7 @@ function MonthDay({
                 onMove={() => onMove(entry)}
                 onScale={(scale) => "recipeId" in entry && onScale(entry, scale)}
               />
-            </li>
+            </DraggableItem>
           ))}
         </Stack>
       )}
@@ -385,6 +396,7 @@ function MonthDay({
 
 /** One day: its heading and "+", then its entries. Past days are dimmed; today is marked. */
 function PlanDay({
+  date,
   label,
   isToday,
   isPast,
@@ -395,12 +407,16 @@ function PlanDay({
   onMove,
   onScale,
 }: DayProps) {
+  const { ref: dropRef, isDropTarget } = useDayDrop(date);
   return (
     <Box
       component="section"
+      ref={dropRef}
       aria-label={label}
       aria-current={isToday ? "date" : undefined}
       data-past={isPast || undefined}
+      data-drop-target={isDropTarget || undefined}
+      className={classes.day}
       py="sm"
       px="xs"
       style={{
@@ -433,7 +449,7 @@ function PlanDay({
       ) : (
         <Stack component="ul" gap={6} p={0} m={0} style={{ listStyle: "none" }}>
           {entries.map((entry) => (
-            <li key={entry.id}>
+            <DraggableItem key={entry.id} date={date} entry={entry} className={classes.draggable}>
               <Entry
                 entry={entry}
                 recipes={recipes}
@@ -441,7 +457,7 @@ function PlanDay({
                 onMove={() => onMove(entry)}
                 onScale={(scale) => "recipeId" in entry && onScale(entry, scale)}
               />
-            </li>
+            </DraggableItem>
           ))}
         </Stack>
       )}
