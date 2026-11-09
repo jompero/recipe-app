@@ -34,6 +34,7 @@ import { scaleIngredient } from "../parsing/scale.ts";
 import { scaleLabel } from "../plan/scale.ts";
 import { dayLabel, toDateKey } from "../plan/week.ts";
 import { LABEL_STYLE } from "../theme.ts";
+import { GROCERY_COLUMN } from "./groceryColumn.ts";
 import { usePageMenu } from "./pageMenu.ts";
 import { useGroceryList } from "./useGroceryList.ts";
 
@@ -95,7 +96,7 @@ export function GroceryListPage() {
   };
 
   return (
-    <Stack gap="lg">
+    <Stack gap="lg" maw={{ md: GROCERY_COLUMN }} mx="auto">
       <Stack gap={4} pt="xl" align="center">
         <Title order={1}>Grocery list</Title>
         {list?.updatedAt && list.lines.length > 0 && (
@@ -287,21 +288,20 @@ function MergedRow({
           aria-expanded={open}
           style={{ flex: 1, minWidth: 0 }}
         >
-          <Group
-            justify="space-between"
-            wrap="nowrap"
-            gap="sm"
+          {/* The amount right after the name ("potatoes · 2 kg"), not at the far edge (US-10.7). */}
+          <Text
             style={
               all ? { textDecoration: "line-through", color: "var(--mantine-color-dimmed)" } : {}
             }
           >
-            <Text>{line.name}</Text>
+            {line.name}
             {line.amount && (
-              <Text c="dimmed" fz="sm" style={{ whiteSpace: "nowrap" }}>
+              <Text component="span" c="dimmed" fz="sm" style={{ whiteSpace: "nowrap" }}>
+                {" · "}
                 {line.amount}
               </Text>
             )}
-          </Group>
+          </Text>
         </UnstyledButton>
       </Group>
       {open && (

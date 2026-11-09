@@ -109,7 +109,7 @@ test("the merged view: one line per thing to buy, A–Z, with combined amounts",
   openList({ lines: LINES, updatedAt: new Date(2026, 10, 6, 17, 30) });
 
   const rows = screen.getAllByRole("listitem").map((item) => item.textContent);
-  expect(rows).toEqual(["milk5 dl", "onion1", "pasta800 g", "toilet paper"]);
+  expect(rows).toEqual(["milk · 5 dl", "onion · 1", "pasta · 800 g", "toilet paper"]);
   expect(screen.getByText("Changed 17:30")).toBeInTheDocument();
 });
 

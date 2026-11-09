@@ -21,6 +21,7 @@ import { dayLabel, parseDateKey, weekFromParam } from "../plan/week.ts";
 import { LABEL_STYLE } from "../theme.ts";
 import { useGroceryList } from "./useGroceryList.ts";
 import { useLiveRecipes } from "./liveRecipes.ts";
+import { GROCERY_COLUMN } from "./groceryColumn.ts";
 import { usePageMenu } from "./pageMenu.ts";
 import { usePlanDays } from "./usePlanDays.ts";
 
@@ -99,7 +100,7 @@ export function GroceryBuilderPage() {
   );
 
   return (
-    <Stack gap="lg">
+    <Stack gap="lg" maw={{ md: GROCERY_COLUMN }} mx="auto">
       <Stack gap={4} pt="xl" align="center">
         <Title order={1}>Grocery list</Title>
         <Text c="dimmed" fs="italic" ta="center">
