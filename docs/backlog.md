@@ -90,7 +90,7 @@ Left for later:
 * **Android is untested:** nobody in the group has one. Check sign-in, photos and Wake Lock if anyone ever uses one.
 
 Found in the smoke test on the live site (2026-11-07), left for later. No code changes in Epic 7. Input zoom, opening on the menu and the Roll button were fixed in Epic 9:
-* **Layout on iPad and desktop** needs a look; the app was designed for phones first. Picked up as Epic 10 (below).
+* **Layout on iPad and desktop** needs a look; the app was designed for phones first. Done in Epic 10 (below).
 
 ---
 
@@ -127,19 +127,25 @@ Left for later:
 ## Epic 10: Wide Layouts (iPad Landscape and Desktop)
 **Goal:** Make the app use an iPad in landscape and a computer screen well, without changing the phone layout.
 
-Specified in [`.scratch/EPIC-10-wide-layouts/spec.md`](../.scratch/EPIC-10-wide-layouts/spec.md) (grilled 2026-11-08). In short:
-* One wide layout from Mantine's `md` (about 992px) up, with a sticky top bar instead of the menu button and content capped at about 1200px. Phones keep the bottom button.
-* Layouts were prototyped first on a throwaway branch (US-10.1, done 2026-11-08); the picks are in the spec.
-* The build stories then cover:
-  * the Data page's spacing
-  * the cookbook grid (320px thumbnails kept)
-  * the recipe page in two columns
-  * the grocery list column
-  * the roller's week grid
-* Three features come last:
-  * the Plan's month view (wide only)
-  * drag and drop on the Plan (all sizes, long-press on phones)
-  * grocery aisle sections from a static table
+**Done** (2026-11-09): from Mantine's `md` (about 992px) up, an iPad in landscape or a computer gets the wide layout; phones and iPad portrait keep the phone layout. Details are in [`.scratch/EPIC-10-wide-layouts/spec.md`](../.scratch/EPIC-10-wide-layouts/spec.md) and its issues:
+* US-10.1: prototypes of every page, picked by the owner (branch never merged)
+* US-10.2: wide shell: a sticky top bar instead of the menu button, content capped at 1200px, an iPad Playwright project
+* US-10.3: Data page spacing and a 720px column
+* US-10.4: cookbook grid of ~210px cards, wrapping tags, A–Z in columns
+* US-10.5: sharper thumbnails (`wontfix`: 320px kept)
+* US-10.6: the recipe as a spread (photo at 38.2%, sticky ingredients) or two columns without a photo
+* US-10.7: grocery list in a 560px column, "potatoes · 2 kg" at all sizes
+* US-10.8: the roller as a week grid
+* US-10.9: the Plan's month view
+* US-10.10: drag and drop on the Plan, at all sizes (long-press on touch), with `@dnd-kit/react`
+* US-10.11: grocery aisle sections from a static table
+* US-10.12: smoke test on iPad, desktop, iPhone and the installed app
+* US-10.13: docs
+* US-10.14: drag fixes found by the tests on Windows (native link drag, target under the pointer)
+
+The spec's "Different from the spec" section lists what changed on the way.
 
 Left for later:
 * **The recipe spread can feel cramped at 1024px** (iPad Mini landscape) when there's a photo: the photo takes 38.2%, leaving about 245px for the ingredients and 300px for the method. Options if it bothers anyone: a smaller photo share below about 1180px, the method under the ingredients at that width, or the photo-less two-column arrangement there. Found in the US-10.6 check (2026-11-08).
+* **Aisles:** about 5% of lines land in Other. Grow the table in `src/groceries/aisles.ts` when the list shows a misplaced item. Members can't override an aisle (out of scope).
+* **Drag and drop:** only within the visible week or month, with no reordering within a day and no keyboard dragging (Move to… covers all three).

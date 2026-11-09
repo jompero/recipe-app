@@ -43,9 +43,9 @@ src/
     backup.ts            Export everything to JSON, restore
   utils/imageCompressor.ts   browser-image-compression: JPEG, ~1024px full / ~320px thumbnail
   parsing/               Ingredient and recipe text parsers (shared by the Pepperplate import and Quick Paste)
-  plan/                  The Plan's pure logic: week dates, note rules, the roller's picking rules
-  groceries/             The grocery list's pure logic: merge keys, unit conversion, merged and by-recipe views, the builder's lines
-  components/ …          UI only; calls src/data, never Firebase directly
+  plan/                  The Plan's pure logic: week and month dates, note rules, the roller's picking rules, the drop rule
+  groceries/             The grocery list's pure logic: merge keys, unit conversion, merged and by-recipe views, aisles (a static table), the builder's lines
+  components/ …          UI only; calls src/data, never Firebase directly. Phone layout first; the wide layout from 62em (useWide)
 ```
 
 Components never call Firebase directly. Keeping it in one module puts every Firebase call in one reviewable place. It also lets tests replace Firebase with a fake, and makes a later storage move cheap.
@@ -87,7 +87,7 @@ flowchart TD
     class G secure;
 ```
 
-Live updates: the recipe list, the visible range of the menu and the grocery list use `onSnapshot`, so a change on one device appears on the others within about a second. Firestore's offline copy shows cached data and queues writes while the device is offline.
+Live updates: the recipe list, the visible range of the menu and the grocery list use `onSnapshot`, so a change on one device appears on the others within about a second. The visible range is a week (7 days), or on wide screens the month view's grid (up to 42 days, Monday before the 1st to Sunday after the end): one listener over that range, which reads only the days that have entries. Firestore's offline copy shows cached data and queues writes while the device is offline.
 
 ---
 
@@ -155,7 +155,7 @@ Rules of thumb:
 | Quota | Limit | Expected use |
 |---|---|---|
 | Firestore storage | 1 GiB | ~200 recipes × up to ~450 KB (base64 full image + thumbnail) ≈ 90 MB at most |
-| Reads | 50,000/day | ~200 per app open (recipe list) plus full images on demand |
+| Reads | 50,000/day | ~200 per app open (recipe list) plus full images on demand; the Plan adds the planned days in view (up to 42 in the month view) |
 | Writes | 20,000/day | Tiny. The one-off import is ~400. |
 | GitHub Pages | 1 GB site, ~100 GB/month soft limit | Tiny |
 
