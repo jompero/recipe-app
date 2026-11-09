@@ -12,6 +12,8 @@ test("an entry dragged to another day moves there, and a click still opens the r
 }) => {
   await makeMember(CAROL);
   await putDoc("recipes/e2e-drag-stew", recipe("Drag Stew", ["1 onion"]));
+  // Thursday starts empty, so a rerun (CI retries once) begins from the same state.
+  await putDoc("menu_days/2031-03-06", { entries: [], updatedAt: new Date() });
   await putDoc("menu_days/2031-03-03", {
     entries: [{ id: "e2e-drag", recipeId: "e2e-drag-stew" }],
     updatedAt: new Date(),
@@ -26,7 +28,7 @@ test("an entry dragged to another day moves there, and a click still opens the r
   await dragTo(page, stew, monday.getByText("Mon 3 Mar"));
   await expect(stew).toBeVisible();
 
-  await dragTo(page, stew, thursday);
+  await dragTo(page, stew, thursday, thursday);
   await expect(thursday.getByRole("link", { name: "Drag Stew" })).toBeVisible();
   await expect(monday.getByText("Nothing planned")).toBeVisible();
 
