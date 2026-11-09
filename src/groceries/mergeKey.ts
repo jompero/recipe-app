@@ -7,7 +7,7 @@ const NOT_PLURAL = new Set(["hummus", "couscous", "asparagus", "molasses", "swis
 const IRREGULAR: Record<string, string> = { leaves: "leaf", loaves: "loaf", cookies: "cookie" };
 
 /** A plural word made singular with a few rules; good enough for matching, not for display. */
-function singular(word: string): string {
+export function singular(word: string): string {
   if (NOT_PLURAL.has(word)) return word;
   const irregular = IRREGULAR[word];
   if (irregular) return irregular;

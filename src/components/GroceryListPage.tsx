@@ -26,6 +26,7 @@ import {
   untick,
 } from "../data/groceries.ts";
 import type { EntryScale } from "../data/menu.ts";
+import { groupByAisle, type Aisle } from "../groceries/aisles.ts";
 import { groupByRecipe, type RecipeGroup } from "../groceries/groupByRecipe.ts";
 import { mergeLines } from "../groceries/mergeLines.ts";
 import type { MergedLine, SourceLine } from "../groceries/types.ts";
@@ -60,8 +61,12 @@ const groupLabel = (group: RecipeGroup) =>
     ? "Added by hand"
     : `${group.title ?? "Recipe"}${group.scale && group.scale !== 1 ? ` ${scaleLabel(group.scale as EntryScale)}` : ""}`;
 
+/** The id of an aisle's heading, e.g. "aisle-meat-fish". */
+const aisleId = (aisle: Aisle) => `aisle-${aisle.toLowerCase().replace(/[^a-z]+/g, "-")}`;
+
 /**
- * The shared grocery list (US-6.5): merged (one line per thing to buy, A–Z) or by recipe. Ticks
+ * The shared grocery list (US-6.5): merged (one line per thing to buy, in aisles, A–Z within
+ * each: US-10.11) or by recipe. Ticks
  * sync live between members. Members add items by hand, remove lines or recipes, and clear it.
  */
 export function GroceryListPage() {
@@ -143,15 +148,24 @@ export function GroceryListPage() {
               onChange={(value) => setView(value === "recipe" ? "recipe" : "merged")}
             />
             {view === "merged" ? (
-              <Stack component="ul" gap={0} p={0} m={0} style={{ listStyle: "none" }}>
-                {mergeLines(list.lines).map((line) => (
-                  <MergedRow
-                    key={line.key}
-                    line={line}
-                    ticked={ticked}
-                    onTick={(on) => setTicked(line.sources, on)}
-                    onRemove={(source) => save(removeLines([source]))}
-                  />
+              <Stack gap="md">
+                {groupByAisle(mergeLines(list.lines)).map(({ aisle, lines }) => (
+                  <Box key={aisle} component="section" aria-labelledby={aisleId(aisle)}>
+                    <Text component="h2" id={aisleId(aisle)} c="dimmed" m={0} style={LABEL_STYLE}>
+                      {aisle}
+                    </Text>
+                    <Stack component="ul" gap={0} p={0} m={0} style={{ listStyle: "none" }}>
+                      {lines.map((line) => (
+                        <MergedRow
+                          key={line.key}
+                          line={line}
+                          ticked={ticked}
+                          onTick={(on) => setTicked(line.sources, on)}
+                          onRemove={(source) => save(removeLines([source]))}
+                        />
+                      ))}
+                    </Stack>
+                  </Box>
                 ))}
               </Stack>
             ) : (

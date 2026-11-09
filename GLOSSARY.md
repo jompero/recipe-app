@@ -45,6 +45,10 @@ The source lines that share a merge key, shown as one line with one combined amo
 **Merge key**:
 An ingredient name cleaned up for matching: lowercase, without brackets, comma tail or a leading "of", in the singular, then mapped through the synonym table. Prep words such as "chopped" stay, so "chopped tomatoes" and "tomatoes" are different keys.
 
+**Aisle**:
+A section of the merged grocery list: Produce, Bakery, Dairy, Meat & fish, Dry goods, Frozen, then Other, in that order. A merged line's aisle comes from a fixed table keyed on its merge key, in `src/groceries/aisles.ts`; anything the table doesn't know goes to Other. The by-recipe view has no aisles.
+_Avoid_: Category, section (in code)
+
 ## The app on a phone
 
 **Installed app**:

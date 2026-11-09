@@ -105,12 +105,32 @@ test("with no list, links to the builder", async () => {
   expect(router.state.location.pathname).toBe("/groceries/new");
 });
 
-test("the merged view: one line per thing to buy, A–Z, with combined amounts", () => {
+test("the merged view: one line per thing to buy, with combined amounts", () => {
   openList({ lines: LINES, updatedAt: new Date(2026, 10, 6, 17, 30) });
 
   const rows = screen.getAllByRole("listitem").map((item) => item.textContent);
-  expect(rows).toEqual(["milk · 5 dl", "onion · 1", "pasta · 800 g", "toilet paper"]);
+  expect(rows).toEqual(["onion · 1", "milk · 5 dl", "pasta · 800 g", "toilet paper"]);
   expect(screen.getByText("Changed 17:30")).toBeInTheDocument();
+});
+
+test("the merged view is in aisles, in the shop's order, A–Z within each, empty ones left out", () => {
+  const BREAD: SourceLine = { id: "h2", raw: "rye bread", scale: 1 };
+  const APPLES: SourceLine = { id: "h3", raw: "2 apples", scale: 1 };
+  openList({ lines: [...LINES, BREAD, APPLES] });
+
+  const headings = screen.getAllByRole("heading", { level: 2 }).map((h) => h.textContent);
+  expect(headings).toEqual(["Produce", "Bakery", "Dairy", "Dry goods", "Other"]);
+  const produce = screen.getByRole("region", { name: "Produce" });
+  expect(
+    within(produce)
+      .getAllByRole("listitem")
+      .map((item) => item.textContent),
+  ).toEqual(["apples · 2", "onion · 1"]);
+  expect(
+    within(screen.getByRole("region", { name: "Other" })).getByRole("listitem", {
+      name: "toilet paper",
+    }),
+  ).toBeInTheDocument();
 });
 
 test("a line is ticked when all its sources are, partly ticked when some are", () => {

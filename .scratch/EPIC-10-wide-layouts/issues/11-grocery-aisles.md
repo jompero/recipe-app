@@ -1,6 +1,6 @@
 # 11: Grocery aisle sections
 
-Status: ready-for-agent
+Status: done
 Story: US-10.11
 Branch: `EPIC-10/US-10.11-aisles`
 Spec: [../spec.md](../spec.md) (Grocery list)
@@ -16,9 +16,15 @@ Blocked by: 07
 
 ## Acceptance criteria
 
-- [ ] Unit tests: the lookup (plurals and synonyms reach the same aisle), unknowns go to Other, the order of aisles.
-- [ ] A note in Comments on how many distinct merge keys in the base data land in Other.
-- [ ] Component test: the merged view shows aisle headings in order.
-- [ ] `npm run check` and `npm run e2e` pass.
+- [x] Unit tests: the lookup (plurals and synonyms reach the same aisle), unknowns go to Other, the order of aisles.
+- [x] A note in Comments on how many distinct merge keys in the base data land in Other.
+- [x] Component test: the merged view shows aisle headings in order.
+- [x] `npm run check` and `npm run e2e` pass.
 
 ## Comments
+
+- **2026-11-09, built.** `src/groceries/aisles.ts`: `AISLES` (the order), `aisleOf(key)` and `groupByAisle(merged)`. The table is words and phrases as merge keys, seeded from the base data's ingredient lines (`fixtures/baseDataLines.json`), with the Danish and Finnish names seen there.
+  - Lookup: the key's endings, longest first ("tin chopped tomato" → "chopped tomato", Dry goods), then single words from the end, also made singular with `mergeKey.ts`'s `singular`, now exported ("parmesan cheese shredded" → "cheese"). A key starting with "frozen" is Frozen; with "dried"/"dry", Dry goods. A phrase beats a word in it ("coconut milk" is Dry goods).
+  - **Other in the base data:** 77 of 1030 distinct merge keys (7.5%), 104 of 2188 lines (4.8%). Mostly water (16 uses), serving notes ("for serving", "salad on the side?"), and one-off untranslated or run-together lines. Judgement calls: eggs in Dairy, tuna (tinned) and sweetcorn in Dry goods, peas in Frozen, tofu in Produce.
+  - Merged view: an `h2` label per aisle with its own list; the by-recipe view is unchanged. GLOSSARY: **Aisle**.
+  - `npm run check` (896) and `npm run e2e` pass locally.
