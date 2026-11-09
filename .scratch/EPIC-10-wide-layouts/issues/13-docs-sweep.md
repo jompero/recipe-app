@@ -1,6 +1,6 @@
 # 13: Docs sweep
 
-Status: ready-for-agent
+Status: done
 Story: US-10.13
 Spec: [../spec.md](../spec.md)
 Blocked by: 12
@@ -14,3 +14,11 @@ Blocked by: 12
 - GLOSSARY: check Top bar, Wide layout, Month view and Aisle are there.
 
 ## Comments
+
+- **2026-11-09, done.**
+  - Spec: Status done, a "Different from the spec" section, and 14 added to the build order.
+  - Backlog: Epic 10 done with its stories and what's left for later; Epic 7's iPad item points to it.
+  - CLAUDE.md: the Epic 10 status.
+  - Blueprint: `plan/` and `groceries/` in the code structure, the month view's listener and its reads. Thumbnails are unchanged at 320px.
+  - GLOSSARY already had Wide layout, Top bar, Month view and Aisle.
+  - Running `npm run e2e` locally on Windows turned up drag problems, filed and fixed as [14](14-drag-fixes.md) (PR #78), with the leftover US-10.3 iPad check.

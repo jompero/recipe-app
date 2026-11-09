@@ -1,6 +1,6 @@
 # EPIC-10: Wide Layouts (iPad Landscape and Desktop)
 
-Status: ready-for-agent
+Status: done (2026-11-09)
 
 Replaces "Layout on iPad and desktop needs a look" (left for later in Epic 7) in `docs/backlog.md`. Settled in a grilling session on 2026-11-08. No ADR conflicts: no ADR covers layout or breakpoints. Issue 05 changes `firestore.rules` (the thumbnail size cap), which reaches the live project only through `npm run deploy:rules`.
 
@@ -36,8 +36,29 @@ Three features come last, after the layout stories:
 | 11 Grocery aisle sections | US-10.11 | agent | 07 |
 | 12 Smoke test on iPad and desktop | US-10.12 | owner | 02–11 deployed |
 | 13 Docs sweep | US-10.13 | agent | 12 |
+| 14 Drag and drop fixes (found by 13) | US-10.14 | agent | 10 |
 
 03 and 05 can start once 01 is decided. 04 and 06–09 can go in any order after 02. If 01 keeps 320px thumbnails, 05 becomes `wontfix`. Anything the smoke test finds becomes a new numbered fix issue in this folder, `ready-for-agent`, and 13 waits for it.
+
+## Different from the spec
+
+Built 2026-11-08 to 2026-11-09; smoke tested by the owner on the live site (iPad landscape and portrait, desktop, iPhone, the installed app) with everything passing (12).
+
+- **Prototypes (01)** were variant switches on the real pages, not `#/proto/*` routes, so they could be judged with live data and the real shell. The branch `EPIC-10/US-10.1-prototypes` still never merged.
+- **Thumbnails (05)** stayed 320px (`wontfix`), so there's no rules change, no "Regenerate thumbnails", and the note above about `firestore.rules` didn't apply.
+- **iPad Playwright project** is Desktop Chrome at 1180×820 with touch, not a WebKit iPad profile, since CI installs only Chromium. It runs `e2e/wide.spec.ts` only. The Data page check (03) came late, in 14.
+- **Recipe spread (06):** the sticky photo and ingredients are sized from `--page-bottom` (48px wide, 100px on phones), set by `MemberShell`. Sizing them from the margin alone left the photo 32px too tall, so it scrolled; the owner spotted it.
+- **Month view (09):**
+  - With a mouse, a cell's "+" and an entry's "⋯" show only on hover or focus, so titles get the full width. On touch screens they always show, so nothing is hover-only.
+  - `useWide` reads the width on the first render. Before, a wide screen briefly drew the phone layout, and the Plan listened to a week before swapping to the month.
+- **Drag and drop (10, 14):**
+  - `@dnd-kit/react` 0.5.3 (with `@dnd-kit/dom` and `@dnd-kit/collision`, all pinned) rather than the older `@dnd-kit/core`.
+  - No keyboard dragging: dnd-kit's Accessibility plugin would make every entry a tab stop with role "button" around its link. Move to… stays the keyboard way.
+  - The dragged entry leaves a faded copy in place, with no drop animation.
+  - 14, found by the tests on Windows after the smoke test, fixed two things:
+    - recipe links started the browser's own drag in Chromium on Windows
+    - the drop target followed the dragged card instead of the pointer
+- **Aisles (11):** the table is keyed on the merge key as planned, but the lookup also tries the key's endings and then single words (made singular), plus "frozen …" → Frozen and "dried …" → Dry goods, so prep words don't push an item into Other. On the base data, 7.5% of merge keys (4.8% of lines) land in Other, mostly water and serving notes.
 
 ## User Stories
 
