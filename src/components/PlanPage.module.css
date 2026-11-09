@@ -1,0 +1,68 @@
+/*
+ * The Plan's month view (US-10.9): seven columns of days with hairline borders, the days of the
+ * months either side tinted. With a mouse, a day's "+" and an entry's "⋯" show on hover or focus,
+ * the "⋯" over the end of the title, so titles get the cell's whole width. On touch screens (the
+ * iPad) they always show, beside the title.
+ */
+.grid {
+  display: grid;
+  grid-template-columns: repeat(7, minmax(0, 1fr));
+  border-top: 1px solid var(--mantine-color-gray-3);
+  border-left: 1px solid var(--mantine-color-gray-3);
+}
+
+.heading,
+.cell {
+  border-right: 1px solid var(--mantine-color-gray-3);
+  border-bottom: 1px solid var(--mantine-color-gray-3);
+}
+
+.cell {
+  min-width: 0;
+  min-height: 128px;
+  padding: 6px;
+}
+
+.cell[data-outside] {
+  background: var(--mantine-color-gray-0);
+}
+
+.cell[data-past] {
+  opacity: 0.55;
+}
+
+.cell[aria-current="date"] {
+  box-shadow: inset 0 3px 0 var(--mantine-color-linen-6);
+}
+
+@media (hover: hover) and (pointer: fine) {
+  .control {
+    opacity: 0;
+    transition: opacity 120ms;
+  }
+
+  .cell:hover .control,
+  .cell:focus-within .control {
+    opacity: 1;
+  }
+
+  .entry {
+    position: relative;
+  }
+
+  .entryMenu {
+    position: absolute;
+    top: 50%;
+    right: 0;
+    transform: translateY(-50%);
+    background: var(--mantine-color-body);
+    opacity: 0;
+    transition: opacity 120ms;
+  }
+
+  .entry:hover .entryMenu,
+  .entry:focus-within .entryMenu,
+  .entryMenu[aria-expanded="true"] {
+    opacity: 1;
+  }
+}

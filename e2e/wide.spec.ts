@@ -2,7 +2,7 @@
 // file. Each wide-layout story adds its page's check here.
 import { expect, test } from "@playwright/test";
 import { makeMember, signedInPage } from "./members.ts";
-import { putDoc, recipe } from "./seed.ts";
+import { putDoc, recipe, todayKey } from "./seed.ts";
 
 const DAVE = "dave@example.com";
 
@@ -190,4 +190,32 @@ test("US-10.8: the roller is a week grid that wraps for a longer range", async (
     "aria-pressed",
     "true",
   );
+});
+
+test("US-10.9: the Plan opens on the month, and a day's + adds to it", async ({ browser }) => {
+  await makeMember(DAVE);
+  await putDoc("recipes/e2e-month-pie", recipe("Month Pie", ["1 egg"]));
+  await putDoc(`menu_days/${todayKey()}`, {
+    entries: [{ id: "e2e-month", recipeId: "e2e-month-pie" }],
+    updatedAt: new Date(),
+  });
+  const page = await signedInPage(browser, DAVE, "#/plan");
+  const month = page.getByLabel("Month");
+  await expect(month.getByRole("link", { name: "Month Pie" })).toBeVisible();
+  expect(await month.getByRole("region").count()).toBeGreaterThanOrEqual(28);
+
+  const today = month.locator('[aria-current="date"]');
+  await today.getByRole("button", { name: /^Add to / }).click();
+  const sheet = page.getByRole("dialog", { name: /^Add to / });
+  await sheet.getByRole("tab", { name: "Note" }).click();
+  const note = `Note ${String(Date.now())}`;
+  await sheet.getByRole("textbox", { name: "Note" }).fill(note);
+  await sheet.getByRole("textbox", { name: "Note" }).press("Enter");
+  await expect(today.getByText(note)).toBeVisible();
+
+  // The week is one click away.
+  await page.getByRole("radio", { name: "Week" }).click();
+  await expect(
+    page.getByRole("region", { name: /Today/ }).or(page.locator('section[aria-current="date"]')),
+  ).toBeVisible();
 });

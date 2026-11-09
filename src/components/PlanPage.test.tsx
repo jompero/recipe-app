@@ -4,6 +4,7 @@ import type { Session } from "../data/auth.ts";
 import type { MenuEntry, NewMenuEntry, PlanDays } from "../data/menu.ts";
 import type { StoredRecipe } from "../data/recipes.ts";
 import { storedRecipe } from "../test-utils/recipeFixture.ts";
+import { setWideScreen } from "../test-utils/media.ts";
 import { renderApp, screen } from "../test-utils/renderApp.tsx";
 
 // Fake the data seam: a signed-in member, a fixed recipe list, and Plan days the tests can change.
@@ -396,4 +397,109 @@ describe("adding, removing and moving (US-5.2)", () => {
     expect(await screen.findByText("Couldn't save the change")).toBeInTheDocument();
     expect(screen.getByText("Missing or insufficient permissions.")).toBeInTheDocument();
   });
+});
+
+describe("the month view on a wide screen (US-10.9)", () => {
+  /** November 2026 as the month view lays it out: whole weeks, Mon 26 Oct to Sun 6 Dec. */
+  const NOVEMBER = "2026-10-26/2026-12-06";
+
+  beforeEach(() => setWideScreen());
+
+  test("opens on this month: six Monday-first weeks, today marked, other months' days tinted", () => {
+    renderApp("/plan");
+    act(() => fake.push(NOVEMBER, {}));
+
+    expect(fake.watched).toEqual([NOVEMBER]);
+    expect(screen.getByText("November 2026")).toBeInTheDocument();
+    const grid = within(screen.getByLabelText("Month"));
+    expect(grid.getAllByRole("region")).toHaveLength(42);
+    expect(day("Thu 5 Nov")).toHaveAttribute("aria-current", "date");
+    expect(day("Wed 4 Nov")).toHaveAttribute("data-past");
+    expect(day("Mon 26 Oct")).toHaveAttribute("data-outside");
+    expect(day("Fri 6 Nov")).not.toHaveAttribute("data-outside");
+  });
+
+  test("a day shows up to three entries with photos, then +N more, which opens its week", async () => {
+    const { router } = renderApp("/plan");
+    act(() =>
+      fake.push(NOVEMBER, {
+        "2026-11-12": [
+          { id: "a", recipeId: "spinach-pie" },
+          { id: "b", note: "Leftovers" },
+          { id: "c", recipeId: "chicken-soup", scale: 2 },
+          { id: "d", note: "Pizza night" },
+        ],
+      }),
+    );
+
+    const thursday = within(day("Thu 12 Nov"));
+    expect(thursday.getByRole("link", { name: "Spinach Pie" })).toHaveAttribute(
+      "href",
+      "/recipe/spinach-pie",
+    );
+    expect(thursday.getByText("Leftovers")).toBeInTheDocument();
+    expect(thursday.getByText("Chicken Soup 2×")).toBeInTheDocument();
+    expect(thursday.queryByText("Pizza night")).not.toBeInTheDocument();
+
+    await userEvent.click(thursday.getByRole("button", { name: "+1 more" }));
+    expect(router.state.location.search).toBe("?week=2026-11-09");
+    expect(screen.getByText("9–15 Nov 2026")).toBeInTheDocument();
+  });
+
+  test("a ?week= still opens that week, so links from the roller and recipes keep working", () => {
+    renderApp("/plan?week=2026-11-09");
+    expect(fake.watched).toEqual(["2026-11-09/2026-11-15"]);
+  });
+
+  test("the Week / Month switch and the arrows change the URL", async () => {
+    const { router } = renderApp("/plan");
+
+    await userEvent.click(screen.getByRole("radio", { name: "Week" }));
+    expect(router.state.location.search).toBe("?week=2026-11-02");
+
+    await userEvent.click(screen.getByRole("radio", { name: "Month" }));
+    expect(router.state.location.search).toBe("?view=month&month=2026-11");
+
+    await userEvent.click(screen.getByRole("button", { name: "Next month" }));
+    expect(router.state.location.search).toBe("?view=month&month=2026-12");
+    expect(fake.watched.at(-1)).toBe("2026-11-30/2027-01-03");
+
+    await userEvent.click(screen.getByRole("button", { name: "Today" }));
+    expect(router.state.location.search).toBe("?view=month");
+    expect(screen.getByText("November 2026")).toBeInTheDocument();
+  });
+
+  test("a day's + adds to that day, and an entry's menu removes it", async () => {
+    renderApp("/plan");
+    const pie = { id: "b", recipeId: "spinach-pie" };
+    act(() => fake.push(NOVEMBER, { "2026-11-20": [pie] }));
+
+    await userEvent.click(screen.getByRole("button", { name: "Add to Tue 24 Nov" }));
+    const sheet = within(screen.getByRole("dialog", { name: "Add to Tue 24 Nov" }));
+    await userEvent.click(sheet.getByRole("button", { name: "Chicken Soup" }));
+    expect(fake.addEntry).toHaveBeenCalledWith("2026-11-24", { recipeId: "chicken-soup" });
+
+    await userEvent.click(screen.getByRole("button", { name: "Options for Spinach Pie" }));
+    await userEvent.click(screen.getByRole("menuitem", { name: "Remove" }));
+    expect(fake.removeEntry).toHaveBeenCalledWith("2026-11-20", pie);
+  });
+
+  test("Roll… and Grocery list… get this week, or the month's first week in another month", async () => {
+    const { router } = renderApp("/plan");
+    const actions = () => within(screen.getByRole("group", { name: "Page actions" }));
+    await userEvent.click(actions().getByRole("button", { name: "Roll…" }));
+    expect(router.state.location.pathname).toBe("/plan/roll");
+    expect(router.state.location.search).toBe("?week=2026-11-02");
+
+    await act(() => router.navigate("/plan?view=month&month=2026-12"));
+    await userEvent.click(actions().getByRole("button", { name: "Grocery list…" }));
+    expect(router.state.location.pathname).toBe("/groceries/new");
+    expect(router.state.location.search).toBe("?week=2026-11-30");
+  });
+});
+
+test("a phone ignores ?view=month and shows the week", () => {
+  renderApp("/plan?view=month&month=2026-12");
+  expect(fake.watched).toEqual([THIS_WEEK]);
+  expect(screen.queryByRole("radio", { name: "Month" })).not.toBeInTheDocument();
 });

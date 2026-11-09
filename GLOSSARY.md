@@ -68,3 +68,7 @@ _Avoid_: Desktop mode, tablet layout
 **Top bar**:
 The bar along the top in the wide layout: the sections on the left, the current page's actions on the right. Phones have the menu button instead.
 _Avoid_: Header, navbar
+
+**Month view**:
+The Plan as a calendar month in the wide layout: Monday-first weeks, each day with its first few entries. Phones only have the week.
+_Avoid_: Calendar view, month grid

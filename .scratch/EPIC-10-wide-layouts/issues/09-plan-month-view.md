@@ -1,6 +1,6 @@
 # 09: Plan month view
 
-Status: ready-for-agent
+Status: done
 Story: US-10.9
 Branch: `EPIC-10/US-10.9-month-view`
 Spec: [../spec.md](../spec.md) (Plan)
@@ -27,9 +27,21 @@ Blocked by: 02
 
 ## Acceptance criteria
 
-- [ ] Unit tests for the month dates: months starting on Monday and on Sunday, a February, a six-week month.
-- [ ] Component tests: the switch and the URL; adding from a cell; the ⋯ menu.
-- [ ] The iPad Playwright subset opens the Plan on Month and adds an entry.
-- [ ] `npm run check` and `npm run e2e` pass.
+- [x] Unit tests for the month dates: months starting on Monday and on Sunday, a February, a six-week month.
+- [x] Component tests: the switch and the URL; adding from a cell; the ⋯ menu.
+- [x] The iPad Playwright subset opens the Plan on Month and adds an entry.
+- [x] `npm run check` and `npm run e2e` pass.
 
 ## Comments
+
+**2026-11-09 (agent):** Built.
+- **Pure helpers:** `src/plan/month.ts` (`monthFromParam`, `monthKey`, `addMonths`, `firstOfMonth`, `monthLabel`, `monthWeeks` on top of `calendarWeeks`, `weekForMonth`), with 10 unit tests covering a month starting on a Monday, one starting on a Sunday (6 weeks), a February that fits 4 weeks, and crossing years.
+- **Which view:** `viewFrom()` in `PlanPage` decides. Phones always get the week. On a wide screen, `?view=week|month` wins; otherwise `?week=` means the week, so links from the roller and "Add to plan…" still land on their week; otherwise the month.
+  - The month arrows write `?view=month&month=YYYY-MM`, and Today writes `?view=month`.
+  - The switch to Week writes `?week=` for `weekForMonth`.
+- **One listener** covers the month grid's range (Mon before the 1st to Sun after the end). It reads only the day documents that exist (days with entries), up to 42, once, then changes. A week is up to 7.
+- **Cells:** `MonthGrid`/`MonthDay` (`PlanPage.module.css`) reuse the week's day props, and `Entry` gets a `compact` variant: a 26px photo, one line of title with the scale ("Chicken Soup 2×"), notes italic, and the same ⋯ menu (Move to…, Remove, Scale). "+N more" opens that day's week.
+- **Mouse vs touch:** with a mouse (`hover: hover` and `pointer: fine`), "+" and "⋯" show only on hover or focus, the ⋯ over the end of the title, which answers the prototype note. On touch screens they always show.
+- **`useWide` now reads the width on the first render** (`getInitialValueInEffect: false`). Before, a wide screen rendered the phone layout once first: a flash of the bottom button before the top bar, and the Plan started listening to a week before swapping to the month. The tests caught the second.
+- **Tests:** 7 component tests for wide screens plus 1 for phones (`PlanPage.test.tsx`). The iPad e2e check (US-10.9) opens on the month, shows a seeded entry, adds a note with today's "+", and switches to Week. Checked with a Playwright screenshot at 1180×820.
+- GLOSSARY: added **Month view**.

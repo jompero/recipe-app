@@ -35,33 +35,70 @@ import {
   weekFromParam,
   weekLabel,
 } from "../plan/week.ts";
+import {
+  addMonths,
+  firstOfMonth,
+  monthFromParam,
+  monthKey,
+  monthLabel,
+  monthWeeks,
+  weekForMonth,
+} from "../plan/month.ts";
 import { scaleLabel } from "../plan/scale.ts";
 import { LABEL_STYLE } from "../theme.ts";
 import { AddEntrySheet } from "./AddEntrySheet.tsx";
 import { useLiveRecipes } from "./liveRecipes.ts";
 import { usePageMenu } from "./pageMenu.ts";
+import classes from "./PlanPage.module.css";
 import { PlanDatePicker } from "./PlanDatePicker.tsx";
+import { QuietToggle } from "./QuietToggle.tsx";
 import { usePlanDays } from "./usePlanDays.ts";
+import { useWide } from "./useWide.ts";
+
+type PlanView = "week" | "month";
 
 /**
- * The Plan (US-5.1, US-5.2): one week, Monday to Sunday, kept live, with the week in the URL.
- * Members add recipes and notes to a day, and remove or move entries, and set a recipe's scale
- * for the grocery list (US-6.2).
+ * Which view the URL asks for. The month view is for wide screens only (US-10.9), and opens there
+ * when nothing says otherwise; a `?week=` (from the roller or "Add to plan…") still means that week.
+ * Phones always get the week.
+ */
+function viewFrom(params: URLSearchParams, wide: boolean): PlanView {
+  if (!wide) return "week";
+  const view = params.get("view");
+  if (view === "week" || view === "month") return view;
+  return params.has("week") ? "week" : "month";
+}
+
+/**
+ * The Plan (US-5.1, US-5.2): one week, Monday to Sunday, kept live, with the week in the URL. On a
+ * wide screen, also a month (US-10.9). Members add recipes and notes to a day, and remove or move
+ * entries, and set a recipe's scale for the grocery list (US-6.2).
  */
 export function PlanPage() {
   const [params] = useSearchParams();
   const navigate = useNavigate();
+  const wide = useWide();
   const today = new Date();
   const todayKey = toDateKey(today);
+  const view = viewFrom(params, wide);
+
   const monday = weekFromParam(params.get("week"), today);
   const days = weekDays(monday);
-  const first = toDateKey(monday);
-  const live = usePlanDays(first, toDateKey(days[6]!));
+  const month = monthFromParam(params.get("month"), today);
+  const weeks = monthWeeks(month);
+  const [first, last] =
+    view === "month"
+      ? [weeks[0]![0]!, weeks.at(-1)![6]!]
+      : [toDateKey(monday), toDateKey(days[6]!)];
+  const live = usePlanDays(first, last);
   const recipes = useLiveRecipes();
-  const isThisWeek = first === toDateKey(mondayOf(today));
+  const isThisWeek = toDateKey(monday) === toDateKey(mondayOf(today));
+  const isThisMonth = monthKey(month) === monthKey(today);
+  // Roll… and Grocery list… take a week: in the month view, this week or the month's first.
+  const handOver = toDateKey(view === "month" ? weekForMonth(month, today) : monday);
   usePageMenu("Plan", [
-    { label: "Roll…", to: `/plan/roll?week=${first}` },
-    { label: "Grocery list…", to: `/groceries/new?week=${first}` },
+    { label: "Roll…", to: `/plan/roll?week=${handOver}` },
+    { label: "Grocery list…", to: `/groceries/new?week=${handOver}` },
   ]);
 
   /** The day whose "+" sheet is open. */
@@ -70,9 +107,12 @@ export function PlanPage() {
   const [moving, setMoving] = useState<{ date: string; entry: MenuEntry } | null>(null);
   const [saveError, setSaveError] = useState<string | null>(null);
 
-  // Changing week replaces the URL: Back leaves the Plan instead of stepping through weeks.
+  // Changing week or month replaces the URL: Back leaves the Plan instead of stepping through.
+  const go = (search: string) => void navigate({ search }, { replace: true });
   const goToWeek = (week: Date | null) =>
-    void navigate({ search: week ? `?week=${toDateKey(week)}` : "" }, { replace: true });
+    go(week ? `?week=${toDateKey(week)}` : wide ? "?view=week" : "");
+  const goToMonth = (first: Date | null) =>
+    go(first ? `?view=month&month=${monthKey(first)}` : "?view=month");
 
   // Writes aren't awaited: the live week shows them at once, also offline, where the promise only
   // settles once the device is back online. A failure (e.g. the rules) is shown when it comes.
@@ -88,31 +128,67 @@ export function PlanPage() {
     return day ? dayLabel(day) : date;
   };
 
+  /** What a day shows and does, in either view. */
+  const dayProps = (key: string) => ({
+    label: labelOf(key),
+    isToday: key === todayKey,
+    isPast: key < todayKey,
+    entries: live.status === "ready" ? (live.days[key] ?? []) : null,
+    recipes: recipes.status === "ready" ? recipes.recipes : null,
+    onAdd: () => setAddingTo(key),
+    onRemove: (entry: MenuEntry) => save(removeEntry(key, entry)),
+    onMove: (entry: MenuEntry) => setMoving({ date: key, entry }),
+    onScale: (entry: RecipeEntry, scale: EntryScale) => save(setEntryScale(key, entry, scale)),
+  });
+
   return (
     <Stack gap="lg">
       <Stack gap={4} pt="xl" align="center">
         <Title order={1}>Plan</Title>
+        {wide && (
+          <QuietToggle
+            label="View"
+            value={view}
+            onChange={(next) =>
+              next === "week"
+                ? goToWeek(weekForMonth(month, today))
+                : goToMonth(firstOfMonth(monday))
+            }
+            options={[
+              { value: "week", label: "Week" },
+              { value: "month", label: "Month" },
+            ]}
+          />
+        )}
         <Group gap="xs" wrap="nowrap">
           <ActionIcon
             variant="subtle"
-            aria-label="Previous week"
-            onClick={() => goToWeek(addDays(monday, -7))}
+            aria-label={view === "month" ? "Previous month" : "Previous week"}
+            onClick={() =>
+              view === "month" ? goToMonth(addMonths(month, -1)) : goToWeek(addDays(monday, -7))
+            }
           >
             ‹
           </ActionIcon>
           <Text c="dimmed" style={LABEL_STYLE} miw={170} ta="center">
-            {weekLabel(monday)}
+            {view === "month" ? monthLabel(month) : weekLabel(monday)}
           </Text>
           <ActionIcon
             variant="subtle"
-            aria-label="Next week"
-            onClick={() => goToWeek(addDays(monday, 7))}
+            aria-label={view === "month" ? "Next month" : "Next week"}
+            onClick={() =>
+              view === "month" ? goToMonth(addMonths(month, 1)) : goToWeek(addDays(monday, 7))
+            }
           >
             ›
           </ActionIcon>
         </Group>
-        {!isThisWeek && (
-          <Button variant="subtle" size="compact-xs" onClick={() => goToWeek(null)}>
+        {!(view === "month" ? isThisMonth : isThisWeek) && (
+          <Button
+            variant="subtle"
+            size="compact-xs"
+            onClick={() => (view === "month" ? goToMonth(null) : goToWeek(null))}
+          >
             Today
           </Button>
         )}
@@ -132,25 +208,21 @@ export function PlanPage() {
           {saveError}
         </Alert>
       )}
-      <Stack gap={0}>
-        {days.map((date) => {
-          const key = toDateKey(date);
-          return (
-            <PlanDay
-              key={key}
-              label={dayLabel(date)}
-              isToday={key === todayKey}
-              isPast={key < todayKey}
-              entries={live.status === "ready" ? (live.days[key] ?? []) : null}
-              recipes={recipes.status === "ready" ? recipes.recipes : null}
-              onAdd={() => setAddingTo(key)}
-              onRemove={(entry) => save(removeEntry(key, entry))}
-              onMove={(entry) => setMoving({ date: key, entry })}
-              onScale={(entry, scale) => save(setEntryScale(key, entry, scale))}
-            />
-          );
-        })}
-      </Stack>
+      {view === "month" ? (
+        <MonthGrid
+          month={month}
+          weeks={weeks}
+          dayProps={dayProps}
+          onMore={(key) => goToWeek(mondayOf(parseDateKey(key) ?? today))}
+        />
+      ) : (
+        <Stack gap={0}>
+          {days.map((date) => {
+            const key = toDateKey(date);
+            return <PlanDay key={key} {...dayProps(key)} />;
+          })}
+        </Stack>
+      )}
       <AddEntrySheet
         opened={addingTo !== null}
         dayLabel={addingTo ? labelOf(addingTo) : ""}
@@ -176,6 +248,141 @@ export function PlanPage() {
   );
 }
 
+/** What a day needs, in the week list or the month grid. */
+interface DayProps {
+  label: string;
+  isToday: boolean;
+  isPast: boolean;
+  /** null while the days are loading. */
+  entries: MenuEntry[] | null;
+  /** null while the recipes are loading. */
+  recipes: StoredRecipe[] | null;
+  onAdd: () => void;
+  onRemove: (entry: MenuEntry) => void;
+  onMove: (entry: MenuEntry) => void;
+  onScale: (entry: RecipeEntry, scale: EntryScale) => void;
+}
+
+const WEEKDAY_HEADINGS = ["Mon", "Tue", "Wed", "Thu", "Fri", "Sat", "Sun"];
+
+/** How many entries a month cell shows before "+N more". */
+const MONTH_CELL_ENTRIES = 3;
+
+/**
+ * The month view (US-10.9): Monday-first weeks, the days of the months either side tinted. Each
+ * day has "+" and up to three entries; "+N more" opens that day's week.
+ */
+function MonthGrid({
+  month,
+  weeks,
+  dayProps,
+  onMore,
+}: {
+  month: Date;
+  weeks: string[][];
+  dayProps: (key: string) => DayProps;
+  onMore: (key: string) => void;
+}) {
+  const inMonth = monthKey(month);
+  return (
+    <Box aria-label="Month" className={classes.grid}>
+      {WEEKDAY_HEADINGS.map((day) => (
+        <Text
+          key={day}
+          c="dimmed"
+          ta="center"
+          py={6}
+          className={classes.heading}
+          style={LABEL_STYLE}
+        >
+          {day}
+        </Text>
+      ))}
+      {weeks.flat().map((key) => (
+        <MonthDay
+          key={key}
+          dayNumber={Number(key.slice(8))}
+          outside={key.slice(0, 7) !== inMonth}
+          onMore={() => onMore(key)}
+          {...dayProps(key)}
+        />
+      ))}
+    </Box>
+  );
+}
+
+/** One day of the month grid. */
+function MonthDay({
+  dayNumber,
+  outside,
+  onMore,
+  label,
+  isToday,
+  isPast,
+  entries,
+  recipes,
+  onAdd,
+  onRemove,
+  onMove,
+  onScale,
+}: DayProps & { dayNumber: number; outside: boolean; onMore: () => void }) {
+  const extra = (entries?.length ?? 0) - MONTH_CELL_ENTRIES;
+  return (
+    <Box
+      component="section"
+      aria-label={label}
+      aria-current={isToday ? "date" : undefined}
+      data-past={isPast || undefined}
+      data-outside={outside || undefined}
+      className={classes.cell}
+    >
+      <Group justify="space-between" wrap="nowrap" gap={2}>
+        <Text
+          ff="heading"
+          fs="italic"
+          fz={16}
+          c={isToday ? "linen.6" : outside ? "dimmed" : undefined}
+        >
+          {dayNumber}
+        </Text>
+        <ActionIcon
+          size="sm"
+          variant="subtle"
+          color="gray"
+          aria-label={`Add to ${label}`}
+          onClick={onAdd}
+          className={classes.control}
+        >
+          +
+        </ActionIcon>
+      </Group>
+      {entries === null ? (
+        <Skeleton height={26} mt={4} aria-label="Loading" />
+      ) : (
+        <Stack component="ul" gap={4} p={0} m={0} mt={4} style={{ listStyle: "none" }}>
+          {entries.slice(0, MONTH_CELL_ENTRIES).map((entry) => (
+            <li key={entry.id}>
+              <Entry
+                compact
+                entry={entry}
+                recipes={recipes}
+                onRemove={() => onRemove(entry)}
+                onMove={() => onMove(entry)}
+                onScale={(scale) => "recipeId" in entry && onScale(entry, scale)}
+              />
+            </li>
+          ))}
+        </Stack>
+      )}
+      {extra > 0 && (
+        <UnstyledButton onClick={onMore} mt={4} c="dimmed" style={{ ...LABEL_STYLE, fontSize: 9 }}>
+          +{extra} more
+        </UnstyledButton>
+      )}
+    </Box>
+  );
+}
+
 /** One day: its heading and "+", then its entries. Past days are dimmed; today is marked. */
 function PlanDay({
   label,
@@ -187,19 +394,7 @@ function PlanDay({
   onRemove,
   onMove,
   onScale,
-}: {
-  label: string;
-  isToday: boolean;
-  isPast: boolean;
-  /** null while the week is loading. */
-  entries: MenuEntry[] | null;
-  /** null while the recipes are loading. */
-  recipes: StoredRecipe[] | null;
-  onAdd: () => void;
-  onRemove: (entry: MenuEntry) => void;
-  onMove: (entry: MenuEntry) => void;
-  onScale: (entry: RecipeEntry, scale: EntryScale) => void;
-}) {
+}: DayProps) {
   return (
     <Box
       component="section"
@@ -258,14 +453,19 @@ const THUMB = 44;
 
 const SCALES: EntryScale[] = [0.5, 1, 2, 3];
 
-/** An entry, with its "…" menu (Move to…, Remove, and for a recipe its scale). */
+/**
+ * An entry, with its "…" menu (Move to…, Remove, and for a recipe its scale). Compact in a month
+ * cell: a small photo and one line of title, the menu over its end until hovered on a mouse.
+ */
 function Entry({
+  compact = false,
   entry,
   recipes,
   onRemove,
   onMove,
   onScale,
 }: {
+  compact?: boolean;
   entry: MenuEntry;
   recipes: StoredRecipe[] | null;
   onRemove: () => void;
@@ -278,13 +478,29 @@ function Entry({
       : undefined;
   const name = "note" in entry ? entry.note : (recipe?.title ?? "Missing recipe");
   return (
-    <Group gap="xs" wrap="nowrap" justify="space-between">
+    <Group
+      gap={compact ? 2 : "xs"}
+      wrap="nowrap"
+      justify="space-between"
+      className={compact ? classes.entry : undefined}
+    >
       <Box style={{ flex: 1, minWidth: 0 }}>
-        <EntryContent entry={entry} recipe={recipe} recipesLoading={recipes === null} />
+        <EntryContent
+          compact={compact}
+          entry={entry}
+          recipe={recipe}
+          recipesLoading={recipes === null}
+        />
       </Box>
       <Menu position="bottom-end" withinPortal>
         <Menu.Target>
-          <ActionIcon variant="subtle" color="gray" aria-label={`Options for ${name}`}>
+          <ActionIcon
+            variant="subtle"
+            color="gray"
+            size={compact ? "sm" : undefined}
+            className={compact ? classes.entryMenu : undefined}
+            aria-label={`Options for ${name}`}
+          >
             ⋯
           </ActionIcon>
         </Menu.Target>
@@ -317,15 +533,68 @@ function Entry({
   );
 }
 
+const COMPACT_THUMB = 26;
+
+/** One line of title in a month cell. */
+const oneLine = { overflow: "hidden", textOverflow: "ellipsis", whiteSpace: "nowrap" } as const;
+
 function EntryContent({
+  compact,
   entry,
   recipe,
   recipesLoading,
 }: {
+  compact: boolean;
   entry: MenuEntry;
   recipe: StoredRecipe | undefined;
   recipesLoading: boolean;
 }) {
+  if (compact) {
+    if ("note" in entry) {
+      return (
+        <Text fz={13} lh={1.3} fs="italic" c="dimmed" style={oneLine} title={entry.note}>
+          {entry.note}
+        </Text>
+      );
+    }
+    if (recipesLoading) return <Skeleton height={COMPACT_THUMB} />;
+    const title = recipe?.title ?? "Missing recipe";
+    const line = (
+      <Group gap={6} wrap="nowrap">
+        {recipe?.thumbnail ? (
+          <Image
+            src={recipe.thumbnail}
+            alt=""
+            w={COMPACT_THUMB}
+            h={COMPACT_THUMB}
+            fit="cover"
+            style={{ flex: "none" }}
+          />
+        ) : (
+          <Box bg="gray.1" w={COMPACT_THUMB} h={COMPACT_THUMB} style={{ flex: "none" }} />
+        )}
+        <Text
+          ff={recipe ? "heading" : undefined}
+          c={recipe ? undefined : "dimmed"}
+          fz={13}
+          lh={1.3}
+          miw={0}
+          style={oneLine}
+          title={title}
+        >
+          {title}
+          {entry.scale && ` ${scaleLabel(entry.scale)}`}
+        </Text>
+      </Group>
+    );
+    return recipe ? (
+      <UnstyledButton component={Link} to={`/recipe/${recipe.id}`} w="100%" display="block">
+        {line}
+      </UnstyledButton>
+    ) : (
+      line
+    );
+  }
   if ("note" in entry) {
     return (
       <Text fs="italic" c="dimmed" py={4}>
